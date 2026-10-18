@@ -3,7 +3,7 @@
     "name": "منصة الرعاية",
     "slug": "white-connect",
     "scheme": "whiteconnect",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "icon": "./assets/icon.png",
@@ -27,7 +27,8 @@
       },
       "permissions": [
         "ACCESS_COARSE_LOCATION",
-        "POST_NOTIFICATIONS"
+        "POST_NOTIFICATIONS",
+        "REQUEST_INSTALL_PACKAGES"
       ],
       "blockedPermissions": [
         "ACCESS_FINE_LOCATION",
@@ -35,7 +36,7 @@
         "RECORD_AUDIO",
         "READ_CONTACTS"
       ],
-      "versionCode": 2
+      "versionCode": 3
     },
     "web": {
       "output": "single",

@@ -9,6 +9,7 @@ import {
   useFonts, IBMPlexSansArabic_400Regular, IBMPlexSansArabic_500Medium, IBMPlexSansArabic_600SemiBold, IBMPlexSansArabic_700Bold,
 } from '@expo-google-fonts/ibm-plex-sans-arabic';
 import { AuthProvider } from '../src/lib/auth';
+import { UpdateProvider } from '../src/components/UpdatePrompt';
 import { configMissing } from '../src/lib/supabase';
 import { Alert, Screen } from '../src/components/ui';
 import { color, family } from '../src/theme';
@@ -52,6 +53,7 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
+        <UpdateProvider>
         <StatusBar style="light" />
         <Stack
           screenOptions={{
@@ -70,6 +72,7 @@ export default function RootLayout() {
           <Stack.Screen name="meds" options={{ title: 'خطة الدواء' }} />
           <Stack.Screen name="card/[patientId]" options={{ title: 'بطاقة التعريف', presentation: 'modal' }} />
         </Stack>
+        </UpdateProvider>
       </AuthProvider>
     </SafeAreaProvider>
   );

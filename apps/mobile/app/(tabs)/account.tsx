@@ -7,6 +7,7 @@ import { useAsync } from '../../src/lib/useAsync';
 import { disableReminders, enableReminders, remindersEnabled } from '../../src/lib/reminders';
 import { AuthForm, RegisterSelf } from '../../src/components/AuthForms';
 import { PatientCard } from '../../src/components/PatientCard';
+import { UpdateCheckRow } from '../../src/components/UpdatePrompt';
 import { Alert, Button, Card, Loading, Ltr, Row, Screen, SectionTitle, Stack, Text } from '../../src/components/ui';
 import { color } from '../../src/theme';
 
@@ -23,6 +24,7 @@ export default function Account() {
       <Screen>
         <Card><AuthForm /></Card>
         <Text variant="small" muted>البحث والاطلاع على الأطباء متاح دون حساب. الحجوزات والرحلة الطبية تحتاج حساباً لحماية بياناتك.</Text>
+        <Card><UpdateCheckRow /></Card>
       </Screen>
     );
   }
@@ -50,6 +52,7 @@ export default function Account() {
       )}
 
       <ReminderToggle />
+      {Platform.OS === 'android' && <Card><UpdateCheckRow /></Card>}
 
       {isStaff && (
         <Card>

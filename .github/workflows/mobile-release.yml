@@ -1,0 +1,92 @@
+# Builds the Android test APK and publishes it as a GitHub Release
+# (tag mobile-v<version>) whenever apps/mobile/app.json carries a version
+# that has not been released yet. The app's «حدّث الآن» button reads these
+# releases. Release notes come from apps/mobile/RELEASE_NOTES.md.
+name: Mobile release
+
+on:
+  push:
+    branches: [claude/friendly-lamport-sjzzos]
+    paths: ['apps/mobile/**', 'packages/shared/**', '.github/workflows/mobile-release.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mobile-release
+  cancel-in-progress: false
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read app version
+        id: v
+        run: |
+          VERSION=$(node -p "require('./apps/mobile/app.json').expo.version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if gh release view "mobile-v$VERSION" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "mobile-v$VERSION is already released — nothing to do."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - uses: pnpm/action-setup@v4
+        if: steps.v.outputs.exists == 'false'
+      - uses: actions/setup-node@v4
+        if: steps.v.outputs.exists == 'false'
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: actions/setup-java@v4
+        if: steps.v.outputs.exists == 'false'
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install dependencies
+        if: steps.v.outputs.exists == 'false'
+        run: pnpm install --frozen-lockfile --filter @app/mobile...
+
+      - name: Android SDK packages
+        if: steps.v.outputs.exists == 'false'
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.0" "build-tools;37.0.0" "ndk;27.1.12297006" > /dev/null
+
+      - name: Generate native project
+        if: steps.v.outputs.exists == 'false'
+        working-directory: apps/mobile
+        run: |
+          cp .env.example .env
+          npx expo prebuild -p android --no-install
+          cp signing/test.keystore android/app/debug.keystore
+          sed -i 's/^reactNativeArchitectures=.*/reactNativeArchitectures=armeabi-v7a,arm64-v8a/' android/gradle.properties
+
+      - name: Build release APK
+        if: steps.v.outputs.exists == 'false'
+        working-directory: apps/mobile/android
+        env:
+          NODE_ENV: production
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Publish release
+        if: steps.v.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.v.outputs.version }}
+        run: |
+          APK="white-connect-$VERSION.apk"
+          cp apps/mobile/android/app/build/outputs/apk/release/app-release.apk "$APK"
+          gh release create "mobile-v$VERSION" "$APK" \
+            --target "$GITHUB_SHA" \
+            --title "تطبيق المريض $VERSION (تجريبي)" \
+            --notes-file apps/mobile/RELEASE_NOTES.md \
+            --prerelease
