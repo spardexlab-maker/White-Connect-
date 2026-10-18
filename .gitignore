@@ -26,3 +26,4 @@ apps/mobile/.expo/
 apps/mobile/dist/
 apps/mobile/android/
 apps/mobile/ios/
+apps/mobile/dist-apk/
