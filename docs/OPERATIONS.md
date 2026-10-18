@@ -77,3 +77,10 @@ select private.bootstrap_platform_admin('admin@example.com');
 1. Vercel → Add New Project → استيراد المستودع (الجذر). `vercel.json` يحدد التثبيت والبناء ومجلد الإخراج وإعادة توجيه SPA ورؤوس الأمان.
 2. Environment Variables: `VITE_SUPABASE_URL=https://utuwjykgubsqqescpiwz.supabase.co`، `VITE_SUPABASE_PUBLISHABLE_KEY=<publishable>`، اختياري `VITE_PRODUCT_NAME`.
 3. بعد أول نشر: Supabase → Authentication → URL Configuration: ضع رابط Vercel في Site URL و Redirect URLs (للدعوات وتأكيد البريد).
+
+## بيئة الاختبار على السحابة (18 أكتوبر 2026)
+* `supabase/cloud/test-environment.sql` طُبق على المشروع السحابي: «مجمع الاختبار الطبي (اختبار)» بعيادة وصيدلية ومختبر، طبيبان، سكرتير، صيدلاني، فني ومعتمد مختبر، مدير مجمع، ومريض بحساب. كل المعرفات تبدأ بـ`7e570000-` والحسابات بصيغة `spardexlab+<الدور>@gmail.com`.
+* كلمة المرور لا تُحفظ في المستودع (العنصر النائب `__TEST_PASSWORD__` يُستبدل وقت التشغيل) وأُرسلت للمالك مباشرة.
+* الدوام 08:00–22:00 كل الأيام لتسهيل التجربة؛ التأكيد يدوي في العيادة وتلقائي في المختبر.
+* لإيقافها قبل الإطلاق دون حذف السجل: `supabase/cloud/test-environment-disable.sql` (تعليق المجمع وحظر دخول حسابات 7e57…).
+* migration `20261018002000_practitioner_by_email` مطبقة.
