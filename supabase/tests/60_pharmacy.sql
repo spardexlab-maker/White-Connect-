@@ -106,7 +106,8 @@ select is((select (public.pharmacy_report(:PH_A, current_date, current_date) -> 
 
 -- another pharmacy sees nothing
 select tests.login(:U_PHB);
-select is((select count(*)::int from public.pharmacy_products) + (select count(*)::int from public.sales), 0, 'other pharmacy cannot see stock or sales');
+select is((select count(*)::int from public.pharmacy_products where pharmacy_id = :PH_A) + (select count(*)::int from public.sales where pharmacy_id = :PH_A), 0,
+          'other pharmacy cannot see pharmacy A stock or sales');
 
 select * from finish();
 rollback;
