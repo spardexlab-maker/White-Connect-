@@ -262,3 +262,34 @@ values ('00000000-0000-4000-f000-0000000000a1', '00000000-0000-4000-9000-0000000
 insert into public.care_relationships (patient_id, facility_id, practitioner_id, source)
 values ('00000000-0000-4000-5000-000000000064', '00000000-0000-4000-f000-0000000000a1', '00000000-0000-4000-9000-000000000010', 'walk_in')
 on conflict do nothing;
+
+-- ---------------------------------------------------------------------
+-- Phase 3 reference data (development catalog; the operator loads the
+-- real national formulary and each lab its own catalog in production).
+-- ---------------------------------------------------------------------
+insert into public.medication_catalog (active_ingredient, brand_name, strength, dosage_form, unit) values
+  ('Paracetamol', null, '500 mg', 'tablet', 'mg'),
+  ('Paracetamol', null, '120 mg/5 ml', 'syrup', 'ml'),
+  ('Amoxicillin', null, '500 mg', 'capsule', 'mg'),
+  ('Amoxicillin + Clavulanic acid', null, '625 mg', 'tablet', 'mg'),
+  ('Ibuprofen', null, '400 mg', 'tablet', 'mg'),
+  ('Omeprazole', null, '20 mg', 'capsule', 'mg'),
+  ('Metformin', null, '500 mg', 'tablet', 'mg'),
+  ('Amlodipine', null, '5 mg', 'tablet', 'mg'),
+  ('Atorvastatin', null, '20 mg', 'tablet', 'mg'),
+  ('Salbutamol', null, '100 mcg/dose', 'inhaler', 'mcg'),
+  ('Cetirizine', null, '10 mg', 'tablet', 'mg'),
+  ('Azithromycin', null, '500 mg', 'tablet', 'mg');
+
+insert into public.lab_test_catalog (lab_facility_id, code, name, specimen_type, unit, reference_range_text, price_minor, turnaround_hours, preparation_note) values
+  ('00000000-0000-4000-f000-0000000000a3', 'CBC', 'صورة دم كاملة (CBC)', 'دم كامل', null, 'حسب تقرير المختبر', 10000, 4, null),
+  ('00000000-0000-4000-f000-0000000000a3', 'FBS', 'سكر صائم', 'مصل', 'mg/dL', 'يحدده المختبر', 5000, 2, 'صيام 8 ساعات'),
+  ('00000000-0000-4000-f000-0000000000a3', 'HBA1C', 'السكر التراكمي HbA1c', 'دم كامل', '%', 'يحدده المختبر', 15000, 24, null),
+  ('00000000-0000-4000-f000-0000000000a3', 'LIPID', 'دهون الدم', 'مصل', 'mg/dL', 'يحدده المختبر', 20000, 24, 'صيام 12 ساعة'),
+  ('00000000-0000-4000-f000-0000000000a3', 'TSH', 'هرمون الغدة الدرقية TSH', 'مصل', 'mIU/L', 'يحدده المختبر', 18000, 24, null),
+  ('00000000-0000-4000-f000-0000000000b3', 'CBC', 'صورة دم كاملة (CBC)', 'دم كامل', null, 'حسب تقرير المختبر', 9000, 4, null),
+  ('00000000-0000-4000-f000-0000000000b3', 'FBS', 'سكر صائم', 'مصل', 'mg/dL', 'يحدده المختبر', 5000, 2, 'صيام 8 ساعات');
+
+-- documented allergy for the demo patient Hasan (shown in the session header)
+insert into public.allergies (patient_id, substance, reaction, severity, source, recorded_by)
+values ('00000000-0000-4000-5000-000000000050', 'Penicillin', 'طفح جلدي', 'moderate', 'patient_reported', '00000000-0000-4000-a000-000000000050');

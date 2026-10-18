@@ -37,6 +37,44 @@ export type Database = {
                   Relationships: [
                     
                   ]
+                },"allergies": {
+                  Row: {
+                    "created_at": string,"facility_id": string | null,"id": string,"patient_id": string,"reaction": string | null,"recorded_by": string,"recorded_by_practitioner_id": string | null,"severity": string | null,"source": string,"status": string,"substance": string,"updated_at": string,"version": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"facility_id"?: string | null,"id"?: string,"patient_id": string,"reaction"?: string | null,"recorded_by": string,"recorded_by_practitioner_id"?: string | null,"severity"?: string | null,"source": string,"status"?: string,"substance": string,"updated_at"?: string,"version"?: number
+                  }
+                  Update: {
+                    "created_at"?: string,"facility_id"?: string | null,"id"?: string,"patient_id"?: string,"reaction"?: string | null,"recorded_by"?: string,"recorded_by_practitioner_id"?: string | null,"severity"?: string | null,"source"?: string,"status"?: string,"substance"?: string,"updated_at"?: string,"version"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "allergies_facility_id_fkey"
+      columns: ["facility_id"]
+isOneToOne: false
+      referencedRelation: "facilities"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "allergies_patient_id_fkey"
+      columns: ["patient_id"]
+isOneToOne: false
+      referencedRelation: "patients"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "allergies_recorded_by_fkey"
+      columns: ["recorded_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "allergies_recorded_by_practitioner_id_fkey"
+      columns: ["recorded_by_practitioner_id"]
+isOneToOne: false
+      referencedRelation: "practitioner_profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"appointment_events": {
                   Row: {
                     "actor_user_id": string | null,"appointment_id": string,"from_status": Database["public"]['Enums']["appointment_status"] | null,"id": number,"occurred_at": string,"reason": string | null,"to_status": Database["public"]['Enums']["appointment_status"]
@@ -255,6 +293,88 @@ isOneToOne: false
       referencedColumns: ["id","facility_id"]
     }
                   ]
+                },"clinical_notes": {
+                  Row: {
+                    "assessment": string | null,"correction_reason": string | null,"created_at": string,"created_by": string,"encounter_id": string,"examination": string | null,"follow_up": string | null,"free_text": string | null,"history": string | null,"id": string,"plan": string | null,"reason_for_visit": string | null,"signed_at": string | null,"signed_by": string | null,"status": string,"supersedes_id": string | null,"updated_at": string,"version": number,"version_no": number,"vitals": NonNullable<Json>
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "assessment"?: string | null,"correction_reason"?: string | null,"created_at"?: string,"created_by": string,"encounter_id": string,"examination"?: string | null,"follow_up"?: string | null,"free_text"?: string | null,"history"?: string | null,"id"?: string,"plan"?: string | null,"reason_for_visit"?: string | null,"signed_at"?: string | null,"signed_by"?: string | null,"status"?: string,"supersedes_id"?: string | null,"updated_at"?: string,"version"?: number,"version_no": number,"vitals"?: NonNullable<Json>
+                  }
+                  Update: {
+                    "assessment"?: string | null,"correction_reason"?: string | null,"created_at"?: string,"created_by"?: string,"encounter_id"?: string,"examination"?: string | null,"follow_up"?: string | null,"free_text"?: string | null,"history"?: string | null,"id"?: string,"plan"?: string | null,"reason_for_visit"?: string | null,"signed_at"?: string | null,"signed_by"?: string | null,"status"?: string,"supersedes_id"?: string | null,"updated_at"?: string,"version"?: number,"version_no"?: number,"vitals"?: NonNullable<Json>
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "clinical_notes_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "clinical_notes_encounter_id_fkey"
+      columns: ["encounter_id"]
+isOneToOne: false
+      referencedRelation: "encounters"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "clinical_notes_signed_by_fkey"
+      columns: ["signed_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "clinical_notes_supersedes_id_fkey"
+      columns: ["supersedes_id"]
+isOneToOne: false
+      referencedRelation: "clinical_notes"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"clinical_tasks": {
+                  Row: {
+                    "created_at": string,"done_at": string | null,"encounter_id": string | null,"facility_id": string | null,"id": string,"kind": string,"lab_order_id": string | null,"patient_id": string,"practitioner_id": string,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"done_at"?: string | null,"encounter_id"?: string | null,"facility_id"?: string | null,"id"?: string,"kind": string,"lab_order_id"?: string | null,"patient_id": string,"practitioner_id": string,"status"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"done_at"?: string | null,"encounter_id"?: string | null,"facility_id"?: string | null,"id"?: string,"kind"?: string,"lab_order_id"?: string | null,"patient_id"?: string,"practitioner_id"?: string,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "clinical_tasks_encounter_id_fkey"
+      columns: ["encounter_id"]
+isOneToOne: false
+      referencedRelation: "encounters"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "clinical_tasks_facility_id_fkey"
+      columns: ["facility_id"]
+isOneToOne: false
+      referencedRelation: "facilities"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "clinical_tasks_lab_order_fk"
+      columns: ["lab_order_id"]
+isOneToOne: false
+      referencedRelation: "lab_orders"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "clinical_tasks_patient_id_fkey"
+      columns: ["patient_id"]
+isOneToOne: false
+      referencedRelation: "patients"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "clinical_tasks_practitioner_id_fkey"
+      columns: ["practitioner_id"]
+isOneToOne: false
+      referencedRelation: "practitioner_profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"consent_grants": {
                   Row: {
                     "created_at": string,"expires_at": string | null,"granted_by": string,"grantee_facility_id": string | null,"grantee_practitioner_id": string | null,"id": string,"patient_id": string,"purpose": string,"resource_id": string | null,"revoked_at": string | null,"scope": string,"starts_at": string
@@ -322,6 +442,62 @@ isOneToOne: false
       columns: ["practitioner_id"]
 isOneToOne: false
       referencedRelation: "practitioner_profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"encounters": {
+                  Row: {
+                    "appointment_id": string | null,"created_at": string,"created_by": string,"ended_at": string | null,"facility_id": string,"follow_up_of": string | null,"id": string,"identity_verified": boolean,"patient_id": string,"practitioner_id": string,"queue_entry_id": string | null,"started_at": string | null,"status": Database["public"]['Enums']["encounter_status"],"updated_at": string,"version": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "appointment_id"?: string | null,"created_at"?: string,"created_by": string,"ended_at"?: string | null,"facility_id": string,"follow_up_of"?: string | null,"id"?: string,"identity_verified"?: boolean,"patient_id": string,"practitioner_id": string,"queue_entry_id"?: string | null,"started_at"?: string | null,"status"?: Database["public"]['Enums']["encounter_status"],"updated_at"?: string,"version"?: number
+                  }
+                  Update: {
+                    "appointment_id"?: string | null,"created_at"?: string,"created_by"?: string,"ended_at"?: string | null,"facility_id"?: string,"follow_up_of"?: string | null,"id"?: string,"identity_verified"?: boolean,"patient_id"?: string,"practitioner_id"?: string,"queue_entry_id"?: string | null,"started_at"?: string | null,"status"?: Database["public"]['Enums']["encounter_status"],"updated_at"?: string,"version"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "encounters_appointment_id_fkey"
+      columns: ["appointment_id"]
+isOneToOne: true
+      referencedRelation: "appointments"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "encounters_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "encounters_facility_id_fkey"
+      columns: ["facility_id"]
+isOneToOne: false
+      referencedRelation: "facilities"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "encounters_follow_up_of_fkey"
+      columns: ["follow_up_of"]
+isOneToOne: false
+      referencedRelation: "encounters"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "encounters_patient_id_fkey"
+      columns: ["patient_id"]
+isOneToOne: false
+      referencedRelation: "patients"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "encounters_practitioner_id_fkey"
+      columns: ["practitioner_id"]
+isOneToOne: false
+      referencedRelation: "practitioner_profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "encounters_queue_entry_id_fkey"
+      columns: ["queue_entry_id"]
+isOneToOne: true
+      referencedRelation: "queue_entries"
       referencedColumns: ["id"]
     }
                   ]
@@ -420,6 +596,154 @@ isOneToOne: false
       referencedRelation: "organizations"
       referencedColumns: ["id"]
     }
+                  ]
+                },"lab_order_items": {
+                  Row: {
+                    "display_name": string,"id": string,"order_id": string,"released_at": string | null,"status": Database["public"]['Enums']["lab_status"],"test_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "display_name": string,"id"?: string,"order_id": string,"released_at"?: string | null,"status"?: Database["public"]['Enums']["lab_status"],"test_id": string
+                  }
+                  Update: {
+                    "display_name"?: string,"id"?: string,"order_id"?: string,"released_at"?: string | null,"status"?: Database["public"]['Enums']["lab_status"],"test_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "lab_order_items_order_id_fkey"
+      columns: ["order_id"]
+isOneToOne: false
+      referencedRelation: "lab_orders"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "lab_order_items_test_id_fkey"
+      columns: ["test_id"]
+isOneToOne: false
+      referencedRelation: "lab_test_catalog"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"lab_orders": {
+                  Row: {
+                    "clinical_note": string | null,"created_at": string,"created_by": string,"encounter_id": string | null,"id": string,"idempotency_key": string,"lab_facility_id": string,"order_number": string,"ordering_facility_id": string | null,"ordering_practitioner_id": string | null,"patient_id": string,"source": string,"status": Database["public"]['Enums']["lab_status"],"updated_at": string,"version": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "clinical_note"?: string | null,"created_at"?: string,"created_by": string,"encounter_id"?: string | null,"id"?: string,"idempotency_key": string,"lab_facility_id": string,"order_number"?: string,"ordering_facility_id"?: string | null,"ordering_practitioner_id"?: string | null,"patient_id": string,"source": string,"status"?: Database["public"]['Enums']["lab_status"],"updated_at"?: string,"version"?: number
+                  }
+                  Update: {
+                    "clinical_note"?: string | null,"created_at"?: string,"created_by"?: string,"encounter_id"?: string | null,"id"?: string,"idempotency_key"?: string,"lab_facility_id"?: string,"order_number"?: string,"ordering_facility_id"?: string | null,"ordering_practitioner_id"?: string | null,"patient_id"?: string,"source"?: string,"status"?: Database["public"]['Enums']["lab_status"],"updated_at"?: string,"version"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "lab_orders_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "lab_orders_encounter_id_fkey"
+      columns: ["encounter_id"]
+isOneToOne: false
+      referencedRelation: "encounters"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "lab_orders_lab_facility_id_fkey"
+      columns: ["lab_facility_id"]
+isOneToOne: false
+      referencedRelation: "facilities"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "lab_orders_ordering_facility_id_fkey"
+      columns: ["ordering_facility_id"]
+isOneToOne: false
+      referencedRelation: "facilities"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "lab_orders_ordering_practitioner_id_fkey"
+      columns: ["ordering_practitioner_id"]
+isOneToOne: false
+      referencedRelation: "practitioner_profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "lab_orders_patient_id_fkey"
+      columns: ["patient_id"]
+isOneToOne: false
+      referencedRelation: "patients"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"lab_results": {
+                  Row: {
+                    "correction_reason": string | null,"created_at": string,"entered_by": string,"id": string,"lab_flag": string | null,"notes": string | null,"order_item_id": string,"reference_range": string | null,"released_at": string | null,"released_by": string | null,"status": string,"supersedes_id": string | null,"unit": string | null,"updated_at": string,"value_numeric": number | null,"value_text": string | null,"version_no": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "correction_reason"?: string | null,"created_at"?: string,"entered_by": string,"id"?: string,"lab_flag"?: string | null,"notes"?: string | null,"order_item_id": string,"reference_range"?: string | null,"released_at"?: string | null,"released_by"?: string | null,"status"?: string,"supersedes_id"?: string | null,"unit"?: string | null,"updated_at"?: string,"value_numeric"?: number | null,"value_text"?: string | null,"version_no": number
+                  }
+                  Update: {
+                    "correction_reason"?: string | null,"created_at"?: string,"entered_by"?: string,"id"?: string,"lab_flag"?: string | null,"notes"?: string | null,"order_item_id"?: string,"reference_range"?: string | null,"released_at"?: string | null,"released_by"?: string | null,"status"?: string,"supersedes_id"?: string | null,"unit"?: string | null,"updated_at"?: string,"value_numeric"?: number | null,"value_text"?: string | null,"version_no"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "lab_results_entered_by_fkey"
+      columns: ["entered_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "lab_results_order_item_id_fkey"
+      columns: ["order_item_id"]
+isOneToOne: false
+      referencedRelation: "lab_order_items"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "lab_results_released_by_fkey"
+      columns: ["released_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "lab_results_supersedes_id_fkey"
+      columns: ["supersedes_id"]
+isOneToOne: false
+      referencedRelation: "lab_results"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"lab_test_catalog": {
+                  Row: {
+                    "code": string,"created_at": string,"id": string,"is_active": boolean,"lab_facility_id": string,"name": string,"preparation_note": string | null,"price_minor": number | null,"reference_range_text": string | null,"specimen_type": string,"turnaround_hours": number | null,"unit": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "code": string,"created_at"?: string,"id"?: string,"is_active"?: boolean,"lab_facility_id": string,"name": string,"preparation_note"?: string | null,"price_minor"?: number | null,"reference_range_text"?: string | null,"specimen_type": string,"turnaround_hours"?: number | null,"unit"?: string | null
+                  }
+                  Update: {
+                    "code"?: string,"created_at"?: string,"id"?: string,"is_active"?: boolean,"lab_facility_id"?: string,"name"?: string,"preparation_note"?: string | null,"price_minor"?: number | null,"reference_range_text"?: string | null,"specimen_type"?: string,"turnaround_hours"?: number | null,"unit"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "lab_test_catalog_lab_facility_id_fkey"
+      columns: ["lab_facility_id"]
+isOneToOne: false
+      referencedRelation: "facilities"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"medication_catalog": {
+                  Row: {
+                    "active_ingredient": string,"brand_name": string | null,"created_at": string,"dosage_form": string,"id": string,"is_active": boolean,"strength": string,"unit": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "active_ingredient": string,"brand_name"?: string | null,"created_at"?: string,"dosage_form": string,"id"?: string,"is_active"?: boolean,"strength": string,"unit": string
+                  }
+                  Update: {
+                    "active_ingredient"?: string,"brand_name"?: string | null,"created_at"?: string,"dosage_form"?: string,"id"?: string,"is_active"?: boolean,"strength"?: string,"unit"?: string
+                  }
+                  Relationships: [
+                    
                   ]
                 },"memberships": {
                   Row: {
@@ -609,6 +933,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"patient_reported_medications": {
+                  Row: {
+                    "created_at": string,"created_by": string,"dose_text": string | null,"id": string,"name": string,"patient_id": string,"started_on": string | null,"stopped_on": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by": string,"dose_text"?: string | null,"id"?: string,"name": string,"patient_id": string,"started_on"?: string | null,"stopped_on"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string,"dose_text"?: string | null,"id"?: string,"name"?: string,"patient_id"?: string,"started_on"?: string | null,"stopped_on"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "patient_reported_medications_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "patient_reported_medications_patient_id_fkey"
+      columns: ["patient_id"]
+isOneToOne: false
+      referencedRelation: "patients"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"patients": {
                   Row: {
                     "birth_date": string | null,"birth_year": number | null,"city_id": string | null,"created_at": string,"created_at_facility_id": string | null,"created_by": string | null,"full_name": string,"id": string,"is_provisional": boolean,"merged_into": string | null,"phone": string | null,"public_code": string,"sex": Database["public"]['Enums']["patient_sex"] | null,"status": Database["public"]['Enums']["patient_record_status"],"updated_at": string,"version": number
@@ -716,6 +1066,178 @@ isOneToOne: false
       columns: ["user_id"]
 isOneToOne: true
       referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"prescription_dispatches": {
+                  Row: {
+                    "id": string,"pharmacy_id": string,"prescription_id": string,"received_at": string | null,"sent_at": string,"sent_by": string,"status": string,"updated_at": string,"version_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "id"?: string,"pharmacy_id": string,"prescription_id": string,"received_at"?: string | null,"sent_at"?: string,"sent_by": string,"status"?: string,"updated_at"?: string,"version_id": string
+                  }
+                  Update: {
+                    "id"?: string,"pharmacy_id"?: string,"prescription_id"?: string,"received_at"?: string | null,"sent_at"?: string,"sent_by"?: string,"status"?: string,"updated_at"?: string,"version_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "prescription_dispatches_pharmacy_id_fkey"
+      columns: ["pharmacy_id"]
+isOneToOne: false
+      referencedRelation: "facilities"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "prescription_dispatches_prescription_id_fkey"
+      columns: ["prescription_id"]
+isOneToOne: false
+      referencedRelation: "prescriptions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "prescription_dispatches_sent_by_fkey"
+      columns: ["sent_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "prescription_dispatches_version_id_fkey"
+      columns: ["version_id"]
+isOneToOne: false
+      referencedRelation: "prescription_versions"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"prescription_events": {
+                  Row: {
+                    "actor_user_id": string | null,"event": string,"facility_id": string | null,"id": number,"note": string | null,"occurred_at": string,"prescription_id": string,"version_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "actor_user_id"?: string | null,"event": string,"facility_id"?: string | null,"id"?: never,"note"?: string | null,"occurred_at"?: string,"prescription_id": string,"version_id"?: string | null
+                  }
+                  Update: {
+                    "actor_user_id"?: string | null,"event"?: string,"facility_id"?: string | null,"id"?: never,"note"?: string | null,"occurred_at"?: string,"prescription_id"?: string,"version_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "prescription_events_facility_id_fkey"
+      columns: ["facility_id"]
+isOneToOne: false
+      referencedRelation: "facilities"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "prescription_events_prescription_id_fkey"
+      columns: ["prescription_id"]
+isOneToOne: false
+      referencedRelation: "prescriptions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "prescription_events_version_id_fkey"
+      columns: ["version_id"]
+isOneToOne: false
+      referencedRelation: "prescription_versions"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"prescription_items": {
+                  Row: {
+                    "as_needed": boolean,"display_name": string,"dose": number | null,"dose_unit": string | null,"duration_days": number | null,"frequency_text": string | null,"id": string,"instructions": string | null,"interval_hours": number | null,"line_no": number,"max_daily": string | null,"medication_id": string | null,"quantity": number | null,"quantity_unit": string | null,"route": string | null,"start_date": string | null,"version_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "as_needed"?: boolean,"display_name": string,"dose"?: number | null,"dose_unit"?: string | null,"duration_days"?: number | null,"frequency_text"?: string | null,"id"?: string,"instructions"?: string | null,"interval_hours"?: number | null,"line_no": number,"max_daily"?: string | null,"medication_id"?: string | null,"quantity"?: number | null,"quantity_unit"?: string | null,"route"?: string | null,"start_date"?: string | null,"version_id": string
+                  }
+                  Update: {
+                    "as_needed"?: boolean,"display_name"?: string,"dose"?: number | null,"dose_unit"?: string | null,"duration_days"?: number | null,"frequency_text"?: string | null,"id"?: string,"instructions"?: string | null,"interval_hours"?: number | null,"line_no"?: number,"max_daily"?: string | null,"medication_id"?: string | null,"quantity"?: number | null,"quantity_unit"?: string | null,"route"?: string | null,"start_date"?: string | null,"version_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "prescription_items_medication_id_fkey"
+      columns: ["medication_id"]
+isOneToOne: false
+      referencedRelation: "medication_catalog"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "prescription_items_version_id_fkey"
+      columns: ["version_id"]
+isOneToOne: false
+      referencedRelation: "prescription_versions"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"prescription_versions": {
+                  Row: {
+                    "approved_at": string | null,"approved_by": string | null,"created_at": string,"id": string,"prescription_id": string,"revision_reason": string | null,"snapshot": Json | null,"status": Database["public"]['Enums']["rx_version_status"],"verify_expires_at": string | null,"verify_token": string | null,"version_no": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "approved_at"?: string | null,"approved_by"?: string | null,"created_at"?: string,"id"?: string,"prescription_id": string,"revision_reason"?: string | null,"snapshot"?: Json | null,"status"?: Database["public"]['Enums']["rx_version_status"],"verify_expires_at"?: string | null,"verify_token"?: string | null,"version_no": number
+                  }
+                  Update: {
+                    "approved_at"?: string | null,"approved_by"?: string | null,"created_at"?: string,"id"?: string,"prescription_id"?: string,"revision_reason"?: string | null,"snapshot"?: Json | null,"status"?: Database["public"]['Enums']["rx_version_status"],"verify_expires_at"?: string | null,"verify_token"?: string | null,"version_no"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "prescription_versions_approved_by_fkey"
+      columns: ["approved_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "prescription_versions_prescription_id_fkey"
+      columns: ["prescription_id"]
+isOneToOne: false
+      referencedRelation: "prescriptions"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"prescriptions": {
+                  Row: {
+                    "cancel_reason": string | null,"created_at": string,"created_by": string,"current_version_id": string | null,"encounter_id": string,"facility_id": string,"id": string,"idempotency_key": string,"patient_id": string,"practitioner_id": string,"rx_number": string,"status": Database["public"]['Enums']["rx_status"],"updated_at": string,"version": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "cancel_reason"?: string | null,"created_at"?: string,"created_by": string,"current_version_id"?: string | null,"encounter_id": string,"facility_id": string,"id"?: string,"idempotency_key": string,"patient_id": string,"practitioner_id": string,"rx_number"?: string,"status"?: Database["public"]['Enums']["rx_status"],"updated_at"?: string,"version"?: number
+                  }
+                  Update: {
+                    "cancel_reason"?: string | null,"created_at"?: string,"created_by"?: string,"current_version_id"?: string | null,"encounter_id"?: string,"facility_id"?: string,"id"?: string,"idempotency_key"?: string,"patient_id"?: string,"practitioner_id"?: string,"rx_number"?: string,"status"?: Database["public"]['Enums']["rx_status"],"updated_at"?: string,"version"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "prescriptions_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "prescriptions_current_version_fk"
+      columns: ["current_version_id"]
+isOneToOne: false
+      referencedRelation: "prescription_versions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "prescriptions_encounter_id_fkey"
+      columns: ["encounter_id"]
+isOneToOne: false
+      referencedRelation: "encounters"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "prescriptions_facility_id_fkey"
+      columns: ["facility_id"]
+isOneToOne: false
+      referencedRelation: "facilities"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "prescriptions_patient_id_fkey"
+      columns: ["patient_id"]
+isOneToOne: false
+      referencedRelation: "patients"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "prescriptions_practitioner_id_fkey"
+      columns: ["practitioner_id"]
+isOneToOne: false
+      referencedRelation: "practitioner_profiles"
       referencedColumns: ["id"]
     }
                   ]
@@ -893,6 +1415,32 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"specimens": {
+                  Row: {
+                    "barcode": string,"collected_at": string,"collected_by": string,"id": string,"order_id": string,"rejected_at": string | null,"rejection_reason": string | null,"specimen_type": string,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "barcode"?: string,"collected_at"?: string,"collected_by": string,"id"?: string,"order_id": string,"rejected_at"?: string | null,"rejection_reason"?: string | null,"specimen_type": string,"status"?: string
+                  }
+                  Update: {
+                    "barcode"?: string,"collected_at"?: string,"collected_by"?: string,"id"?: string,"order_id"?: string,"rejected_at"?: string | null,"rejection_reason"?: string | null,"specimen_type"?: string,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "specimens_collected_by_fkey"
+      columns: ["collected_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "specimens_order_id_fkey"
+      columns: ["order_id"]
+isOneToOne: false
+      referencedRelation: "lab_orders"
+      referencedColumns: ["id"]
+    }
+                  ]
                 }
           }
           Views: {
@@ -917,6 +1465,28 @@ isOneToOne: false
                           SetofOptions: {
         from: "*"
         to: "memberships"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"add_allergy":
+{ Args: { "p_patient_id": string,"p_reaction"?: string,"p_severity"?: string,"p_substance": string }; Returns: {
+              "created_at": string,
+"facility_id": string | null,
+"id": string,
+"patient_id": string,
+"reaction": string | null,
+"recorded_by": string,
+"recorded_by_practitioner_id": string | null,
+"severity": string | null,
+"source": string,
+"status": string,
+"substance": string,
+"updated_at": string,
+"version": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "allergies"
         isOneToOne: true
         isSetofReturn: false
       } },
@@ -1057,6 +1627,38 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"amend_clinical_note":
+{ Args: { "p_fields": Json,"p_note_id": string,"p_reason": string }; Returns: {
+              "assessment": string | null,
+"correction_reason": string | null,
+"created_at": string,
+"created_by": string,
+"encounter_id": string,
+"examination": string | null,
+"follow_up": string | null,
+"free_text": string | null,
+"history": string | null,
+"id": string,
+"plan": string | null,
+"reason_for_visit": string | null,
+"signed_at": string | null,
+"signed_by": string | null,
+"status": string,
+"supersedes_id": string | null,
+"updated_at": string,
+"version": number,
+"version_no": number,
+"vitals": NonNullable<Json>
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "clinical_notes"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"approve_prescription":
+{ Args: { "p_prescription_id": string,"p_revision_reason"?: string,"p_send_to_pharmacy_id"?: string }; Returns: Json
+                           },
 "assign_walk_in_slot":
 { Args: { "p_idempotency_key": string,"p_queue_entry_id": string,"p_service_id": string,"p_start": string }; Returns: {
               "blocked_period": unknown,
@@ -1136,6 +1738,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"cancel_prescription":
+{ Args: { "p_prescription_id": string,"p_reason": string }; Returns: undefined
+                           },
 "change_appointment_status":
 { Args: { "p_appointment_id": string,"p_expected_version"?: number,"p_reason"?: string,"p_to": Database["public"]['Enums']["appointment_status"] }; Returns: {
               "blocked_period": unknown,
@@ -1174,6 +1779,53 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"collect_specimen":
+{ Args: { "p_order_id": string,"p_specimen_type": string }; Returns: {
+              "barcode": string,
+"collected_at": string,
+"collected_by": string,
+"id": string,
+"order_id": string,
+"rejected_at": string | null,
+"rejection_reason": string | null,
+"specimen_type": string,
+"status": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "specimens"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"complete_clinical_task":
+{ Args: { "p_task_id": string }; Returns: undefined
+                           },
+"correct_lab_result":
+{ Args: { "p_lab_flag"?: string,"p_notes"?: string,"p_reason": string,"p_reference_range"?: string,"p_result_id": string,"p_unit"?: string,"p_value_numeric"?: number,"p_value_text"?: string }; Returns: {
+              "correction_reason": string | null,
+"created_at": string,
+"entered_by": string,
+"id": string,
+"lab_flag": string | null,
+"notes": string | null,
+"order_item_id": string,
+"reference_range": string | null,
+"released_at": string | null,
+"released_by": string | null,
+"status": string,
+"supersedes_id": string | null,
+"unit": string | null,
+"updated_at": string,
+"value_numeric": number | null,
+"value_text": string | null,
+"version_no": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "lab_results"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "create_account_link_code":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
@@ -1207,6 +1859,12 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"encounter_context":
+{ Args: { "p_encounter_id": string }; Returns: Json
+                           },
+"encounter_orders":
+{ Args: { "p_encounter_id": string }; Returns: Json
+                           },
 "expire_pending_appointments":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
@@ -1257,6 +1915,67 @@ isOneToOne: false
 "issue_patient_card":
 { Args: { "p_facility_id": string,"p_patient_id": string,"p_rotate"?: boolean }; Returns: Json
                            },
+"lab_check_in":
+{ Args: { "p_order_id": string }; Returns: {
+              "clinical_note": string | null,
+"created_at": string,
+"created_by": string,
+"encounter_id": string | null,
+"id": string,
+"idempotency_key": string,
+"lab_facility_id": string,
+"order_number": string,
+"ordering_facility_id": string | null,
+"ordering_practitioner_id": string | null,
+"patient_id": string,
+"source": string,
+"status": Database["public"]['Enums']["lab_status"],
+"updated_at": string,
+"version": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "lab_orders"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"lab_choices":
+{ Args: { "p_encounter_id": string }; Returns: {
+              "branch": string,"is_default": boolean,"lab_id": string,"name": string,"tests": Json
+            }[]
+                           },
+"lab_order_detail":
+{ Args: { "p_order_id": string }; Returns: Json
+                           },
+"lab_register_direct":
+{ Args: { "p_idempotency_key": string,"p_lab_facility_id": string,"p_patient_id": string,"p_test_ids": (string)[] }; Returns: {
+              "clinical_note": string | null,
+"created_at": string,
+"created_by": string,
+"encounter_id": string | null,
+"id": string,
+"idempotency_key": string,
+"lab_facility_id": string,
+"order_number": string,
+"ordering_facility_id": string | null,
+"ordering_practitioner_id": string | null,
+"patient_id": string,
+"source": string,
+"status": Database["public"]['Enums']["lab_status"],
+"updated_at": string,
+"version": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "lab_orders"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"lab_worklist":
+{ Args: { "p_lab_facility_id": string,"p_status"?: Database["public"]['Enums']["lab_status"] }; Returns: {
+              "created_at": string,"item_count": number,"latest_barcode": string,"order_id": string,"order_number": string,"ordering_doctor": string,"ordering_facility": string,"patient_code": string,"patient_id": string,"patient_name": string,"released_count": number,"source": string,"status": Database["public"]['Enums']["lab_status"]
+            }[]
+                           },
 "link_patient_with_code":
 { Args: { "p_code": string,"p_facility_id": string,"p_patient_id": string,"p_verification_note": string }; Returns: string
                            },
@@ -1276,8 +1995,23 @@ isOneToOne: false
               "address": string,"appointment_id": string,"booking_number": string,"branch_name": string,"cancellation_cutoff_minutes": number,"confirmation_deadline": string,"currency": string,"ends_at": string,"facility_id": string,"facility_name": string,"patient_id": string,"patient_name": string,"practitioner_id": string,"practitioner_name": string,"price_minor": number,"service_name": string,"starts_at": string,"status": Database["public"]['Enums']["appointment_status"],"status_reason": string,"timezone": string
             }[]
                            },
+"my_clinical_tasks":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "created_at": string,"encounter_id": string,"has_critical": boolean,"kind": string,"lab_order_id": string,"order_number": string,"patient_code": string,"patient_id": string,"patient_name": string,"task_id": string
+            }[]
+                           },
+"my_lab_orders":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "created_at": string,"item_count": number,"lab_name": string,"order_id": string,"order_number": string,"ordering_doctor": string,"patient_name": string,"released_count": number,"status": Database["public"]['Enums']["lab_status"]
+            }[]
+                           },
 "my_patient_card":
 { Args: { "p_patient_id": string }; Returns: Json
+                           },
+"my_prescriptions":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "approved_at": string,"dispatch_status": string,"facility_name": string,"items": Json,"patient_name": string,"pharmacy_name": string,"practitioner_name": string,"prescription_id": string,"rx_number": string,"status": Database["public"]['Enums']["rx_status"],"version_no": number
+            }[]
                            },
 "my_queue_status":
 { Args: { "p_appointment_id": string }; Returns: Json
@@ -1287,6 +2021,30 @@ isOneToOne: false
               "branch_id": string,"branch_name": string,"default_lab_id": string,"default_pharmacy_id": string,"facility_id": string,"facility_name": string,"facility_type": Database["public"]['Enums']["facility_type"],"membership_id": string,"organization_id": string,"organization_name": string,"role": Database["public"]['Enums']["member_role"],"timezone": string
             }[]
                            },
+"order_lab_tests":
+{ Args: { "p_encounter_id": string,"p_idempotency_key": string,"p_lab_facility_id": string,"p_note"?: string,"p_test_ids": (string)[] }; Returns: {
+              "clinical_note": string | null,
+"created_at": string,
+"created_by": string,
+"encounter_id": string | null,
+"id": string,
+"idempotency_key": string,
+"lab_facility_id": string,
+"order_number": string,
+"ordering_facility_id": string | null,
+"ordering_practitioner_id": string | null,
+"patient_id": string,
+"source": string,
+"status": Database["public"]['Enums']["lab_status"],
+"updated_at": string,
+"version": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "lab_orders"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "outbox_claim":
 { Args: { "p_lease_seconds"?: number,"p_limit"?: number }; Returns: {
               "attempts": number,
@@ -1315,6 +2073,27 @@ isOneToOne: false
 "outbox_complete":
 { Args: { "p_error"?: string,"p_id": string,"p_inbox_body"?: string,"p_inbox_link"?: string,"p_inbox_title"?: string,"p_success": boolean }; Returns: undefined
                            },
+"patient_journey":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "corrected": boolean,"encounter_id": string,"event_type": string,"facility_name": string,"occurred_at": string,"patient_id": string,"patient_name": string,"practitioner_name": string,"ref_id": string,"status": string,"title": string
+            }[]
+                           },
+"pharmacy_choices":
+{ Args: { "p_encounter_id": string }; Returns: {
+              "branch": string,"is_default": boolean,"name": string,"pharmacy_id": string
+            }[]
+                           },
+"pharmacy_inbox":
+{ Args: { "p_pharmacy_id": string,"p_status"?: string }; Returns: {
+              "dispatch_id": string,"facility_name": string,"item_count": number,"patient_code": string,"patient_name": string,"practitioner_name": string,"prescription_id": string,"printed_count": number,"received_at": string,"revised": boolean,"rx_number": string,"rx_status": Database["public"]['Enums']["rx_status"],"sent_at": string,"status": string,"version_no": number
+            }[]
+                           },
+"pharmacy_mark_received":
+{ Args: { "p_dispatch_id": string }; Returns: undefined
+                           },
+"pharmacy_prescription":
+{ Args: { "p_dispatch_id": string }; Returns: Json
+                           },
 "platform_overview":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
@@ -1335,6 +2114,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"prescription_document":
+{ Args: { "p_prescription_id": string }; Returns: Json
+                           },
 "reception_practitioners":
 { Args: { "p_facility_id": string }; Returns: {
               "full_name": string,"practitioner_id": string,"services": Json,"specialty": string
@@ -1342,6 +2124,9 @@ isOneToOne: false
                            },
 "reception_quick_book":
 { Args: { "p_birth_year"?: number,"p_facility_id": string,"p_idempotency_key": string,"p_new_patient_name"?: string,"p_patient_id"?: string,"p_phone"?: string,"p_practitioner_id": string,"p_service_id"?: string,"p_sex"?: Database["public"]['Enums']["patient_sex"],"p_start"?: string }; Returns: Json
+                           },
+"record_prescription_print":
+{ Args: { "p_facility_id": string,"p_prescription_id": string }; Returns: undefined
                            },
 "register_self_patient":
 { Args: { "p_birth_date"?: string,"p_city_id"?: string,"p_full_name": string,"p_phone"?: string,"p_sex"?: Database["public"]['Enums']["patient_sex"] }; Returns: {
@@ -1365,6 +2150,33 @@ isOneToOne: false
                           SetofOptions: {
         from: "*"
         to: "patients"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"reject_specimen":
+{ Args: { "p_reason": string,"p_specimen_id": string }; Returns: undefined
+                           },
+"release_lab_results":
+{ Args: { "p_item_ids": (string)[],"p_order_id": string }; Returns: {
+              "clinical_note": string | null,
+"created_at": string,
+"created_by": string,
+"encounter_id": string | null,
+"id": string,
+"idempotency_key": string,
+"lab_facility_id": string,
+"order_number": string,
+"ordering_facility_id": string | null,
+"ordering_practitioner_id": string | null,
+"patient_id": string,
+"source": string,
+"status": Database["public"]['Enums']["lab_status"],
+"updated_at": string,
+"version": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "lab_orders"
         isOneToOne: true
         isSetofReturn: false
       } },
@@ -1406,6 +2218,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"revise_prescription":
+{ Args: { "p_prescription_id": string }; Returns: Json
+                           },
 "revoke_consent":
 { Args: { "p_consent_id": string }; Returns: undefined
                            },
@@ -1414,6 +2229,69 @@ isOneToOne: false
                            },
 "rotate_patient_qr":
 { Args: { "p_patient_id": string }; Returns: string
+                           },
+"save_clinical_note_draft":
+{ Args: { "p_encounter_id": string,"p_expected_version"?: number,"p_fields": Json }; Returns: {
+              "assessment": string | null,
+"correction_reason": string | null,
+"created_at": string,
+"created_by": string,
+"encounter_id": string,
+"examination": string | null,
+"follow_up": string | null,
+"free_text": string | null,
+"history": string | null,
+"id": string,
+"plan": string | null,
+"reason_for_visit": string | null,
+"signed_at": string | null,
+"signed_by": string | null,
+"status": string,
+"supersedes_id": string | null,
+"updated_at": string,
+"version": number,
+"version_no": number,
+"vitals": NonNullable<Json>
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "clinical_notes"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"save_lab_result_draft":
+{ Args: { "p_lab_flag"?: string,"p_notes"?: string,"p_order_item_id": string,"p_reference_range"?: string,"p_unit"?: string,"p_value_numeric"?: number,"p_value_text"?: string }; Returns: {
+              "correction_reason": string | null,
+"created_at": string,
+"entered_by": string,
+"id": string,
+"lab_flag": string | null,
+"notes": string | null,
+"order_item_id": string,
+"reference_range": string | null,
+"released_at": string | null,
+"released_by": string | null,
+"status": string,
+"supersedes_id": string | null,
+"unit": string | null,
+"updated_at": string,
+"value_numeric": number | null,
+"value_text": string | null,
+"version_no": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "lab_results"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"save_prescription_draft":
+{ Args: { "p_encounter_id": string,"p_idempotency_key": string,"p_items": Json,"p_prescription_id"?: string }; Returns: Json
+                           },
+"search_medications":
+{ Args: { "p_pharmacy_id"?: string,"p_query": string }; Returns: {
+              "active_ingredient": string,"availability": string,"availability_updated_at": string,"brand_name": string,"dosage_form": string,"medication_id": string,"strength": string,"unit": string
+            }[]
                            },
 "search_providers":
 { Args: { "p_city_id"?: string,"p_kind"?: string,"p_lat"?: number,"p_limit"?: number,"p_lng"?: number,"p_max_km"?: number,"p_query"?: string,"p_specialty_id"?: string }; Returns: {
@@ -1443,6 +2321,30 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"set_encounter_status":
+{ Args: { "p_encounter_id": string,"p_status": Database["public"]['Enums']["encounter_status"] }; Returns: {
+              "appointment_id": string | null,
+"created_at": string,
+"created_by": string,
+"ended_at": string | null,
+"facility_id": string,
+"follow_up_of": string | null,
+"id": string,
+"identity_verified": boolean,
+"patient_id": string,
+"practitioner_id": string,
+"queue_entry_id": string | null,
+"started_at": string | null,
+"status": Database["public"]['Enums']["encounter_status"],
+"updated_at": string,
+"version": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "encounters"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "set_membership_status":
 { Args: { "p_membership_id": string,"p_reason": string,"p_status": Database["public"]['Enums']["membership_status"] }; Returns: undefined
                            },
@@ -1452,6 +2354,59 @@ isOneToOne: false
 "set_weekly_schedule":
 { Args: { "p_facility_id": string,"p_practitioner_id": string,"p_slots": Json }; Returns: number
                            },
+"sign_clinical_note":
+{ Args: { "p_encounter_id": string }; Returns: {
+              "assessment": string | null,
+"correction_reason": string | null,
+"created_at": string,
+"created_by": string,
+"encounter_id": string,
+"examination": string | null,
+"follow_up": string | null,
+"free_text": string | null,
+"history": string | null,
+"id": string,
+"plan": string | null,
+"reason_for_visit": string | null,
+"signed_at": string | null,
+"signed_by": string | null,
+"status": string,
+"supersedes_id": string | null,
+"updated_at": string,
+"version": number,
+"version_no": number,
+"vitals": NonNullable<Json>
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "clinical_notes"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"start_encounter":
+{ Args: { "p_identity_verified": boolean,"p_queue_entry_id": string }; Returns: {
+              "appointment_id": string | null,
+"created_at": string,
+"created_by": string,
+"ended_at": string | null,
+"facility_id": string,
+"follow_up_of": string | null,
+"id": string,
+"identity_verified": boolean,
+"patient_id": string,
+"practitioner_id": string,
+"queue_entry_id": string | null,
+"started_at": string | null,
+"status": Database["public"]['Enums']["encounter_status"],
+"updated_at": string,
+"version": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "encounters"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "update_queue_entry":
 { Args: { "p_priority"?: number,"p_priority_reason"?: string,"p_queue_entry_id": string,"p_status"?: Database["public"]['Enums']["queue_status"] }; Returns: {
               "appointment_id": string | null,
@@ -1505,10 +2460,13 @@ isOneToOne: false
         to: "clinic_services"
         isOneToOne: true
         isSetofReturn: false
-      } }
+      } },
+"verify_prescription":
+{ Args: { "p_token": string }; Returns: Json
+                           }
           }
           Enums: {
-            "account_status": "active"|"suspended","appointment_status": "awaiting_confirmation"|"confirmed"|"checked_in"|"fulfilled"|"cancelled"|"rejected"|"no_show"|"expired","booking_source": "app"|"web"|"reception","entity_status": "pending"|"active"|"suspended"|"closed","facility_type": "clinic"|"pharmacy"|"laboratory","member_role": "doctor"|"receptionist"|"pharmacist"|"pharmacy_staff"|"lab_technician"|"lab_approver"|"facility_admin"|"organization_admin","membership_status": "active"|"suspended"|"revoked","notification_channel": "in_app"|"push"|"sms"|"email","outbox_status": "pending"|"processing"|"sent"|"failed"|"dead"|"cancelled","patient_record_status": "active"|"merged"|"deceased"|"inactive","patient_sex": "female"|"male","queue_status": "waiting"|"called"|"in_session"|"done"|"left"|"cancelled"
+            "account_status": "active"|"suspended","appointment_status": "awaiting_confirmation"|"confirmed"|"checked_in"|"fulfilled"|"cancelled"|"rejected"|"no_show"|"expired","booking_source": "app"|"web"|"reception","encounter_status": "not_started"|"in_progress"|"awaiting_results"|"ready_for_review"|"completed"|"closed","entity_status": "pending"|"active"|"suspended"|"closed","facility_type": "clinic"|"pharmacy"|"laboratory","lab_status": "ordered"|"scheduled"|"checked_in"|"sample_collected"|"processing"|"pending_review"|"released"|"cancelled"|"sample_rejected","member_role": "doctor"|"receptionist"|"pharmacist"|"pharmacy_staff"|"lab_technician"|"lab_approver"|"facility_admin"|"organization_admin","membership_status": "active"|"suspended"|"revoked","notification_channel": "in_app"|"push"|"sms"|"email","outbox_status": "pending"|"processing"|"sent"|"failed"|"dead"|"cancelled","patient_record_status": "active"|"merged"|"deceased"|"inactive","patient_sex": "female"|"male","queue_status": "waiting"|"called"|"in_session"|"done"|"left"|"cancelled","rx_status": "draft"|"active"|"cancelled","rx_version_status": "draft"|"approved"|"superseded"|"cancelled"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -1628,7 +2586,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "account_status": ["active", "suspended"],"appointment_status": ["awaiting_confirmation", "confirmed", "checked_in", "fulfilled", "cancelled", "rejected", "no_show", "expired"],"booking_source": ["app", "web", "reception"],"entity_status": ["pending", "active", "suspended", "closed"],"facility_type": ["clinic", "pharmacy", "laboratory"],"member_role": ["doctor", "receptionist", "pharmacist", "pharmacy_staff", "lab_technician", "lab_approver", "facility_admin", "organization_admin"],"membership_status": ["active", "suspended", "revoked"],"notification_channel": ["in_app", "push", "sms", "email"],"outbox_status": ["pending", "processing", "sent", "failed", "dead", "cancelled"],"patient_record_status": ["active", "merged", "deceased", "inactive"],"patient_sex": ["female", "male"],"queue_status": ["waiting", "called", "in_session", "done", "left", "cancelled"]
+            "account_status": ["active", "suspended"],"appointment_status": ["awaiting_confirmation", "confirmed", "checked_in", "fulfilled", "cancelled", "rejected", "no_show", "expired"],"booking_source": ["app", "web", "reception"],"encounter_status": ["not_started", "in_progress", "awaiting_results", "ready_for_review", "completed", "closed"],"entity_status": ["pending", "active", "suspended", "closed"],"facility_type": ["clinic", "pharmacy", "laboratory"],"lab_status": ["ordered", "scheduled", "checked_in", "sample_collected", "processing", "pending_review", "released", "cancelled", "sample_rejected"],"member_role": ["doctor", "receptionist", "pharmacist", "pharmacy_staff", "lab_technician", "lab_approver", "facility_admin", "organization_admin"],"membership_status": ["active", "suspended", "revoked"],"notification_channel": ["in_app", "push", "sms", "email"],"outbox_status": ["pending", "processing", "sent", "failed", "dead", "cancelled"],"patient_record_status": ["active", "merged", "deceased", "inactive"],"patient_sex": ["female", "male"],"queue_status": ["waiting", "called", "in_session", "done", "left", "cancelled"],"rx_status": ["draft", "active", "cancelled"],"rx_version_status": ["draft", "approved", "superseded", "cancelled"]
           }
         }
 } as const
