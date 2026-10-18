@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { MailPlus, Stethoscope } from 'lucide-react';
-import { errorMessage, roleLabel, type MemberRole } from '@app/shared';
+import { MailPlus, Stethoscope, UserCog, Users } from 'lucide-react';
+import { errorMessage, reasonSchema, roleLabel, type MemberRole } from '@app/shared';
 import { supabase } from '../../lib/supabase';
 import { unwrap, useAsync } from '../../lib/useAsync';
-import { Alert, Badge, Button, ErrorState, Ltr, PageHead, SelectField, SkeletonList, TextField, useToast } from '../../components/ui';
+import { Alert, Badge, Button, ConfirmDialog, EmptyState, ErrorState, Ltr, PageHead, SelectField, SkeletonList, TextField, TextareaField, useToast } from '../../components/ui';
 
 /** Invitations and membership overview for the platform admin. */
 export function AdminMembers() {
@@ -22,7 +22,7 @@ export function AdminMembers() {
 
   const create = async () => {
     const { data: res, error } = await supabase.rpc('create_invitation', {
-      p_email: f.email, p_organization_id: f.org, p_facility_id: (f.role === 'organization_admin' ? null : f.facility) as string, p_role: f.role as MemberRole,
+      p_email: f.email, p_organization_id: f.org, p_facility_id: f.facility, p_role: f.role as MemberRole,
     });
     if (error) { toast(errorMessage(error), 'danger'); return; }
     setLink(`${window.location.origin}/invite?token=${(res as { token: string }[])[0].token}`);
@@ -30,9 +30,10 @@ export function AdminMembers() {
   };
 
   const facilityType = data.data?.facs.find((x) => x.id === f.facility)?.type;
-  const roleOptions: MemberRole[] = !f.facility ? ['organization_admin']
-    : facilityType === 'clinic' ? ['doctor', 'receptionist', 'facility_admin']
-    : facilityType === 'pharmacy' ? ['pharmacist', 'pharmacy_staff', 'facility_admin'] : ['lab_technician', 'lab_approver', 'facility_admin'];
+  // Staff roles only: administration (staff, reports, finance) is done by the platform admin.
+  const roleOptions: MemberRole[] = !f.facility ? []
+    : facilityType === 'clinic' ? ['doctor', 'receptionist']
+    : facilityType === 'pharmacy' ? ['pharmacist', 'pharmacy_staff'] : ['lab_technician', 'lab_approver'];
 
   return (
     <div className="stack">
@@ -47,17 +48,18 @@ export function AdminMembers() {
             <SelectField label="المجمع" value={f.org} onChange={(e) => setF({ ...f, org: e.target.value, facility: '', role: '' })}>
               <option value="">اختر</option>{data.data.orgs.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
             </SelectField>
-            <SelectField label="الجهة" hint="اتركها فارغة لدعوة مدير مجمع" value={f.facility} onChange={(e) => setF({ ...f, facility: e.target.value, role: '' })}>
-              <option value="">— مستوى المجمع —</option>{data.data.facs.filter((x) => x.organization_id === f.org).map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
+            <SelectField label="الجهة" value={f.facility} onChange={(e) => setF({ ...f, facility: e.target.value, role: '' })}>
+              <option value="">اختر</option>{data.data.facs.filter((x) => x.organization_id === f.org).map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
             </SelectField>
             <SelectField label="الدور" value={f.role} onChange={(e) => setF({ ...f, role: e.target.value as MemberRole })}>
               <option value="">اختر</option>{roleOptions.map((r) => <option key={r} value={r}>{roleLabel[r]}</option>)}
             </SelectField>
             <Alert tone="info">للطبيب: أنشئ هويته المهنية أدناه (بعد أن يسجّل حسابه) حتى يظهر للمرضى في البحث.</Alert>
-            <Button disabled={!f.email || !f.org || !f.role} onClick={create}>إنشاء الدعوة</Button>
+            <Button disabled={!f.email || !f.org || !f.facility || !f.role} onClick={create}>إنشاء الدعوة</Button>
             {link && <Alert tone="success" title="رابط الدعوة (يظهر مرة واحدة)"><div className="code-pill" style={{ fontSize: 12, wordBreak: 'break-all' }}>{link}</div></Alert>}
           </section>
           <PractitionerForm specialties={data.data.specialties} />
+          <FacilityMembers facs={data.data.facs} orgs={data.data.orgs} />
           <section className="card card-flush">
             <div className="card-header"><h2>آخر الدعوات</h2></div>
             <div className="table-wrap" role="region" aria-label="الدعوات" tabIndex={0}>
@@ -111,6 +113,61 @@ function PractitionerForm({ specialties }: { specialties: { id: string; name_ar:
       <TextField label="نبذة" optional value={f.bio} onChange={(e) => setF({ ...f, bio: e.target.value })} />
       <label className="row small" style={{ gap: 8 }}><input type="checkbox" checked={f.verified} onChange={(e) => setF({ ...f, verified: e.target.checked })} />راجعتُ الترخيص (تظهر شارة «موثّق»)</label>
       <Button loading={busy} disabled={!f.email || !f.fullName.trim()} onClick={save}>حفظ الهوية المهنية</Button>
+    </section>
+  );
+}
+
+interface Member { membership_id: string; user_id: string; display_name: string | null; email: string; role: MemberRole; status: 'active' | 'suspended' | 'revoked'; created_at: string }
+
+/** Staff of one facility, with suspend / reactivate (takes effect immediately, audited). */
+function FacilityMembers({ facs, orgs }: { facs: { id: string; organization_id: string; name: string }[]; orgs: { id: string; name: string }[] }) {
+  const toast = useToast();
+  const [facilityId, setFacilityId] = useState(facs[0]?.id ?? '');
+  const [target, setTarget] = useState<Member | null>(null);
+  const [reason, setReason] = useState('');
+  const [reasonErr, setReasonErr] = useState<string>();
+  const members = useAsync(async () => (facilityId ? ((await unwrap(supabase.rpc('facility_members', { p_facility_id: facilityId }))) as Member[]) : []), [facilityId]);
+  const apply = async () => {
+    const parsed = reasonSchema.safeParse(reason);
+    if (!parsed.success) { setReasonErr(parsed.error.issues[0].message); return; }
+    const { error } = await supabase.rpc('set_membership_status', { p_membership_id: target!.membership_id, p_status: target!.status === 'active' ? 'suspended' : 'active', p_reason: reason });
+    if (error) { toast(errorMessage(error), 'danger'); return; }
+    toast('تم تحديث العضوية — يسري الأثر فوراً', 'success');
+    setTarget(null); setReason(''); setReasonErr(undefined); members.reload();
+  };
+  const orgName = (id: string) => orgs.find((o) => o.id === id)?.name ?? '';
+  return (
+    <section className="card card-flush">
+      <div className="card-header"><h2 className="row" style={{ gap: 8 }}><Users size={18} aria-hidden />موظفو الجهة</h2></div>
+      <div style={{ padding: 'var(--s-4)' }}>
+        <SelectField label="الجهة" value={facilityId} onChange={(e) => setFacilityId(e.target.value)}>
+          {facs.map((x) => <option key={x.id} value={x.id}>{x.name} — {orgName(x.organization_id)}</option>)}
+        </SelectField>
+      </div>
+      {members.status === 'loading' && !members.data && <SkeletonList rows={3} />}
+      {members.status === 'error' && <ErrorState error={members.error} onRetry={members.reload} />}
+      {members.data?.length === 0 && <EmptyState icon={<UserCog />} title="لا يوجد موظفون في هذه الجهة">أرسل دعوة من النموذج أعلاه.</EmptyState>}
+      <ul className="list" style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+        {members.data?.map((m) => (
+          <li key={m.membership_id} className="list-item">
+            <div className="grow" style={{ minWidth: 0 }}>
+              <strong className="truncate" style={{ display: 'block' }}>{m.display_name ?? m.email}</strong>
+              <span className="small muted"><Ltr>{m.email}</Ltr> · {roleLabel[m.role]}</span>
+            </div>
+            <Badge tone={m.status === 'active' ? 'success' : 'danger'}>{m.status === 'active' ? 'فعّال' : m.status === 'suspended' ? 'معلّق' : 'ملغى'}</Badge>
+            {m.status !== 'revoked' && (
+              <Button size="sm" variant={m.status === 'active' ? 'danger' : 'secondary'} onClick={() => { setTarget(m); setReason(''); setReasonErr(undefined); }}>
+                {m.status === 'active' ? 'تعليق' : 'إعادة تفعيل'}
+              </Button>
+            )}
+          </li>
+        ))}
+      </ul>
+      <ConfirmDialog open={!!target} title={target?.status === 'active' ? `تعليق ${target?.display_name ?? target?.email}؟` : `إعادة تفعيل ${target?.display_name ?? target?.email}؟`}
+                     confirmLabel="تأكيد" tone={target?.status === 'active' ? 'danger' : 'primary'} onCancel={() => setTarget(null)} onConfirm={apply}>
+        <p className="small">{target?.status === 'active' ? 'يفقد الوصول لهذه الجهة فوراً. لا تُحذف أي سجلات.' : 'يستعيد الوصول بنفس الدور.'}</p>
+        <TextareaField label="السبب" required value={reason} error={reasonErr} onChange={(e) => setReason(e.target.value)} style={{ minHeight: 64 }} />
+      </ConfirmDialog>
     </section>
   );
 }

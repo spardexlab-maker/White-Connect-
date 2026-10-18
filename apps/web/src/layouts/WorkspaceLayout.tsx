@@ -19,6 +19,7 @@ function navFor(ws: Workspace | null, isPlatformAdmin: boolean, path: string): N
       { to: '/platform-admin', label: 'نظرة عامة', icon: <LayoutDashboard size={20} />, end: true },
       { to: '/platform-admin/organizations', label: 'المجمعات والجهات', icon: <Building2 size={20} /> },
       { to: '/platform-admin/members', label: 'الحسابات والعضويات', icon: <Users size={20} /> },
+      { to: '/platform-admin/reports', label: 'التقارير والمالية', icon: <BarChart3 size={20} /> },
       { to: '/platform-admin/audit', label: 'سجل التدقيق', icon: <ScrollText size={20} /> },
       { to: '/platform-admin/health', label: 'صحة النظام', icon: <Activity size={20} /> },
     ];
@@ -38,9 +39,13 @@ function navFor(ws: Workspace | null, isPlatformAdmin: boolean, path: string): N
         { to: '/workspace/pharmacy/stock', label: 'المخزون والدفعات', icon: <Boxes size={20} /> },
         { to: '/workspace/pharmacy/sales', label: 'المبيعات والمرتجعات', icon: <Receipt size={20} /> },
         ...(ws.role === 'pharmacist' ? [{ to: '/workspace/pharmacy/reports', label: 'التقارير', icon: <BarChart3 size={20} /> }] : []),
+        { to: '/workspace/pharmacy/doctors', label: 'أطباء المجمع', icon: <Users size={20} /> },
       ];
     case 'lab':
-      return [{ to: '/workspace/lab', label: 'طلبات المختبر', icon: <FlaskConical size={20} />, end: true }];
+      return [
+        { to: '/workspace/lab', label: 'طلبات المختبر', icon: <FlaskConical size={20} />, end: true },
+        { to: '/workspace/lab/doctors', label: 'أطباء المجمع', icon: <Users size={20} /> },
+      ];
     default:
       return [
         { to: '/workspace/organization', label: 'المنشأة والأعضاء', icon: <ClipboardList size={20} />, end: true },

@@ -2741,6 +2741,11 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"organization_doctors":
+{ Args: { "p_facility_id": string }; Returns: {
+              "branch_name": string,"facility_id": string,"facility_name": string,"full_name": string,"license_verified": boolean,"phone": string,"practitioner_id": string,"specialty": string,"title": string
+            }[]
+                           },
 "organization_report":
 { Args: { "p_from": string,"p_organization_id": string,"p_to": string }; Returns: Json
                            },

@@ -22,7 +22,8 @@
     "mobile": "pnpm --filter @app/mobile start",
     "mobile:export:web": "pnpm --filter @app/mobile export:web",
     "e2e:mobile": "node scripts/e2e-mobile.mjs apps/mobile/dist",
-    "mobile:assets": "node scripts/mobile-assets.mjs"
+    "mobile:assets": "node scripts/mobile-assets.mjs",
+    "e2e:admin-roles": "node scripts/e2e-admin-roles.mjs"
   },
   "devDependencies": {
     "@supabase/supabase-js": "^2.45.0",

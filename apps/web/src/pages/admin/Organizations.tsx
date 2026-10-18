@@ -22,9 +22,6 @@ export function AdminOrganizations() {
     ]);
     return { orgs: orgs ?? [], branches: branches ?? [], facs: facs ?? [], cities: cities ?? [] };
   }, []);
-  const [orgName, setOrgName] = useState('');
-  const [branch, setBranch] = useState({ org: '', name: '', city: '', area: '', lat: '', lng: '' });
-  const [fac, setFac] = useState({ org: '', branch: '', type: 'clinic' as FacilityType, name: '' });
   const [statusChange, setStatusChange] = useState<{ entity: 'organization' | 'facility'; id: string; name: string; to: Status } | null>(null);
   const [reason, setReason] = useState('');
   const [reasonErr, setReasonErr] = useState<string>();
@@ -57,7 +54,7 @@ export function AdminOrganizations() {
               <div key={o.id} style={{ borderBlockEnd: '1px solid var(--c-border)' }}>
                 <div className="list-item" style={{ borderBlockEnd: 0 }}>
                   <Building2 size={18} aria-hidden />
-                  <strong className="grow">{o.name}</strong>
+                  <strong className="grow">{o.name}{o.kind === 'independent' && <span className="muted small"> · جهة مستقلة</span>}</strong>
                   <Badge tone={statusLabel[o.status as Status].tone}>{statusLabel[o.status as Status].label}</Badge>
                   <StatusMenu current={o.status as Status} onPick={(to) => setStatusChange({ entity: 'organization', id: o.id, name: o.name, to })} />
                 </div>
@@ -71,48 +68,7 @@ export function AdminOrganizations() {
               </div>
             ))}
           </section>
-          <div className="stack">
-            <section className="card stack">
-              <h2 className="section-title">مجمع / جهة مستقلة جديدة</h2>
-              <TextField label="الاسم" value={orgName} onChange={(e) => setOrgName(e.target.value)} />
-              <Button icon={<Plus size={16} />} disabled={!orgName.trim()} onClick={async () => { if (await run(supabase.rpc('admin_create_organization', { p_name: orgName }), 'تم إنشاء المجمع (بانتظار التحقق)')) setOrgName(''); }}>إنشاء</Button>
-            </section>
-            <section className="card stack">
-              <h2 className="section-title">فرع جديد</h2>
-              <SelectField label="المجمع" value={branch.org} onChange={(e) => setBranch({ ...branch, org: e.target.value })}>
-                <option value="">اختر</option>{data.data.orgs.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
-              </SelectField>
-              <TextField label="اسم الفرع" value={branch.name} onChange={(e) => setBranch({ ...branch, name: e.target.value })} />
-              <SelectField label="المدينة" value={branch.city} onChange={(e) => setBranch({ ...branch, city: e.target.value })}>
-                <option value="">—</option>{data.data.cities.map((c) => <option key={c.id} value={c.id}>{c.name_ar}</option>)}
-              </SelectField>
-              <TextField label="المنطقة" optional value={branch.area} onChange={(e) => setBranch({ ...branch, area: e.target.value })} />
-              <div className="row" style={{ alignItems: 'flex-start' }}>
-                <div className="grow"><TextField label="خط العرض" optional ltr inputMode="decimal" value={branch.lat} onChange={(e) => setBranch({ ...branch, lat: e.target.value })} /></div>
-                <div className="grow"><TextField label="خط الطول" optional ltr inputMode="decimal" value={branch.lng} onChange={(e) => setBranch({ ...branch, lng: e.target.value })} /></div>
-              </div>
-              <Button icon={<Plus size={16} />} disabled={!branch.org || !branch.name} onClick={async () => {
-                if (await run(supabase.rpc('admin_create_branch', { p_organization_id: branch.org, p_name: branch.name, p_city_id: branch.city || undefined, p_area: branch.area || undefined,
-                  p_latitude: branch.lat ? Number(branch.lat) : undefined, p_longitude: branch.lng ? Number(branch.lng) : undefined }), 'تم إنشاء الفرع')) setBranch({ org: '', name: '', city: '', area: '', lat: '', lng: '' });
-              }}>إنشاء الفرع</Button>
-            </section>
-            <section className="card stack">
-              <h2 className="section-title">جهة جديدة (عيادة / صيدلية / مختبر)</h2>
-              <SelectField label="المجمع" value={fac.org} onChange={(e) => setFac({ ...fac, org: e.target.value, branch: '' })}>
-                <option value="">اختر</option>{data.data.orgs.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
-              </SelectField>
-              <SelectField label="الفرع" value={fac.branch} onChange={(e) => setFac({ ...fac, branch: e.target.value })}>
-                <option value="">اختر</option>{data.data.branches.filter((b) => b.organization_id === fac.org).map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-              </SelectField>
-              <SelectField label="النوع" value={fac.type} onChange={(e) => setFac({ ...fac, type: e.target.value as FacilityType })}>
-                {(['clinic', 'pharmacy', 'laboratory'] as const).map((t) => <option key={t} value={t}>{facilityTypeLabel[t]}</option>)}
-              </SelectField>
-              <TextField label="الاسم" value={fac.name} onChange={(e) => setFac({ ...fac, name: e.target.value })} />
-              <Button icon={<Plus size={16} />} disabled={!fac.org || !fac.branch || !fac.name} onClick={async () => {
-                if (await run(supabase.rpc('admin_create_facility', { p_organization_id: fac.org, p_branch_id: fac.branch, p_type: fac.type, p_name: fac.name }), 'تم إنشاء الجهة (بانتظار التحقق)')) setFac({ ...fac, name: '' });
-              }}>إنشاء الجهة</Button>
-            </section>
-          </div>
+          <NewFacilityForm orgs={data.data.orgs} branches={data.data.branches} cities={data.data.cities} onDone={data.reload} />
         </div>
       )}
       <ConfirmDialog open={!!statusChange} title={`تغيير حالة «${statusChange?.name}» إلى: ${statusChange ? statusLabel[statusChange.to].label : ''}`}
@@ -131,5 +87,95 @@ function StatusMenu({ current, onPick }: { current: Status; onPick: (s: Status) 
       <option value="">إجراء…</option>
       {options.map((o) => <option key={o} value={o}>{o === 'active' ? 'تحقق وتفعيل' : o === 'suspended' ? 'تعليق' : 'إغلاق'}</option>)}
     </select>
+  );
+}
+
+type Org = { id: string; name: string; kind: string };
+const NONE = '__none__', NEW = '__new__';
+
+/** One form for a clinic / pharmacy / lab. The complex is optional: without one, an "independent" record is created behind the scenes. */
+function NewFacilityForm({ orgs, branches, cities, onDone }: {
+  orgs: Org[]; branches: { id: string; organization_id: string; name: string; area: string | null }[]; cities: { id: string; name_ar: string }[]; onDone: () => void;
+}) {
+  const toast = useToast();
+  const empty = { type: 'clinic' as FacilityType, name: '', phone: '', org: NONE, orgName: '', branch: NEW, city: '', area: '', address: '', lat: '', lng: '', activate: true };
+  const [f, setF] = useState(empty);
+  const [busy, setBusy] = useState(false);
+  const complexes = orgs.filter((o) => o.kind !== 'independent');
+  const orgBranches = branches.filter((b) => b.organization_id === f.org);
+  const needsLocation = f.org === NONE || f.org === NEW || f.branch === NEW;
+  const valid = f.name.trim() && (f.org !== NEW || f.orgName.trim()) && (!needsLocation || f.city);
+
+  const submit = async () => {
+    setBusy(true);
+    try {
+      let orgId = f.org;
+      if (f.org === NONE || f.org === NEW) {
+        const { data, error } = await supabase.rpc('admin_create_organization', {
+          p_name: f.org === NEW ? f.orgName.trim() : f.name.trim(), p_kind: f.org === NEW ? 'medical_complex' : 'independent', p_activate: f.activate,
+        });
+        if (error) throw error;
+        orgId = (data as { id: string }).id;
+      }
+      let branchId = f.branch;
+      if (needsLocation) {
+        const { data, error } = await supabase.rpc('admin_create_branch', {
+          p_organization_id: orgId, p_name: f.area.trim() || 'الموقع الرئيسي', p_city_id: f.city || undefined, p_area: f.area || undefined,
+          p_address: f.address || undefined, p_latitude: f.lat ? Number(f.lat) : undefined, p_longitude: f.lng ? Number(f.lng) : undefined,
+        });
+        if (error) throw error;
+        branchId = (data as { id: string }).id;
+      }
+      const { error } = await supabase.rpc('admin_create_facility', {
+        p_organization_id: orgId, p_branch_id: branchId, p_type: f.type, p_name: f.name.trim(), p_phone: f.phone || undefined, p_activate: f.activate,
+      });
+      if (error) throw error;
+      toast(f.activate ? 'أُضيفت الجهة وفُعّلت' : 'أُضيفت الجهة (بانتظار التحقق)', 'success');
+      setF(empty); onDone();
+    } catch (e) {
+      toast(errorMessage(e), 'danger');
+    } finally { setBusy(false); }
+  };
+
+  return (
+    <section className="card stack">
+      <h2 className="section-title">إضافة جهة (عيادة / صيدلية / مختبر)</h2>
+      <div className="row" style={{ alignItems: 'flex-start' }}>
+        <div style={{ width: 150 }}><SelectField label="النوع" value={f.type} onChange={(e) => setF({ ...f, type: e.target.value as FacilityType })}>
+          {(['clinic', 'pharmacy', 'laboratory'] as const).map((t) => <option key={t} value={t}>{facilityTypeLabel[t]}</option>)}
+        </SelectField></div>
+        <div className="grow"><TextField label="اسم الجهة" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder="مثال: عيادة د. علي" /></div>
+      </div>
+      <TextField label="هاتف الجهة" optional type="tel" ltr value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} />
+      <SelectField label="المجمع" optional hint="اختياري — اتركه «بدون مجمع» لعيادة أو صيدلية أو مختبر مستقل." value={f.org}
+                   onChange={(e) => setF({ ...f, org: e.target.value, branch: NEW })}>
+        <option value={NONE}>بدون مجمع (جهة مستقلة)</option>
+        {complexes.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
+        <option value={NEW}>+ مجمع جديد…</option>
+      </SelectField>
+      {f.org === NEW && <TextField label="اسم المجمع الجديد" value={f.orgName} onChange={(e) => setF({ ...f, orgName: e.target.value })} />}
+      {f.org !== NONE && f.org !== NEW && (
+        <SelectField label="الموقع / الفرع" value={f.branch} onChange={(e) => setF({ ...f, branch: e.target.value })}>
+          {orgBranches.map((b) => <option key={b.id} value={b.id}>{b.name}{b.area ? ` — ${b.area}` : ''}</option>)}
+          <option value={NEW}>+ موقع جديد…</option>
+        </SelectField>
+      )}
+      {needsLocation && (
+        <div className="panel-muted stack-sm">
+          <strong className="small">الموقع</strong>
+          <SelectField label="المدينة" value={f.city} onChange={(e) => setF({ ...f, city: e.target.value })}>
+            <option value="">اختر</option>{cities.map((c) => <option key={c.id} value={c.id}>{c.name_ar}</option>)}
+          </SelectField>
+          <TextField label="المنطقة" optional value={f.area} onChange={(e) => setF({ ...f, area: e.target.value })} placeholder="مثال: الكرادة" />
+          <TextField label="العنوان" optional value={f.address} onChange={(e) => setF({ ...f, address: e.target.value })} />
+          <div className="row" style={{ alignItems: 'flex-start' }}>
+            <div className="grow"><TextField label="خط العرض" optional ltr inputMode="decimal" value={f.lat} onChange={(e) => setF({ ...f, lat: e.target.value })} /></div>
+            <div className="grow"><TextField label="خط الطول" optional ltr inputMode="decimal" value={f.lng} onChange={(e) => setF({ ...f, lng: e.target.value })} /></div>
+          </div>
+        </div>
+      )}
+      <label className="check small"><input type="checkbox" checked={f.activate} onChange={(e) => setF({ ...f, activate: e.target.checked })} />تحققت منها — تفعيل مباشرة (تظهر للمرضى)</label>
+      <Button icon={<Plus size={16} />} loading={busy} disabled={!valid} onClick={submit}>إضافة الجهة</Button>
+    </section>
   );
 }

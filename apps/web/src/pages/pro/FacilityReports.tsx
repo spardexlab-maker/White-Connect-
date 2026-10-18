@@ -10,20 +10,56 @@ interface Rep { appointments_by_status: Record<string, number>; by_practitioner:
   walk_ins: number; invoiced_minor: number; collected_minor: number; refunded_minor: number; by_method: Record<string, number>; expenses_minor: number;
   expenses_by_category: Record<string, number>; open_invoices: number }
 
-/** Facility operational report: attendance, cancellations, revenue, expenses — no medical data. */
+/** Facility manager entry point (their own facilities). */
 export function FacilityReports() {
   const { current, workspaces } = useWorkspace();
+  const facilities = workspaces.filter((w) => w.facility_id && w.role === 'facility_admin').map((w) => ({ id: w.facility_id!, name: w.facility_name ?? '' }));
+  return <ReportsView facilities={facilities} initialFacilityId={current?.facility_id ?? undefined}
+                      organizationId={current?.role === 'organization_admin' ? current.organization_id : undefined} />;
+}
+
+/** Super admin entry point: any complex and any facility. */
+export function AdminReports() {
+  const list = useAsync(async () => {
+    const [orgs, facs] = await Promise.all([
+      unwrap(supabase.from('organizations').select('id, name, kind').order('name')),
+      unwrap(supabase.from('facilities').select('id, name, organization_id').order('name')),
+    ]);
+    return { orgs: orgs ?? [], facs: facs ?? [] };
+  }, []);
+  const [orgId, setOrgId] = useState('');
+  if (list.status === 'loading' && !list.data) return <SkeletonList />;
+  if (list.status === 'error') return <ErrorState error={list.error} onRetry={list.reload} />;
+  const orgs = list.data!.orgs;
+  const facs = list.data!.facs.filter((f) => !orgId || f.organization_id === orgId);
+  return (
+    <div className="stack">
+      <div className="row" style={{ alignItems: 'flex-end' }}>
+        <div style={{ minWidth: 260 }}>
+          <label className="field-label" htmlFor="rep-org">المجمع</label>
+          <select id="rep-org" className="select" value={orgId} onChange={(e) => setOrgId(e.target.value)}>
+            <option value="">كل الجهات</option>
+            {orgs.map((o) => <option key={o.id} value={o.id}>{o.name}{o.kind === 'independent' ? ' (جهة مستقلة)' : ''}</option>)}
+          </select>
+        </div>
+      </div>
+      <ReportsView key={orgId || 'all'} facilities={facs.map((f) => ({ id: f.id, name: f.name }))} organizationId={orgId || undefined} />
+    </div>
+  );
+}
+
+/** Operational report: attendance, cancellations, revenue, expenses — no medical data. */
+function ReportsView({ facilities, initialFacilityId, organizationId }: { facilities: { id: string; name: string }[]; initialFacilityId?: string; organizationId?: string }) {
   const toast = useToast();
-  const facilities = workspaces.filter((w) => w.facility_id && w.role === 'facility_admin');
-  const [facilityId, setFacilityId] = useState(current?.facility_id ?? facilities[0]?.facility_id ?? '');
+  const [facilityId, setFacilityId] = useState(initialFacilityId && facilities.some((f) => f.id === initialFacilityId) ? initialFacilityId : facilities[0]?.id ?? '');
   const today = localDateKey(new Date());
   const [from, setFrom] = useState(addDays(today, -30));
   const [to, setTo] = useState(today);
   const [exp, setExp] = useState({ category: '', amount: '', note: '' });
   const r = useAsync(async () => (facilityId ? ((await unwrap(supabase.rpc('facility_report', { p_facility_id: facilityId, p_from: from, p_to: to }))) as unknown as Rep) : null), [facilityId, from, to]);
-  const org = useAsync(async () => (current?.role === 'organization_admin'
-    ? ((await unwrap(supabase.rpc('organization_report', { p_organization_id: current.organization_id, p_from: from, p_to: to }))) as unknown as { facility: string; type: string; appointments: number; lab_orders: number; prescriptions_received: number; collected_minor: number }[])
-    : null), [current?.organization_id, current?.role, from, to]);
+  const org = useAsync(async () => (organizationId
+    ? ((await unwrap(supabase.rpc('organization_report', { p_organization_id: organizationId, p_from: from, p_to: to }))) as unknown as { facility: string; type: string; appointments: number; lab_orders: number; prescriptions_received: number; collected_minor: number }[])
+    : null), [organizationId, from, to]);
   const addExpense = async () => {
     const { error } = await supabase.rpc('add_expense', { p_facility_id: facilityId, p_category: exp.category, p_amount_minor: Number(exp.amount), p_note: exp.note || undefined });
     if (error) toast(errorMessage(error), 'danger'); else { toast('سُجل المصروف', 'success'); setExp({ category: '', amount: '', note: '' }); r.reload(); }
@@ -32,7 +68,7 @@ export function FacilityReports() {
     <div className="stack">
       <PageHead title="التقارير والمالية التشغيلية" subtitle="أرقام تشغيلية فقط — بلا تفاصيل طبية"
                 actions={facilities.length > 1 ? <select className="select" style={{ width: 'auto' }} aria-label="المنشأة" value={facilityId} onChange={(e) => setFacilityId(e.target.value)}>
-                  {facilities.map((f) => <option key={f.membership_id} value={f.facility_id!}>{f.facility_name}</option>)}</select> : undefined} />
+                  {facilities.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}</select> : undefined} />
       <div className="row" style={{ alignItems: 'flex-end' }}>
         <div style={{ width: 180 }}><TextField label="من" type="date" ltr value={from} onChange={(e) => setFrom(e.target.value)} /></div>
         <div style={{ width: 180 }}><TextField label="إلى" type="date" ltr value={to} onChange={(e) => setTo(e.target.value)} /></div>
@@ -44,7 +80,7 @@ export function FacilityReports() {
             <tbody>{org.data.map((x) => <tr key={x.facility}><td>{x.facility}</td><td className="num">{x.appointments}</td><td className="num">{x.lab_orders}</td><td className="num">{x.prescriptions_received}</td><td>{formatMoney(x.collected_minor)}</td></tr>)}</tbody>
           </table></div></section>
       )}
-      {!facilityId && !org.data && <Alert tone="info">لا توجد منشأة تديرها.</Alert>}
+      {!facilityId && !org.data && <Alert tone="info">لا توجد جهات بعد.</Alert>}
       {r.status === 'loading' && facilityId && <SkeletonList />}
       {r.status === 'error' && <ErrorState error={r.error} onRetry={r.reload} />}
       {r.data && (

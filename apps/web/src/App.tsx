@@ -36,13 +36,24 @@ const PharmacyStock = lazy(() => import('./pages/pro/pharmacy/Stock').then((m) =
 const PharmacySales = lazy(() => import('./pages/pro/pharmacy/Sales').then((m) => ({ default: m.PharmacySales })));
 const PharmacyReports = lazy(() => import('./pages/pro/pharmacy/Reports').then((m) => ({ default: m.PharmacyReports })));
 const FacilityReports = lazy(() => import('./pages/pro/FacilityReports').then((m) => ({ default: m.FacilityReports })));
+const AdminReports = lazy(() => import('./pages/pro/FacilityReports').then((m) => ({ default: m.AdminReports })));
 const AdminHealth = lazy(() => import('./pages/admin/Health').then((m) => ({ default: m.AdminHealth })));
 const PrintReceipt = lazy(() => import('./pages/PrintReceipt').then((m) => ({ default: m.PrintReceipt })));
+const ComplexDoctors = lazy(() => import('./pages/pro/ComplexDoctors').then((m) => ({ default: m.ComplexDoctors })));
 const LabWorkspace = lazy(() => import('./pages/pro/LabWorkspace').then((m) => ({ default: m.LabWorkspace })));
 const PrintRx = lazy(() => import('./pages/PrintRx').then((m) => ({ default: m.PrintRx })));
 const Security = lazy(() => import('./pages/pro/Security').then((m) => ({ default: m.Security })));
 const ComponentGallery = lazy(() => import('./pages/dev/Gallery').then((m) => ({ default: m.ComponentGallery })));
 const WorkspaceLayout = lazy(() => import('./layouts/WorkspaceLayout').then((m) => ({ default: m.WorkspaceLayout })));
+
+function AdminReportsPage() {
+  return (
+    <div className="stack">
+      <div className="w-page-head"><div className="stack-sm" style={{ gap: 2 }}><h1>التقارير والمالية</h1><div className="muted small">لكل مجمع أو جهة — أرقام تشغيلية فقط، بلا تفاصيل طبية</div></div></div>
+      <AdminReports />
+    </div>
+  );
+}
 
 export function App() {
   if (configMissing) {
@@ -96,12 +107,15 @@ export function App() {
                 <Route path="/workspace/pharmacy/sales" element={<RequireWorkspaceRole roles={['pharmacist', 'pharmacy_staff']}><PharmacySales /></RequireWorkspaceRole>} />
                 <Route path="/workspace/pharmacy/reports" element={<RequireWorkspaceRole roles={['pharmacist']}><PharmacyReports /></RequireWorkspaceRole>} />
                 <Route path="/workspace/lab" element={<RequireWorkspaceRole roles={['lab_technician', 'lab_approver']}><LabWorkspace /></RequireWorkspaceRole>} />
+                <Route path="/workspace/pharmacy/doctors" element={<RequireWorkspaceRole roles={['pharmacist', 'pharmacy_staff']}><ComplexDoctors /></RequireWorkspaceRole>} />
+                <Route path="/workspace/lab/doctors" element={<RequireWorkspaceRole roles={['lab_technician', 'lab_approver']}><ComplexDoctors /></RequireWorkspaceRole>} />
                 <Route path="/workspace/organization" element={<RequireWorkspaceRole roles={['facility_admin', 'organization_admin']}><OrganizationAdmin /></RequireWorkspaceRole>} />
                 <Route path="/platform-admin" element={<RequirePlatformAdmin><AdminOverview /></RequirePlatformAdmin>} />
                 <Route path="/platform-admin/organizations" element={<RequirePlatformAdmin><AdminOrganizations /></RequirePlatformAdmin>} />
                 <Route path="/platform-admin/members" element={<RequirePlatformAdmin><AdminMembers /></RequirePlatformAdmin>} />
                 <Route path="/workspace/organization/reports" element={<RequireWorkspaceRole roles={['facility_admin', 'organization_admin']}><FacilityReports /></RequireWorkspaceRole>} />
                 <Route path="/platform-admin/health" element={<RequirePlatformAdmin><AdminHealth /></RequirePlatformAdmin>} />
+                <Route path="/platform-admin/reports" element={<RequirePlatformAdmin><AdminReportsPage /></RequirePlatformAdmin>} />
                 <Route path="/platform-admin/audit" element={<RequirePlatformAdmin><AdminAudit /></RequirePlatformAdmin>} />
               </Route>
 
