@@ -2211,6 +2211,29 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"admin_upsert_practitioner_by_email":
+{ Args: { "p_bio"?: string,"p_email": string,"p_full_name": string,"p_license_number"?: string,"p_mark_license_verified"?: boolean,"p_specialty_id"?: string,"p_title"?: string }; Returns: {
+              "bio": string | null,
+"created_at": string,
+"full_name": string,
+"id": string,
+"license_number": string | null,
+"license_verified_at": string | null,
+"license_verified_by": string | null,
+"photo_path": string | null,
+"specialty_id": string | null,
+"status": Database["public"]['Enums']["entity_status"],
+"title": string | null,
+"updated_at": string,
+"user_id": string,
+"version": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "practitioner_profiles"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "amend_clinical_note":
 { Args: { "p_fields": Json,"p_note_id": string,"p_reason": string }; Returns: {
               "assessment": string | null,

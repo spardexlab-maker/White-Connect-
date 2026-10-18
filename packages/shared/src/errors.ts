@@ -4,6 +4,8 @@
  * (raw database messages are never shown to users).
  */
 const messages: Record<string, string> = {
+  account_not_found: 'لا يوجد حساب بهذا البريد. اطلب من الطبيب إنشاء حساب أولاً ثم أعد المحاولة.',
+  invalid_input: 'تحقق من الحقول المطلوبة.',
   slot_unavailable: 'هذا الوقت لم يعد متاحاً. اختر وقتاً آخر.',
   slot_in_past: 'لا يمكن الحجز في وقت مضى.',
   slot_too_soon: 'الوقت قريب جداً؛ اختر وقتاً لاحقاً.',

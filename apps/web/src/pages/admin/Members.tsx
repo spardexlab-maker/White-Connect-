@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MailPlus } from 'lucide-react';
+import { MailPlus, Stethoscope } from 'lucide-react';
 import { errorMessage, roleLabel, type MemberRole } from '@app/shared';
 import { supabase } from '../../lib/supabase';
 import { unwrap, useAsync } from '../../lib/useAsync';
@@ -9,12 +9,13 @@ import { Alert, Badge, Button, ErrorState, Ltr, PageHead, SelectField, SkeletonL
 export function AdminMembers() {
   const toast = useToast();
   const data = useAsync(async () => {
-    const [orgs, facs, invites] = await Promise.all([
+    const [orgs, facs, invites, specialties] = await Promise.all([
       unwrap(supabase.from('organizations').select('id, name').order('name')),
       unwrap(supabase.from('facilities').select('id, organization_id, name, type').order('name')),
       unwrap(supabase.from('invitations').select('id, email, role, facility_id, organization_id, expires_at, accepted_at, revoked_at').order('created_at', { ascending: false }).limit(50)),
+      unwrap(supabase.from('specialties').select('id, name_ar').eq('is_active', true).order('sort_order')),
     ]);
-    return { orgs: orgs ?? [], facs: facs ?? [], invites: invites ?? [] };
+    return { orgs: orgs ?? [], facs: facs ?? [], invites: invites ?? [], specialties: specialties ?? [] };
   }, []);
   const [f, setF] = useState({ email: '', org: '', facility: '', role: '' as MemberRole | '' });
   const [link, setLink] = useState<string | null>(null);
@@ -52,10 +53,11 @@ export function AdminMembers() {
             <SelectField label="الدور" value={f.role} onChange={(e) => setF({ ...f, role: e.target.value as MemberRole })}>
               <option value="">اختر</option>{roleOptions.map((r) => <option key={r} value={r}>{roleLabel[r]}</option>)}
             </SelectField>
-            <Alert tone="info">دعوة «طبيب» تتطلب وجود هوية مهنية للحساب قبل القبول (تُنشأ بعد التحقق من الترخيص).</Alert>
+            <Alert tone="info">للطبيب: أنشئ هويته المهنية أدناه (بعد أن يسجّل حسابه) حتى يظهر للمرضى في البحث.</Alert>
             <Button disabled={!f.email || !f.org || !f.role} onClick={create}>إنشاء الدعوة</Button>
             {link && <Alert tone="success" title="رابط الدعوة (يظهر مرة واحدة)"><div className="code-pill" style={{ fontSize: 12, wordBreak: 'break-all' }}>{link}</div></Alert>}
           </section>
+          <PractitionerForm specialties={data.data.specialties} />
           <section className="card card-flush">
             <div className="card-header"><h2>آخر الدعوات</h2></div>
             <div className="table-wrap" role="region" aria-label="الدعوات" tabIndex={0}>
@@ -75,5 +77,40 @@ export function AdminMembers() {
         </div>
       )}
     </div>
+  );
+}
+
+/** Professional identity of a doctor (name, specialty, licence) for an account that already exists. */
+function PractitionerForm({ specialties }: { specialties: { id: string; name_ar: string }[] }) {
+  const toast = useToast();
+  const empty = { email: '', fullName: '', title: '', specialty: '', license: '', bio: '', verified: false };
+  const [f, setF] = useState(empty);
+  const [busy, setBusy] = useState(false);
+  const save = async () => {
+    setBusy(true);
+    const { error } = await supabase.rpc('admin_upsert_practitioner_by_email', {
+      p_email: f.email, p_full_name: f.fullName, p_specialty_id: f.specialty || undefined, p_title: f.title || undefined,
+      p_license_number: f.license || undefined, p_bio: f.bio || undefined, p_mark_license_verified: f.verified,
+    });
+    setBusy(false);
+    if (error) { toast(errorMessage(error), 'danger'); return; }
+    toast('حُفظت الهوية المهنية للطبيب', 'success');
+    setF(empty);
+  };
+  return (
+    <section className="card stack">
+      <h2 className="section-title row"><Stethoscope size={18} aria-hidden />الهوية المهنية للطبيب</h2>
+      <p className="small muted">الطبيب يسجّل حساباً أولاً بالبريد نفسه، ثم تنشئ هنا ملفه، ثم ترسل له دعوة بدور «طبيب» على العيادة.</p>
+      <TextField label="بريد حساب الطبيب" type="email" ltr value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} />
+      <TextField label="الاسم الكامل كما يظهر للمرضى" value={f.fullName} onChange={(e) => setF({ ...f, fullName: e.target.value })} />
+      <TextField label="اللقب" optional hint="مثال: استشاري، أخصائي" value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} />
+      <SelectField label="التخصص" value={f.specialty} onChange={(e) => setF({ ...f, specialty: e.target.value })}>
+        <option value="">اختر</option>{specialties.map((x) => <option key={x.id} value={x.id}>{x.name_ar}</option>)}
+      </SelectField>
+      <TextField label="رقم الترخيص" optional ltr value={f.license} onChange={(e) => setF({ ...f, license: e.target.value })} />
+      <TextField label="نبذة" optional value={f.bio} onChange={(e) => setF({ ...f, bio: e.target.value })} />
+      <label className="row small" style={{ gap: 8 }}><input type="checkbox" checked={f.verified} onChange={(e) => setF({ ...f, verified: e.target.checked })} />راجعتُ الترخيص (تظهر شارة «موثّق»)</label>
+      <Button loading={busy} disabled={!f.email || !f.fullName.trim()} onClick={save}>حفظ الهوية المهنية</Button>
+    </section>
   );
 }
