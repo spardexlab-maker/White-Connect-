@@ -1,0 +1,21 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+coverage/
+playwright-report/
+test-results/
+
+# Environment & secrets — never commit
+.env
+.env.*
+!.env.example
+*.local
+supabase/.branches
+supabase/.temp
+supabase/functions/.env
+supabase/.env
+
+# Never commit private prompt / key material
+*master_prompt*
+*.pem
