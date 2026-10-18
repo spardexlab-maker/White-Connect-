@@ -1,0 +1,30 @@
+{
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://utuwjykgubsqqescpiwz.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_8EOYs1nveiegSBChdGb8jw_L65_dJ01",
+        "EXPO_PUBLIC_WEB_URL": "https://white-connect.vercel.app"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://utuwjykgubsqqescpiwz.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_8EOYs1nveiegSBChdGb8jw_L65_dJ01",
+        "EXPO_PUBLIC_WEB_URL": "https://white-connect.vercel.app"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

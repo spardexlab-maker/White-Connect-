@@ -1,0 +1,81 @@
+{
+  "expo": {
+    "name": "منصة الرعاية",
+    "slug": "white-connect",
+    "scheme": "whiteconnect",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#123B5D"
+    },
+    "ios": {
+      "bundleIdentifier": "com.whiteconnect.patient",
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "يُستخدم الموقع اختيارياً لترتيب الأطباء والمختبرات حسب القرب. الحجز لا يحتاج الموقع."
+      }
+    },
+    "android": {
+      "package": "com.whiteconnect.patient",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#123B5D"
+      },
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "POST_NOTIFICATIONS"
+      ],
+      "blockedPermissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "RECORD_AUDIO",
+        "READ_CONTACTS"
+      ]
+    },
+    "web": {
+      "output": "single",
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-status-bar",
+      "expo-secure-store",
+      "expo-font",
+      [
+        "expo-localization",
+        {
+          "supportsRTL": true,
+          "forcesRTL": true
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "backgroundColor": "#123B5D",
+          "imageWidth": 160
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#0F766E"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "يُستخدم الموقع اختيارياً لترتيب الأطباء والمختبرات حسب القرب. الحجز لا يحتاج الموقع."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}

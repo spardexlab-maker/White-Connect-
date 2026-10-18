@@ -33,6 +33,7 @@ jobs:
           supabase gen types typescript --local > packages/shared/src/database.types.ts
           git diff --exit-code packages/shared/src/database.types.ts
       - run: pnpm --filter @app/web build
+      - run: pnpm --filter @app/mobile export:android
         env:
           VITE_SUPABASE_URL: http://127.0.0.1:54321
           VITE_SUPABASE_PUBLISHABLE_KEY: ci-placeholder
