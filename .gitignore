@@ -19,3 +19,4 @@ supabase/.env
 # Never commit private prompt / key material
 *master_prompt*
 *.pem
+*.tsbuildinfo

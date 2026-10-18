@@ -1,0 +1,92 @@
+import { lazy, Suspense } from 'react';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { AuthProvider } from './lib/auth';
+import { WorkspaceProvider } from './lib/workspace';
+import { configMissing, productName } from './lib/supabase';
+import { ToastProvider, Alert, SkeletonList } from './components/ui';
+import { PatientLayout } from './layouts/PatientLayout';
+import { RequireStaff, RequireWorkspaceRole, RequirePlatformAdmin } from './components/guards';
+import { PatientHome } from './pages/patient/Home';
+import { ProviderPage } from './pages/patient/Provider';
+import { BookingFlow } from './pages/patient/Booking';
+import { MyAppointments } from './pages/patient/Appointments';
+import { Journey } from './pages/patient/Journey';
+import { Notifications } from './pages/patient/Notifications';
+import { Account } from './pages/patient/Account';
+
+// Professional and admin areas are code-split so patients on mobile do not download them.
+const ProLogin = lazy(() => import('./pages/pro/Login').then((m) => ({ default: m.ProLogin })));
+const WorkspacePicker = lazy(() => import('./pages/pro/WorkspacePicker').then((m) => ({ default: m.WorkspacePicker })));
+const AcceptInvite = lazy(() => import('./pages/pro/AcceptInvite').then((m) => ({ default: m.AcceptInvite })));
+const ReceptionDashboard = lazy(() => import('./pages/pro/Reception').then((m) => ({ default: m.ReceptionDashboard })));
+const DoctorToday = lazy(() => import('./pages/pro/DoctorToday').then((m) => ({ default: m.DoctorToday })));
+const DoctorSchedule = lazy(() => import('./pages/pro/DoctorSchedule').then((m) => ({ default: m.DoctorSchedule })));
+const PendingModule = lazy(() => import('./pages/pro/PendingModule').then((m) => ({ default: m.PendingModule })));
+const OrganizationAdmin = lazy(() => import('./pages/pro/OrganizationAdmin').then((m) => ({ default: m.OrganizationAdmin })));
+const AdminOverview = lazy(() => import('./pages/admin/Overview').then((m) => ({ default: m.AdminOverview })));
+const AdminOrganizations = lazy(() => import('./pages/admin/Organizations').then((m) => ({ default: m.AdminOrganizations })));
+const AdminMembers = lazy(() => import('./pages/admin/Members').then((m) => ({ default: m.AdminMembers })));
+const AdminAudit = lazy(() => import('./pages/admin/Audit').then((m) => ({ default: m.AdminAudit })));
+const ComponentGallery = lazy(() => import('./pages/dev/Gallery').then((m) => ({ default: m.ComponentGallery })));
+const WorkspaceLayout = lazy(() => import('./layouts/WorkspaceLayout').then((m) => ({ default: m.WorkspaceLayout })));
+
+export function App() {
+  if (configMissing) {
+    return (
+      <div className="auth-wrap">
+        <div className="auth-card">
+          <h1 style={{ fontSize: 'var(--f-h3)' }}>{productName}</h1>
+          <Alert tone="warning" title="إعداد البيئة غير مكتمل">
+            عرّف VITE_SUPABASE_URL و VITE_SUPABASE_PUBLISHABLE_KEY في ملف apps/web/.env.local (انظر .env.example).
+          </Alert>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <BrowserRouter>
+      <ToastProvider>
+        <AuthProvider>
+          <WorkspaceProvider>
+            <Suspense fallback={<SkeletonList />}>
+            <Routes>
+              <Route path="/" element={<Navigate to="/patient" replace />} />
+
+              {/* Patient experience (public discovery; account pages need sign-in) */}
+              <Route path="/patient" element={<PatientLayout />}>
+                <Route index element={<PatientHome />} />
+                <Route path="provider/:facilityId/:practitionerId?" element={<ProviderPage />} />
+                <Route path="book/:facilityId/:practitionerId?" element={<BookingFlow />} />
+                <Route path="appointments" element={<MyAppointments />} />
+                <Route path="journey" element={<Journey />} />
+                <Route path="notifications" element={<Notifications />} />
+                <Route path="account" element={<Account />} />
+              </Route>
+
+              {/* Professional portal */}
+              <Route path="/login" element={<ProLogin />} />
+              <Route path="/invite" element={<AcceptInvite />} />
+              <Route path="/workspace" element={<RequireStaff><WorkspacePicker /></RequireStaff>} />
+              <Route element={<RequireStaff><WorkspaceLayout /></RequireStaff>}>
+                <Route path="/workspace/reception" element={<RequireWorkspaceRole roles={['receptionist', 'facility_admin', 'doctor']}><ReceptionDashboard /></RequireWorkspaceRole>} />
+                <Route path="/workspace/doctor" element={<RequireWorkspaceRole roles={['doctor']}><DoctorToday /></RequireWorkspaceRole>} />
+                <Route path="/workspace/doctor/schedule" element={<RequireWorkspaceRole roles={['doctor']}><DoctorSchedule /></RequireWorkspaceRole>} />
+                <Route path="/workspace/pharmacy" element={<RequireWorkspaceRole roles={['pharmacist', 'pharmacy_staff']}><PendingModule module="pharmacy" /></RequireWorkspaceRole>} />
+                <Route path="/workspace/lab" element={<RequireWorkspaceRole roles={['lab_technician', 'lab_approver']}><PendingModule module="lab" /></RequireWorkspaceRole>} />
+                <Route path="/workspace/organization" element={<RequireWorkspaceRole roles={['facility_admin', 'organization_admin']}><OrganizationAdmin /></RequireWorkspaceRole>} />
+                <Route path="/platform-admin" element={<RequirePlatformAdmin><AdminOverview /></RequirePlatformAdmin>} />
+                <Route path="/platform-admin/organizations" element={<RequirePlatformAdmin><AdminOrganizations /></RequirePlatformAdmin>} />
+                <Route path="/platform-admin/members" element={<RequirePlatformAdmin><AdminMembers /></RequirePlatformAdmin>} />
+                <Route path="/platform-admin/audit" element={<RequirePlatformAdmin><AdminAudit /></RequirePlatformAdmin>} />
+              </Route>
+
+              <Route path="/dev/components" element={<ComponentGallery />} />
+              <Route path="*" element={<Navigate to="/patient" replace />} />
+            </Routes>
+            </Suspense>
+          </WorkspaceProvider>
+        </AuthProvider>
+      </ToastProvider>
+    </BrowserRouter>
+  );
+}

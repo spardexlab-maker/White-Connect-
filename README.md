@@ -1,0 +1,88 @@
+# منصة الرعاية (اسم مؤقت) — منصة مترابطة للحجز وإدارة الرحلة الطبية
+
+نظام واحد بخلفية وقاعدة بيانات مشتركتين (Supabase Cloud) وتجربتين:
+**تجربة المريض** (ويب متجاوب الآن، تطبيق هاتف في المرحلة 5) و**البوابة المهنية** للطبيب والسكرتير والصيدلية والمختبر وإدارة المجمع والسوبر أدمن.
+
+> ⚠️ قيد التطوير. ليس معتمداً للاستخدام الطبي، ولا يجوز إدخال بيانات مرضى حقيقية قبل حسم الاستضافة والموافقات والنسخ الاحتياطي (انظر [docs/OPERATIONS.md](docs/OPERATIONS.md)).
+
+## ما يعمل الآن (المراحل 0–2)
+- هيكل المجمعات/الفروع/الجهات، العضويات والأدوار المرتبطة بالجهة، الدعوات، الإيقاف الفوري، سجل التدقيق.
+- المريض كسجل طبي مستقل عن الحساب؛ معرف عام غير متسلسل؛ QR عشوائي قابل للتدوير؛ سجل مؤقت **بالاسم فقط**؛ ربط لاحق بتحقق ودمج مدقق؛ تابعون (ولي أمر).
+- محرك حجز يمنع التداخل في PostgreSQL (`EXCLUDE USING gist`) عبر كل المصادر والفروع، مهلة تأكيد ذرية، إعادة جدولة ذرية، idempotency، طابور منفصل عن المواعيد، قائمة انتظار معلنة، إشعار تأخير.
+- واجهات: اكتشاف وحجز للمريض، حجوزاتي، بطاقة QR، لوحة السكرتير مع «حجز سريع»، يوم الطبيب وإعداد جدوله، إدارة المنشأة، لوحة السوبر أدمن.
+- Transactional outbox + Edge Function عامل إشعارات (in-app فعلياً؛ push/SMS تجريدات غير مهيأة).
+
+ما لم يُنفذ بعد وأسبابه: [docs/TRACEABILITY.md](docs/TRACEABILITY.md). باختصار: الجلسة الطبية والوصفات والمختبر (المرحلة 3)، الصيدلية والمخزون (4)، التذكيرات وتطبيق الهاتف وpush/SMS (5)، المالية والتقارير والنسخ الاحتياطي (6).
+
+## البنية
+```
+apps/web            React + TypeScript + Vite (التجربتان)
+packages/shared     الأنواع المولدة، tokens التصميم، التحقق (zod)، التنسيق، رسائل الأخطاء
+supabase/migrations المخطط + RLS + RPC (المصدر الوحيد لقواعد العمل)
+supabase/tests      اختبارات pgTAP (حجز/تزامن/عزل/هوية/outbox)
+supabase/functions  notifications-worker (Edge Function)
+supabase/seed.sql   بيانات اصطناعية للتطوير فقط
+tests/integration   اختبارات تزامن وعزل حقيقية عبر API
+scripts/            لقطات المتصفح وفحص التمرير الأفقي
+docs/               المعمارية، ERD، الصلاحيات، الحالات، التصميم، الشاشات، التتبع، التشغيل
+```
+
+## التشغيل محلياً (Windows / macOS / Linux)
+المتطلبات: Node 20+ و pnpm 10 (`npm i -g pnpm`)، Docker Desktop، Supabase CLI (`npm i -g supabase` أو `scoop install supabase` على Windows). المحرر: VS Code (اختياري: إضافات ESLint وDeno لملفات `supabase/functions`).
+
+```bash
+pnpm install
+supabase start                 # يشغل Postgres/Auth/REST/Realtime محلياً عبر Docker
+supabase db reset              # يطبق migrations + seed الاصطناعي
+supabase status                # انسخ API URL و Publishable key
+```
+أنشئ `apps/web/.env.local` (لا يُرفع إلى git):
+```
+VITE_SUPABASE_URL=http://127.0.0.1:54321
+VITE_SUPABASE_PUBLISHABLE_KEY=<Publishable key من supabase status>
+```
+ثم:
+```bash
+pnpm dev                       # http://127.0.0.1:5173
+```
+على Windows PowerShell الأوامر نفسها تعمل؛ إن ظهر خطأ صلاحيات سكربتات شغّل `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`.
+
+### حسابات تجريبية (محلي فقط — كلمة المرور `Demo-Pass-2026!`)
+| الحساب | الدور |
+|---|---|
+| `admin@demo.test` | سوبر أدمن |
+| `orgadmin.a@demo.test` | مدير مجمع الرافدين |
+| `dr.ahmed@demo.test` | طبيب في مجمعين + مدير عيادة الرافدين |
+| `dr.sara@demo.test`, `dr.layla@demo.test` | أطباء |
+| `reception.a@demo.test`, `reception.b@demo.test` | سكرتير لكل مجمع (نطاق أطباء محدد) |
+| `pharm.a@demo.test`, `pharm.b@demo.test` | صيدلانيان |
+| `lab.a@demo.test`, `labapprover.a@demo.test`, `lab.b@demo.test` | مختبران |
+| `hasan@demo.test`, `mona@demo.test` | مرضى بحسابات (منى ولية أمر لتابع) |
+
+ومرضى بلا حسابات: اسمان متطابقان «علي حسين»، ومريضتان تتشاركان رقم هاتف.
+
+## الاختبارات
+```bash
+supabase test db                          # pgTAP: 64 اختباراً (حجز، مهلة، إعادة جدولة، عابر، اسم فقط، دمج، عزل، outbox)
+pnpm test:integration                     # تزامن حقيقي عبر API: طلبات متوازية من التطبيق والاستقبال وفرعين
+pnpm --filter @app/shared test            # تباين الألوان WCAG AA، التحقق، التنسيق
+pnpm typecheck
+pnpm screenshots                          # يتطلب pnpm dev: لقطات 360–1440px + فحص التمرير الأفقي
+```
+
+## Supabase Cloud و Claude Code MCP
+- `.mcp.json` يضيف خادم Supabase MCP بنطاق المشروع `utuwjykgubsqqescpiwz` (بلا أسرار). صاحب الحساب ينفذ `claude /mcp` → supabase → Authenticate.
+- تطبيق migrations على السحابة ونشر العامل: [docs/OPERATIONS.md](docs/OPERATIONS.md). **لم يُطبق شيء على المشروع السحابي بعد** (يحتاج مصادقة المالك)؛ فُحص أنه فارغ (schema عامة بلا جداول).
+- العميل يستخدم المفتاح العام (publishable) فقط. المفاتيح السرية لا تدخل الواجهة ولا هذا المستودع؛ المفتاح السري المشارك سابقاً يجب تدويره.
+
+## خدمات خارجية تحتاج حساباً/دفعاً (غير مهيأة)
+| الخدمة | لماذا | الحالة |
+|---|---|---|
+| مزود SMS/OTP | الدخول برقم الهاتف | ☐ غير مهيأ — الدخول بالبريد يعمل |
+| Push (FCM/Expo) | إشعارات الهاتف | ☐ تجريد جاهز؛ in-app يعمل |
+| SMTP/Email | إرسال الدعوات والتأكيد | ☐ رابط الدعوة يُعرض لنسخه يدوياً |
+| استضافة الواجهة | نشر الويب | ☐ `pnpm build` ينتج `apps/web/dist` |
+| خطة Supabase (PITR/Branching) | نسخ احتياطي/فروع | ☐ قرار تكلفة للمالك |
+
+## التوثيق
+[المعمارية وERD وعقود API](docs/ARCHITECTURE.md) · [الصلاحيات](docs/PERMISSIONS.md) · [حالات الانتقال](docs/STATE_MACHINES.md) · [نظام التصميم](docs/DESIGN_SYSTEM.md) · [خريطة الشاشات](docs/SCREENS.md) · [قائمة فحص UI](docs/UI_CHECKLIST.md) · [مصفوفة التتبع](docs/TRACEABILITY.md) · [التشغيل](docs/OPERATIONS.md)

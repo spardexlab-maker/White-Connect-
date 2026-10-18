@@ -206,9 +206,59 @@ insert into public.patients (id, public_code, full_name, phone, sex, birth_year,
   ('00000000-0000-4000-5000-000000000062', 'PDEMO00062', 'زينب كريم (تجريبي)', '07801115555', 'female', 1980, true,
    '00000000-0000-4000-a000-000000000021', '00000000-0000-4000-f000-0000000000b1'),
   ('00000000-0000-4000-5000-000000000063', 'PDEMO00063', 'فاطمة كريم (تجريبي)', '07801115555', 'female', 2004, true,
-   '00000000-0000-4000-a000-000000000021', '00000000-0000-4000-f000-0000000000b1');
+   '00000000-0000-4000-a000-000000000021', '00000000-0000-4000-f000-0000000000b1'),
+  ('00000000-0000-4000-5000-000000000064', 'PDEMO00064', 'سلمى رعد (تجريبي)', null, 'female', null, true,
+   '00000000-0000-4000-a000-000000000020', '00000000-0000-4000-f000-0000000000a1');
 insert into public.care_relationships (patient_id, facility_id, source, created_by) values
   ('00000000-0000-4000-5000-000000000060', '00000000-0000-4000-f000-0000000000a1', 'registration', '00000000-0000-4000-a000-000000000020'),
   ('00000000-0000-4000-5000-000000000061', '00000000-0000-4000-f000-0000000000a1', 'registration', '00000000-0000-4000-a000-000000000020'),
   ('00000000-0000-4000-5000-000000000062', '00000000-0000-4000-f000-0000000000b1', 'registration', '00000000-0000-4000-a000-000000000021'),
   ('00000000-0000-4000-5000-000000000063', '00000000-0000-4000-f000-0000000000b1', 'registration', '00000000-0000-4000-a000-000000000021');
+
+-- ---------------------------------------------------------------------
+-- Sample activity relative to "today" (Asia/Baghdad) so boards are not
+-- empty in development. Inserted directly (seed runs as postgres); the
+-- overlap constraint still applies to these rows.
+-- ---------------------------------------------------------------------
+create or replace function pg_temp.local_ts(p_days int, p_time time)
+returns timestamptz language sql stable as $$
+  select (((now() at time zone 'Asia/Baghdad')::date + p_days) + p_time)::timestamp at time zone 'Asia/Baghdad'
+$$;
+
+insert into public.appointments (id, patient_id, facility_id, practitioner_id, service_id, status, period, blocked_period,
+  duration_minutes, buffer_minutes, price_minor, timezone, source, created_by, confirmed_by, confirmed_at,
+  confirmation_deadline, cancellation_cutoff_minutes, idempotency_key)
+select v.id::uuid, v.patient::uuid, '00000000-0000-4000-f000-0000000000a1', '00000000-0000-4000-9000-000000000010',
+       v.svc::uuid, v.status::public.appointment_status,
+       tstzrange(pg_temp.local_ts(v.d, v.t::time), pg_temp.local_ts(v.d, v.t::time) + make_interval(mins => v.dur), '[)'),
+       tstzrange(pg_temp.local_ts(v.d, v.t::time), pg_temp.local_ts(v.d, v.t::time) + make_interval(mins => v.dur), '[)'),
+       v.dur, 0, v.price, 'Asia/Baghdad', v.src::public.booking_source, v.creator::uuid,
+       case when v.status <> 'awaiting_confirmation' then '00000000-0000-4000-a000-000000000020'::uuid end,
+       case when v.status <> 'awaiting_confirmation' then now() end,
+       case when v.status = 'awaiting_confirmation' then greatest(now() + interval '90 minutes', pg_temp.local_ts(v.d, v.t::time) - interval '1 minute') end,
+       120, 'seed-' || v.id
+  from (values
+    ('00000000-0000-4000-4000-000000000001', '00000000-0000-4000-5000-000000000060', '00000000-0000-4000-6000-000000000001', 'checked_in', 0, '16:00', 30, 25000, 'reception', '00000000-0000-4000-a000-000000000020'),
+    ('00000000-0000-4000-4000-000000000002', '00000000-0000-4000-5000-000000000061', '00000000-0000-4000-6000-000000000002', 'confirmed', 0, '16:30', 15, 10000, 'reception', '00000000-0000-4000-a000-000000000020'),
+    ('00000000-0000-4000-4000-000000000003', '00000000-0000-4000-5000-000000000051', '00000000-0000-4000-6000-000000000001', 'confirmed', 0, '17:00', 30, 25000, 'app', '00000000-0000-4000-a000-000000000051'),
+    ('00000000-0000-4000-4000-000000000004', '00000000-0000-4000-5000-000000000050', '00000000-0000-4000-6000-000000000001', 'awaiting_confirmation', 0, '18:00', 30, 25000, 'app', '00000000-0000-4000-a000-000000000050'),
+    ('00000000-0000-4000-4000-000000000005', '00000000-0000-4000-5000-000000000050', '00000000-0000-4000-6000-000000000001', 'awaiting_confirmation', 1, '17:30', 30, 25000, 'app', '00000000-0000-4000-a000-000000000050')
+  ) as v(id, patient, svc, status, d, t, dur, price, src, creator);
+
+insert into public.appointment_events (appointment_id, to_status, actor_user_id, reason)
+select id, status, created_by, source::text from public.appointments where idempotency_key like 'seed-%';
+
+insert into public.care_relationships (patient_id, facility_id, practitioner_id, source)
+select distinct patient_id, facility_id, practitioner_id, 'appointment' from public.appointments where idempotency_key like 'seed-%'
+on conflict do nothing;
+
+insert into public.queue_entries (facility_id, practitioner_id, patient_id, appointment_id, kind, status, service_date, arrived_at, created_by)
+values ('00000000-0000-4000-f000-0000000000a1', '00000000-0000-4000-9000-000000000010', '00000000-0000-4000-5000-000000000060',
+        '00000000-0000-4000-4000-000000000001', 'appointment', 'waiting', (now() at time zone 'Asia/Baghdad')::date,
+        pg_temp.local_ts(0, '15:50'), '00000000-0000-4000-a000-000000000020'),
+       ('00000000-0000-4000-f000-0000000000a1', '00000000-0000-4000-9000-000000000010', '00000000-0000-4000-5000-000000000064',
+        null, 'walk_in', 'waiting', (now() at time zone 'Asia/Baghdad')::date,
+        pg_temp.local_ts(0, '16:10'), '00000000-0000-4000-a000-000000000020');
+insert into public.care_relationships (patient_id, facility_id, practitioner_id, source)
+values ('00000000-0000-4000-5000-000000000064', '00000000-0000-4000-f000-0000000000a1', '00000000-0000-4000-9000-000000000010', 'walk_in')
+on conflict do nothing;

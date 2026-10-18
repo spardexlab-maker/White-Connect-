@@ -1,0 +1,43 @@
+/* Mirrors packages/shared/src/tokens.ts — keep in sync (contrast verified by tests). */
+:root {
+  --c-primary: #123B5D;
+  --c-primary-hover: #0B2A43;
+  --c-accent: #0F766E;
+  --c-accent-soft: #E6F4F1;
+  --c-canvas: #F5F7FA;
+  --c-surface: #FFFFFF;
+  --c-surface-sunken: #EEF2F6;
+  --c-text: #152536;
+  --c-muted: #526171;
+  --c-border: #DCE3EB;
+  --c-border-strong: #B8C4D1;
+  --c-success: #166534;
+  --c-success-soft: #E8F5EC;
+  --c-warning: #92400E;
+  --c-warning-soft: #FDF3E2;
+  --c-danger: #B91C1C;
+  --c-danger-soft: #FCECEC;
+  --c-info: #1D4ED8;
+  --c-info-soft: #EAF0FD;
+  --c-focus: #1D4ED8;
+
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 20px; --s-6: 24px; --s-8: 32px; --s-10: 40px; --s-12: 48px;
+  --r-sm: 8px; --r-md: 10px; --r-lg: 14px; --r-pill: 999px;
+
+  --f-family: 'IBM Plex Sans Arabic', 'Noto Sans Arabic', 'Segoe UI', Tahoma, sans-serif;
+  --f-label: 13px; --f-small: 14px; --f-body: 15px; --f-body-lg: 16px; --f-h3: 20px; --f-h2: 24px; --f-h1: 32px;
+  --lh-body: 1.7; --lh-heading: 1.35;
+
+  --shadow-1: 0 1px 2px rgb(21 37 54 / 0.06);
+  --shadow-2: 0 6px 24px rgb(21 37 54 / 0.10);
+  --t-fast: 120ms; --t-base: 160ms; --t-slow: 200ms;
+
+  --touch: 44px;
+  --sidebar-w: 248px;
+  --topbar-h: 60px;
+  --bottomnav-h: 64px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --t-fast: 0ms; --t-base: 0ms; --t-slow: 0ms; }
+}

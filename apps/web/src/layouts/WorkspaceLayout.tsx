@@ -1,0 +1,149 @@
+import { useEffect, useState, type ReactNode } from 'react';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import {
+  Building2, CalendarClock, ChevronDown, ClipboardList, FlaskConical, HeartPulse, LayoutDashboard, LogOut, Menu,
+  Pill, ScrollText, Settings2, ShieldCheck, Stethoscope, Users,
+} from 'lucide-react';
+import { facilityTypeLabel, roleLabel, workspaceArea, formatDate } from '@app/shared';
+import { useAuth } from '../lib/auth';
+import { useWorkspace, type Workspace } from '../lib/workspace';
+import { productName } from '../lib/supabase';
+import { OfflineBanner, Sheet } from '../components/ui';
+
+interface NavItem { to: string; label: string; icon: ReactNode; end?: boolean }
+
+/** Short role-specific menus; forbidden features are not shown at all (§24). */
+function navFor(ws: Workspace | null, isPlatformAdmin: boolean, path: string): NavItem[] {
+  if (path.startsWith('/platform-admin') && isPlatformAdmin) {
+    return [
+      { to: '/platform-admin', label: 'نظرة عامة', icon: <LayoutDashboard size={20} />, end: true },
+      { to: '/platform-admin/organizations', label: 'المجمعات والجهات', icon: <Building2 size={20} /> },
+      { to: '/platform-admin/members', label: 'الحسابات والعضويات', icon: <Users size={20} /> },
+      { to: '/platform-admin/audit', label: 'سجل التدقيق', icon: <ScrollText size={20} /> },
+    ];
+  }
+  if (!ws) return [];
+  switch (workspaceArea(ws.role)) {
+    case 'reception':
+      return [{ to: '/workspace/reception', label: 'لوحة اليوم', icon: <CalendarClock size={20} />, end: true }];
+    case 'doctor':
+      return [
+        { to: '/workspace/doctor', label: 'اليوم والطابور', icon: <Stethoscope size={20} />, end: true },
+        { to: '/workspace/doctor/schedule', label: 'الجدول والخدمات', icon: <Settings2 size={20} /> },
+      ];
+    case 'pharmacy':
+      return [{ to: '/workspace/pharmacy', label: 'وارد الوصفات', icon: <Pill size={20} />, end: true }];
+    case 'lab':
+      return [{ to: '/workspace/lab', label: 'طلبات المختبر', icon: <FlaskConical size={20} />, end: true }];
+    default:
+      return [
+        { to: '/workspace/organization', label: 'المنشأة والأعضاء', icon: <ClipboardList size={20} />, end: true },
+        { to: '/workspace/reception', label: 'لوحة اليوم', icon: <CalendarClock size={20} /> },
+      ];
+  }
+}
+
+export function WorkspaceLayout() {
+  const { access, signOut } = useAuth();
+  const { current, workspaces } = useWorkspace();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [switcherOpen, setSwitcherOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  useEffect(() => setMenuOpen(false), [location.pathname]);
+
+  const nav = navFor(current, !!access?.is_platform_admin, location.pathname);
+  const onAdmin = location.pathname.startsWith('/platform-admin');
+
+  return (
+    <div className="w-shell">
+      <a href="#main" className="skip-link">تخطَّ إلى المحتوى</a>
+      <aside className="w-sidebar" data-open={menuOpen} aria-label="القائمة الجانبية">
+        <div className="brand"><span className="brand-mark"><HeartPulse size={18} aria-hidden /></span>{productName}</div>
+        <nav aria-label="أقسام مساحة العمل">
+          <ul className="w-nav">
+            {nav.map((n) => <li key={n.to}><NavLink to={n.to} end={n.end}>{n.icon}{n.label}</NavLink></li>)}
+          </ul>
+        </nav>
+        <div className="w-sidebar-foot">
+          {access?.is_platform_admin && !onAdmin && (
+            <NavLink to="/platform-admin" className="row" style={{ color: '#fff' }}><ShieldCheck size={16} />إدارة المنصة</NavLink>
+          )}
+          {access?.patient_ids?.length ? (
+            <NavLink to="/patient" className="row" style={{ color: '#fff', marginBlockStart: 8 }}>
+              <HeartPulse size={16} />مساحتي الشخصية كمريض
+            </NavLink>
+          ) : null}
+        </div>
+      </aside>
+      {menuOpen && <div className="overlay" style={{ zIndex: 84 }} onClick={() => setMenuOpen(false)} aria-hidden />}
+
+      <header className="w-topbar">
+        <button className="icon-btn w-menu-btn" onClick={() => setMenuOpen(true)} aria-label="فتح القائمة"><Menu size={22} /></button>
+        {onAdmin ? (
+          <strong>إدارة المنصة</strong>
+        ) : current ? (
+          <button className="ws-switcher" onClick={() => setSwitcherOpen(true)} aria-label="تبديل مساحة العمل" disabled={workspaces.length < 2}>
+            <span className="ws-meta">
+              <strong className="truncate">{current.facility_name ?? current.organization_name}</strong>
+              <span className="truncate">{roleLabel[current.role]}{current.branch_name ? ` · ${current.branch_name}` : ''}</span>
+            </span>
+            {workspaces.length > 1 && <ChevronDown size={16} aria-hidden />}
+          </button>
+        ) : null}
+        <span className="grow" />
+        <span className="muted small hide-sm">{formatDate(new Date())}</span>
+        <button className="btn btn-ghost btn-sm" onClick={async () => { await signOut(); navigate('/login'); }}>
+          <LogOut size={16} aria-hidden /><span className="hide-sm">خروج</span>
+        </button>
+      </header>
+
+      <main id="main" className="w-main">
+        <OfflineBanner />
+        <Outlet />
+      </main>
+
+      <WorkspaceSwitcher open={switcherOpen} onClose={() => setSwitcherOpen(false)} />
+    </div>
+  );
+}
+
+export function WorkspaceSwitcher({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { workspaces, current, select } = useWorkspace();
+  const navigate = useNavigate();
+  return (
+    <Sheet open={open} onClose={onClose} title="اختيار مساحة العمل">
+      <WorkspaceList
+        workspaces={workspaces}
+        currentId={current?.membership_id}
+        onPick={(w) => { select(w.membership_id); onClose(); navigate(areaPath(w)); }}
+      />
+    </Sheet>
+  );
+}
+
+export function areaPath(w: Workspace): string {
+  const area = workspaceArea(w.role);
+  return area === 'organization' ? '/workspace/organization' : `/workspace/${area}`;
+}
+
+export function WorkspaceList({ workspaces, currentId, onPick }: { workspaces: Workspace[]; currentId?: string; onPick: (w: Workspace) => void }) {
+  return (
+    <div className="card card-flush">
+      <ul className="list" style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+        {workspaces.map((w) => (
+          <li key={w.membership_id}>
+            <button className="list-item" aria-current={w.membership_id === currentId} onClick={() => onPick(w)}>
+              <div className="avatar" aria-hidden>{w.facility_type === 'pharmacy' ? <Pill size={20} /> : w.facility_type === 'laboratory' ? <FlaskConical size={20} /> : w.facility_type === 'clinic' ? <Stethoscope size={20} /> : <Building2 size={20} />}</div>
+              <div className="grow">
+                <strong className="truncate" style={{ display: 'block' }}>{w.facility_name ?? w.organization_name}</strong>
+                <span className="muted small">{roleLabel[w.role]}{w.facility_type ? ` · ${facilityTypeLabel[w.facility_type]}` : ''}{w.branch_name ? ` · ${w.branch_name}` : ''}</span>
+                <span className="muted small" style={{ display: 'block' }}>{w.organization_name}</span>
+              </div>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
