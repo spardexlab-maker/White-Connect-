@@ -293,3 +293,28 @@ insert into public.lab_test_catalog (lab_facility_id, code, name, specimen_type,
 -- documented allergy for the demo patient Hasan (shown in the session header)
 insert into public.allergies (patient_id, substance, reaction, severity, source, recorded_by)
 values ('00000000-0000-4000-5000-000000000050', 'Penicillin', 'طفح جلدي', 'moderate', 'patient_reported', '00000000-0000-4000-a000-000000000050');
+
+-- ---------------------------------------------------------------------
+-- Phase 4 demo stock (local only): products mapped to catalog items,
+-- batches with different expiries (one expired) for both pharmacies.
+-- ---------------------------------------------------------------------
+insert into public.pharmacy_products (id, pharmacy_id, medication_id, name, pack_description, unit_name, units_per_pack, unit_price_minor, reorder_level)
+select v.id::uuid, v.ph::uuid, (select id from public.medication_catalog m where m.active_ingredient = v.ing and m.strength = v.str and m.dosage_form = v.form),
+       v.name, v.pack, v.unit, v.upp, v.price, v.reorder
+  from (values
+    ('00000000-0000-4000-3000-000000000001', '00000000-0000-4000-f000-0000000000a2', 'Paracetamol', '500 mg', 'tablet', 'باراسيتامول 500 (تجريبي)', 'علبة 20 قرص', 'قرص', 20, 250, 40),
+    ('00000000-0000-4000-3000-000000000002', '00000000-0000-4000-f000-0000000000a2', 'Amoxicillin', '500 mg', 'capsule', 'أموكسيسيلين 500 (تجريبي)', 'علبة 16 كبسولة', 'كبسولة', 16, 500, 32),
+    ('00000000-0000-4000-3000-000000000003', '00000000-0000-4000-f000-0000000000a2', 'Omeprazole', '20 mg', 'capsule', 'أوميبرازول 20 (تجريبي)', 'علبة 14 كبسولة', 'كبسولة', 14, 400, 14),
+    ('00000000-0000-4000-3000-000000000004', '00000000-0000-4000-f000-0000000000b2', 'Paracetamol', '500 mg', 'tablet', 'باراسيتامول 500 (تجريبي)', 'علبة 20 قرص', 'قرص', 20, 250, 40)
+  ) as v(id, ph, ing, str, form, name, pack, unit, upp, price, reorder);
+
+insert into public.inventory_batches (product_id, batch_no, expiry_date, quantity_on_hand, unit_cost_minor) values
+  ('00000000-0000-4000-3000-000000000001', 'P-2610', current_date + 40, 60, 150),
+  ('00000000-0000-4000-3000-000000000001', 'P-2711', current_date + 400, 200, 150),
+  ('00000000-0000-4000-3000-000000000001', 'P-OLD', current_date - 3, 20, 150),
+  ('00000000-0000-4000-3000-000000000002', 'A-2702', current_date + 200, 48, 300),
+  ('00000000-0000-4000-3000-000000000003', 'O-2612', current_date + 60, 10, 250),
+  ('00000000-0000-4000-3000-000000000004', 'P-B2701', current_date + 300, 100, 150);
+
+insert into public.stock_movements (product_id, batch_id, quantity, kind, reason)
+select product_id, id, quantity_on_hand, 'receive', 'seed' from public.inventory_batches;

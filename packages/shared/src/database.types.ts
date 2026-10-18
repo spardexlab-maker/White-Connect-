@@ -445,6 +445,82 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"dispatch_line_notes": {
+                  Row: {
+                    "created_at": string,"created_by": string,"dispatch_id": string,"id": string,"kind": string,"line_no": number,"note": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by": string,"dispatch_id": string,"id"?: string,"kind": string,"line_no": number,"note"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string,"dispatch_id"?: string,"id"?: string,"kind"?: string,"line_no"?: number,"note"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "dispatch_line_notes_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "dispatch_line_notes_dispatch_id_fkey"
+      columns: ["dispatch_id"]
+isOneToOne: false
+      referencedRelation: "prescription_dispatches"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"dispensing_records": {
+                  Row: {
+                    "batch_id": string,"dispatch_id": string,"dispensed_at": string,"dispensed_by": string,"id": string,"line_no": number,"product_id": string,"quantity": number,"sale_id": string | null,"version_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "batch_id": string,"dispatch_id": string,"dispensed_at"?: string,"dispensed_by": string,"id"?: string,"line_no": number,"product_id": string,"quantity": number,"sale_id"?: string | null,"version_id": string
+                  }
+                  Update: {
+                    "batch_id"?: string,"dispatch_id"?: string,"dispensed_at"?: string,"dispensed_by"?: string,"id"?: string,"line_no"?: number,"product_id"?: string,"quantity"?: number,"sale_id"?: string | null,"version_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "dispensing_records_batch_id_fkey"
+      columns: ["batch_id"]
+isOneToOne: false
+      referencedRelation: "inventory_batches"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "dispensing_records_dispatch_id_fkey"
+      columns: ["dispatch_id"]
+isOneToOne: false
+      referencedRelation: "prescription_dispatches"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "dispensing_records_dispensed_by_fkey"
+      columns: ["dispensed_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "dispensing_records_product_id_fkey"
+      columns: ["product_id"]
+isOneToOne: false
+      referencedRelation: "pharmacy_products"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "dispensing_records_sale_id_fkey"
+      columns: ["sale_id"]
+isOneToOne: false
+      referencedRelation: "sales"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "dispensing_records_version_id_fkey"
+      columns: ["version_id"]
+isOneToOne: false
+      referencedRelation: "prescription_versions"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"encounters": {
                   Row: {
                     "appointment_id": string | null,"created_at": string,"created_by": string,"ended_at": string | null,"facility_id": string,"follow_up_of": string | null,"id": string,"identity_verified": boolean,"patient_id": string,"practitioner_id": string,"queue_entry_id": string | null,"started_at": string | null,"status": Database["public"]['Enums']["encounter_status"],"updated_at": string,"version": number
@@ -556,6 +632,38 @@ isOneToOne: false
       columns: ["facility_id"]
 isOneToOne: false
       referencedRelation: "facilities"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"inventory_batches": {
+                  Row: {
+                    "batch_no": string,"expiry_date": string,"id": string,"product_id": string,"quantity_on_hand": number,"received_at": string,"received_by": string | null,"supplier_id": string | null,"unit_cost_minor": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "batch_no": string,"expiry_date": string,"id"?: string,"product_id": string,"quantity_on_hand": number,"received_at"?: string,"received_by"?: string | null,"supplier_id"?: string | null,"unit_cost_minor"?: number
+                  }
+                  Update: {
+                    "batch_no"?: string,"expiry_date"?: string,"id"?: string,"product_id"?: string,"quantity_on_hand"?: number,"received_at"?: string,"received_by"?: string | null,"supplier_id"?: string | null,"unit_cost_minor"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "inventory_batches_product_id_fkey"
+      columns: ["product_id"]
+isOneToOne: false
+      referencedRelation: "pharmacy_products"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "inventory_batches_received_by_fkey"
+      columns: ["received_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "inventory_batches_supplier_id_fkey"
+      columns: ["supplier_id"]
+isOneToOne: false
+      referencedRelation: "suppliers"
       referencedColumns: ["id"]
     }
                   ]
@@ -997,6 +1105,58 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"payments": {
+                  Row: {
+                    "amount_minor": number,"created_at": string,"id": string,"method": string,"received_by": string,"sale_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount_minor": number,"created_at"?: string,"id"?: string,"method"?: string,"received_by": string,"sale_id": string
+                  }
+                  Update: {
+                    "amount_minor"?: number,"created_at"?: string,"id"?: string,"method"?: string,"received_by"?: string,"sale_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "payments_received_by_fkey"
+      columns: ["received_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "payments_sale_id_fkey"
+      columns: ["sale_id"]
+isOneToOne: false
+      referencedRelation: "sales"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"pharmacy_products": {
+                  Row: {
+                    "barcode": string | null,"created_at": string,"id": string,"is_active": boolean,"manual_availability": string | null,"manual_availability_at": string | null,"medication_id": string | null,"name": string,"pack_description": string | null,"pharmacy_id": string,"reorder_level": number,"unit_name": string,"unit_price_minor": number,"units_per_pack": number,"updated_at": string,"version": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "barcode"?: string | null,"created_at"?: string,"id"?: string,"is_active"?: boolean,"manual_availability"?: string | null,"manual_availability_at"?: string | null,"medication_id"?: string | null,"name": string,"pack_description"?: string | null,"pharmacy_id": string,"reorder_level"?: number,"unit_name"?: string,"unit_price_minor"?: number,"units_per_pack"?: number,"updated_at"?: string,"version"?: number
+                  }
+                  Update: {
+                    "barcode"?: string | null,"created_at"?: string,"id"?: string,"is_active"?: boolean,"manual_availability"?: string | null,"manual_availability_at"?: string | null,"medication_id"?: string | null,"name"?: string,"pack_description"?: string | null,"pharmacy_id"?: string,"reorder_level"?: number,"unit_name"?: string,"unit_price_minor"?: number,"units_per_pack"?: number,"updated_at"?: string,"version"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "pharmacy_products_medication_id_fkey"
+      columns: ["medication_id"]
+isOneToOne: false
+      referencedRelation: "medication_catalog"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "pharmacy_products_pharmacy_id_fkey"
+      columns: ["pharmacy_id"]
+isOneToOne: false
+      referencedRelation: "facilities"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"platform_admins": {
                   Row: {
                     "granted_at": string,"granted_by": string | null,"revoked_at": string | null,"user_id": string
@@ -1337,6 +1497,102 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"refunds": {
+                  Row: {
+                    "amount_minor": number,"created_at": string,"created_by": string,"id": string,"quantity": number,"reason": string,"restocked": boolean,"sale_line_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount_minor": number,"created_at"?: string,"created_by": string,"id"?: string,"quantity": number,"reason": string,"restocked": boolean,"sale_line_id": string
+                  }
+                  Update: {
+                    "amount_minor"?: number,"created_at"?: string,"created_by"?: string,"id"?: string,"quantity"?: number,"reason"?: string,"restocked"?: boolean,"sale_line_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "refunds_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "refunds_sale_line_id_fkey"
+      columns: ["sale_line_id"]
+isOneToOne: false
+      referencedRelation: "sale_lines"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"sale_lines": {
+                  Row: {
+                    "batch_id": string,"id": string,"line_total_minor": number,"product_id": string,"quantity": number,"returned_quantity": number,"rx_line_no": number | null,"sale_id": string,"unit_price_minor": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "batch_id": string,"id"?: string,"line_total_minor": number,"product_id": string,"quantity": number,"returned_quantity"?: number,"rx_line_no"?: number | null,"sale_id": string,"unit_price_minor": number
+                  }
+                  Update: {
+                    "batch_id"?: string,"id"?: string,"line_total_minor"?: number,"product_id"?: string,"quantity"?: number,"returned_quantity"?: number,"rx_line_no"?: number | null,"sale_id"?: string,"unit_price_minor"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "sale_lines_batch_id_fkey"
+      columns: ["batch_id"]
+isOneToOne: false
+      referencedRelation: "inventory_batches"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "sale_lines_product_id_fkey"
+      columns: ["product_id"]
+isOneToOne: false
+      referencedRelation: "pharmacy_products"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "sale_lines_sale_id_fkey"
+      columns: ["sale_id"]
+isOneToOne: false
+      referencedRelation: "sales"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"sales": {
+                  Row: {
+                    "created_at": string,"created_by": string,"currency": string,"dispatch_id": string | null,"id": string,"idempotency_key": string,"patient_id": string | null,"pharmacy_id": string,"sale_number": string,"source": string,"source_note": string | null,"total_minor": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by": string,"currency"?: string,"dispatch_id"?: string | null,"id"?: string,"idempotency_key": string,"patient_id"?: string | null,"pharmacy_id": string,"sale_number"?: string,"source": string,"source_note"?: string | null,"total_minor"?: number
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string,"currency"?: string,"dispatch_id"?: string | null,"id"?: string,"idempotency_key"?: string,"patient_id"?: string | null,"pharmacy_id"?: string,"sale_number"?: string,"source"?: string,"source_note"?: string | null,"total_minor"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "sales_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "sales_dispatch_id_fkey"
+      columns: ["dispatch_id"]
+isOneToOne: false
+      referencedRelation: "prescription_dispatches"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "sales_patient_id_fkey"
+      columns: ["patient_id"]
+isOneToOne: false
+      referencedRelation: "patients"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "sales_pharmacy_id_fkey"
+      columns: ["pharmacy_id"]
+isOneToOne: false
+      referencedRelation: "facilities"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"schedule_exceptions": {
                   Row: {
                     "created_at": string,"created_by": string | null,"facility_id": string | null,"id": string,"kind": string,"period": unknown,"practitioner_id": string | null,"reason": string | null
@@ -1441,6 +1697,102 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"stock_movements": {
+                  Row: {
+                    "actor_user_id": string | null,"batch_id": string | null,"dispatch_id": string | null,"id": number,"idempotency_key": string | null,"kind": string,"occurred_at": string,"product_id": string,"quantity": number,"reason": string | null,"sale_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "actor_user_id"?: string | null,"batch_id"?: string | null,"dispatch_id"?: string | null,"id"?: never,"idempotency_key"?: string | null,"kind": string,"occurred_at"?: string,"product_id": string,"quantity": number,"reason"?: string | null,"sale_id"?: string | null
+                  }
+                  Update: {
+                    "actor_user_id"?: string | null,"batch_id"?: string | null,"dispatch_id"?: string | null,"id"?: never,"idempotency_key"?: string | null,"kind"?: string,"occurred_at"?: string,"product_id"?: string,"quantity"?: number,"reason"?: string | null,"sale_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "stock_movements_batch_id_fkey"
+      columns: ["batch_id"]
+isOneToOne: false
+      referencedRelation: "inventory_batches"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "stock_movements_dispatch_id_fkey"
+      columns: ["dispatch_id"]
+isOneToOne: false
+      referencedRelation: "prescription_dispatches"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "stock_movements_product_id_fkey"
+      columns: ["product_id"]
+isOneToOne: false
+      referencedRelation: "pharmacy_products"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "stock_movements_sale_fk"
+      columns: ["sale_id"]
+isOneToOne: false
+      referencedRelation: "sales"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"stock_reservations": {
+                  Row: {
+                    "batch_id": string,"created_at": string,"created_by": string | null,"dispatch_id": string,"id": string,"line_no": number,"product_id": string,"quantity": number,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "batch_id": string,"created_at"?: string,"created_by"?: string | null,"dispatch_id": string,"id"?: string,"line_no": number,"product_id": string,"quantity": number,"status"?: string
+                  }
+                  Update: {
+                    "batch_id"?: string,"created_at"?: string,"created_by"?: string | null,"dispatch_id"?: string,"id"?: string,"line_no"?: number,"product_id"?: string,"quantity"?: number,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "stock_reservations_batch_id_fkey"
+      columns: ["batch_id"]
+isOneToOne: false
+      referencedRelation: "inventory_batches"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "stock_reservations_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "stock_reservations_dispatch_id_fkey"
+      columns: ["dispatch_id"]
+isOneToOne: false
+      referencedRelation: "prescription_dispatches"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "stock_reservations_product_id_fkey"
+      columns: ["product_id"]
+isOneToOne: false
+      referencedRelation: "pharmacy_products"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"suppliers": {
+                  Row: {
+                    "created_at": string,"id": string,"name": string,"pharmacy_id": string,"phone": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"name": string,"pharmacy_id": string,"phone"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"name"?: string,"pharmacy_id"?: string,"phone"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "suppliers_pharmacy_id_fkey"
+      columns: ["pharmacy_id"]
+isOneToOne: false
+      referencedRelation: "facilities"
+      referencedColumns: ["id"]
+    }
+                  ]
                 }
           }
           Views: {
@@ -1507,6 +1859,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"adjust_stock":
+{ Args: { "p_batch_id": string,"p_counted_quantity": number,"p_reason": string }; Returns: undefined
+                           },
 "admin_create_branch":
 { Args: { "p_address"?: string,"p_area"?: string,"p_city_id"?: string,"p_latitude"?: number,"p_longitude"?: number,"p_name": string,"p_organization_id": string,"p_timezone"?: string }; Returns: {
               "address": string | null,
@@ -1859,6 +2214,18 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"direct_sale":
+{ Args: { "p_idempotency_key": string,"p_lines": Json,"p_patient_id"?: string,"p_pharmacy_id": string,"p_source": string,"p_source_note"?: string }; Returns: Json
+                           },
+"dispatch_line_note":
+{ Args: { "p_dispatch_id": string,"p_kind": string,"p_line_no": number,"p_note"?: string }; Returns: undefined
+                           },
+"dispatch_lines":
+{ Args: { "p_dispatch_id": string }; Returns: Json
+                           },
+"dispense_prescription":
+{ Args: { "p_dispatch_id": string,"p_idempotency_key": string,"p_lines": Json }; Returns: Json
+                           },
 "encounter_context":
 { Args: { "p_encounter_id": string }; Returns: Json
                            },
@@ -2094,6 +2461,14 @@ isOneToOne: false
 "pharmacy_prescription":
 { Args: { "p_dispatch_id": string }; Returns: Json
                            },
+"pharmacy_report":
+{ Args: { "p_from": string,"p_pharmacy_id": string,"p_to": string }; Returns: Json
+                           },
+"pharmacy_stock":
+{ Args: { "p_pharmacy_id": string }; Returns: {
+              "available": number,"batches": Json,"expired_on_hand": number,"low_stock": boolean,"manual_availability": string,"manual_availability_at": string,"medication": string,"name": string,"nearest_expiry": string,"on_hand": number,"product_id": string,"reorder_level": number,"reserved": number,"unit_name": string,"unit_price_minor": number,"units_per_pack": number
+            }[]
+                           },
 "platform_overview":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
@@ -2114,9 +2489,30 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"prepare_dispatch":
+{ Args: { "p_dispatch_id": string,"p_lines": Json }; Returns: undefined
+                           },
 "prescription_document":
 { Args: { "p_prescription_id": string }; Returns: Json
                            },
+"receive_stock":
+{ Args: { "p_batch_no": string,"p_expiry_date": string,"p_idempotency_key": string,"p_packs": number,"p_product_id": string,"p_supplier_name"?: string,"p_unit_cost_minor": number }; Returns: {
+              "batch_no": string,
+"expiry_date": string,
+"id": string,
+"product_id": string,
+"quantity_on_hand": number,
+"received_at": string,
+"received_by": string | null,
+"supplier_id": string | null,
+"unit_cost_minor": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "inventory_batches"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "reception_practitioners":
 { Args: { "p_facility_id": string }; Returns: {
               "full_name": string,"practitioner_id": string,"services": Json,"specialty": string
@@ -2124,6 +2520,9 @@ isOneToOne: false
                            },
 "reception_quick_book":
 { Args: { "p_birth_year"?: number,"p_facility_id": string,"p_idempotency_key": string,"p_new_patient_name"?: string,"p_patient_id"?: string,"p_phone"?: string,"p_practitioner_id": string,"p_service_id"?: string,"p_sex"?: Database["public"]['Enums']["patient_sex"],"p_start"?: string }; Returns: Json
+                           },
+"record_payment":
+{ Args: { "p_amount_minor": number,"p_method"?: string,"p_sale_id": string }; Returns: undefined
                            },
 "record_prescription_print":
 { Args: { "p_facility_id": string,"p_prescription_id": string }; Returns: undefined
@@ -2215,6 +2614,23 @@ isOneToOne: false
                           SetofOptions: {
         from: "*"
         to: "appointments"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"return_sale_line":
+{ Args: { "p_quantity": number,"p_reason": string,"p_restock"?: boolean,"p_sale_line_id": string }; Returns: {
+              "amount_minor": number,
+"created_at": string,
+"created_by": string,
+"id": string,
+"quantity": number,
+"reason": string,
+"restocked": boolean,
+"sale_line_id": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "refunds"
         isOneToOne: true
         isSetofReturn: false
       } },
@@ -2345,6 +2761,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"set_manual_availability":
+{ Args: { "p_product_id": string,"p_status": string }; Returns: undefined
+                           },
 "set_membership_status":
 { Args: { "p_membership_id": string,"p_reason": string,"p_status": Database["public"]['Enums']["membership_status"] }; Returns: undefined
                            },
@@ -2458,6 +2877,31 @@ isOneToOne: false
                           SetofOptions: {
         from: "*"
         to: "clinic_services"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"upsert_pharmacy_product":
+{ Args: { "p_barcode"?: string,"p_is_active"?: boolean,"p_medication_id"?: string,"p_name": string,"p_pack_description"?: string,"p_pharmacy_id": string,"p_product_id"?: string,"p_reorder_level"?: number,"p_unit_name"?: string,"p_unit_price_minor": number,"p_units_per_pack"?: number }; Returns: {
+              "barcode": string | null,
+"created_at": string,
+"id": string,
+"is_active": boolean,
+"manual_availability": string | null,
+"manual_availability_at": string | null,
+"medication_id": string | null,
+"name": string,
+"pack_description": string | null,
+"pharmacy_id": string,
+"reorder_level": number,
+"unit_name": string,
+"unit_price_minor": number,
+"units_per_pack": number,
+"updated_at": string,
+"version": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "pharmacy_products"
         isOneToOne: true
         isSetofReturn: false
       } },
