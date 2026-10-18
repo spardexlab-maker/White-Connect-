@@ -157,6 +157,44 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"attachments": {
+                  Row: {
+                    "available_at": string | null,"created_at": string,"declared_mime": string,"declared_size": number,"detected_mime": string | null,"encounter_id": string | null,"file_name": string,"id": string,"kind": string,"lab_order_id": string | null,"patient_id": string,"rejection_reason": string | null,"status": string,"storage_path": string | null,"uploaded_by": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "available_at"?: string | null,"created_at"?: string,"declared_mime": string,"declared_size": number,"detected_mime"?: string | null,"encounter_id"?: string | null,"file_name": string,"id"?: string,"kind": string,"lab_order_id"?: string | null,"patient_id": string,"rejection_reason"?: string | null,"status"?: string,"storage_path"?: string | null,"uploaded_by": string
+                  }
+                  Update: {
+                    "available_at"?: string | null,"created_at"?: string,"declared_mime"?: string,"declared_size"?: number,"detected_mime"?: string | null,"encounter_id"?: string | null,"file_name"?: string,"id"?: string,"kind"?: string,"lab_order_id"?: string | null,"patient_id"?: string,"rejection_reason"?: string | null,"status"?: string,"storage_path"?: string | null,"uploaded_by"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "attachments_encounter_id_fkey"
+      columns: ["encounter_id"]
+isOneToOne: false
+      referencedRelation: "encounters"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "attachments_lab_order_id_fkey"
+      columns: ["lab_order_id"]
+isOneToOne: false
+      referencedRelation: "lab_orders"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "attachments_patient_id_fkey"
+      columns: ["patient_id"]
+isOneToOne: false
+      referencedRelation: "patients"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "attachments_uploaded_by_fkey"
+      columns: ["uploaded_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"booking_policies": {
                   Row: {
                     "booking_window_days": number,"cancellation_cutoff_minutes": number,"cancellation_policy_text": string | null,"confirmation_mode": string,"confirmation_timeout_minutes": number,"created_at": string,"facility_id": string,"id": string,"late_policy_text": string | null,"min_notice_minutes": number,"practitioner_id": string | null,"slot_step_minutes": number | null,"updated_at": string,"version": number
@@ -2113,6 +2151,14 @@ isOneToOne: false
 "attach_patient_to_facility":
 { Args: { "p_facility_id": string,"p_patient_id": string,"p_verification_note": string }; Returns: undefined
                            },
+"attachment_scan_queue":
+{ Args: { "p_limit"?: number }; Returns: {
+              "declared_mime": string,"declared_size": number,"id": string
+            }[]
+                           },
+"attachment_scan_result":
+{ Args: { "p_detected_mime": string,"p_id": string,"p_ok": boolean,"p_reason"?: string }; Returns: undefined
+                           },
 "book_appointment":
 { Args: { "p_facility_id": string,"p_idempotency_key": string,"p_patient_id": string,"p_patient_note"?: string,"p_practitioner_id": string,"p_service_id": string,"p_source"?: Database["public"]['Enums']["booking_source"],"p_start": string }; Returns: {
               "blocked_period": unknown,
@@ -2436,6 +2482,11 @@ isOneToOne: false
 "link_patient_with_code":
 { Args: { "p_code": string,"p_facility_id": string,"p_patient_id": string,"p_verification_note": string }; Returns: string
                            },
+"list_attachments":
+{ Args: { "p_kind": string,"p_ref_id": string }; Returns: {
+              "created_at": string,"file_name": string,"id": string,"mime": string,"rejection_reason": string,"size": number,"status": string,"storage_path": string
+            }[]
+                           },
 "lookup_patients":
 { Args: { "p_facility_id": string,"p_kind"?: string,"p_query": string }; Returns: {
               "birth_year": number,"full_name": string,"has_account": boolean,"is_provisional": boolean,"known_here": boolean,"patient_id": string,"phone_masked": string,"public_code": string,"sex": Database["public"]['Enums']["patient_sex"]
@@ -2675,6 +2726,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"request_attachment_upload":
+{ Args: { "p_file_name": string,"p_kind": string,"p_mime": string,"p_ref_id": string,"p_size": number }; Returns: Json
+                           },
 "reschedule_appointment":
 { Args: { "p_appointment_id": string,"p_idempotency_key": string,"p_new_start": string,"p_reason"?: string }; Returns: {
               "blocked_period": unknown,
@@ -2925,6 +2979,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"submit_attachment":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
 "update_queue_entry":
 { Args: { "p_priority"?: number,"p_priority_reason"?: string,"p_queue_entry_id": string,"p_status"?: Database["public"]['Enums']["queue_status"] }; Returns: {
               "appointment_id": string | null,

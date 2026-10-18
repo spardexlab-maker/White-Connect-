@@ -7,6 +7,7 @@ import { useWorkspace } from '../../lib/workspace';
 import { newIdempotencyKey } from '../../lib/idempotency';
 import { Alert, Badge, Button, ConfirmDialog, EmptyState, ErrorState, Ltr, PageHead, SelectField, Sheet, SkeletonList, TextField, TextareaField, useToast } from '../../components/ui';
 import { LabResultView, type LabDetail, type LabResult } from '../../components/clinical/LabResultView';
+import { Attachments } from '../../components/clinical/Attachments';
 
 interface Row { order_id: string; order_number: string; status: LabStatus; source: string; created_at: string; patient_name: string; patient_code: string;
   ordering_doctor: string | null; ordering_facility: string | null; item_count: number; released_count: number; latest_barcode: string | null }
@@ -124,6 +125,7 @@ function OrderSheet({ orderId, isApprover, onClose, onChanged }: { orderId: stri
           selectable={isApprover && it.results.some((r) => r.status === 'draft')} selected={releaseIds.includes(it.id)}
           onSelect={(v) => setReleaseIds(v ? [...releaseIds, it.id] : releaseIds.filter((x) => x !== it.id))} />)}
 
+        <Attachments kind="lab_result" refId={o.order.id} canUpload={o.order.status !== 'cancelled'} />
         {isApprover && drafts.length > 0 && (
           <div className="card stack-sm">
             <p className="small">حدد الفحوصات الجاهزة للنشر. يمكن نشر جزء منها؛ لن يُعتبر الطلب كله جاهزاً.</p>

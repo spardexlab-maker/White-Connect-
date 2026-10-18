@@ -1,6 +1,7 @@
 import { AlertOctagon, FlaskConical } from 'lucide-react';
 import { formatDateTime, labFlag, labStatus, type LabStatus } from '@app/shared';
 import { Badge, Ltr } from '../ui';
+import { Attachments } from './Attachments';
 
 export interface LabResult {
   id: string; version_no: number; status: 'draft' | 'released' | 'superseded'; value_text: string | null; value_numeric: number | null;
@@ -56,6 +57,7 @@ export function LabResultView({ d }: { d: LabDetail }) {
           </tbody>
         </table>
       </div>
+      <Attachments kind="lab_result" refId={d.order.id} />
       <p className="small muted">لا يقدم النظام تفسيراً أو تشخيصاً آلياً للنتائج؛ يناقشها الطبيب المعالج.</p>
     </div>
   );

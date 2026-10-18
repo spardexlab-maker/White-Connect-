@@ -416,3 +416,6 @@ enabled = true
 
 [functions.notifications-worker]
 verify_jwt = false
+
+[functions.attachment-scan]
+verify_jwt = false

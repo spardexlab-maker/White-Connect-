@@ -19,7 +19,12 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @app/shared test
       - run: pnpm typecheck
-      - run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor
+      - run: supabase start -x studio,imgproxy,logflare,vector,supavisor
+      - name: Serve edge functions (attachment scanner used by integration tests)
+        run: |
+          printf 'WORKER_SHARED_SECRET=ci-secret\nAPP_ENV=development\n' > supabase/functions/.env
+          nohup supabase functions serve --env-file supabase/functions/.env > /tmp/functions.log 2>&1 &
+          sleep 10
       - run: supabase db reset
       - run: supabase test db
       - run: pnpm test:integration
