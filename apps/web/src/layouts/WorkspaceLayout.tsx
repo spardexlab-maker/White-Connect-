@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
-  BarChart3, Boxes, Receipt, Building2, CalendarClock, ChevronDown, ClipboardList, FlaskConical, HeartPulse, LayoutDashboard, LogOut, Menu,
+  Activity, BarChart3, Boxes, Receipt, Building2, CalendarClock, ChevronDown, ClipboardList, FlaskConical, HeartPulse, LayoutDashboard, LogOut, Menu,
   Pill, ScrollText, Settings2, ShieldCheck, Stethoscope, Users,
 } from 'lucide-react';
 import { facilityTypeLabel, roleLabel, workspaceArea, formatDate } from '@app/shared';
@@ -20,6 +20,7 @@ function navFor(ws: Workspace | null, isPlatformAdmin: boolean, path: string): N
       { to: '/platform-admin/organizations', label: 'المجمعات والجهات', icon: <Building2 size={20} /> },
       { to: '/platform-admin/members', label: 'الحسابات والعضويات', icon: <Users size={20} /> },
       { to: '/platform-admin/audit', label: 'سجل التدقيق', icon: <ScrollText size={20} /> },
+      { to: '/platform-admin/health', label: 'صحة النظام', icon: <Activity size={20} /> },
     ];
   }
   if (!ws) return [];
@@ -43,6 +44,7 @@ function navFor(ws: Workspace | null, isPlatformAdmin: boolean, path: string): N
     default:
       return [
         { to: '/workspace/organization', label: 'المنشأة والأعضاء', icon: <ClipboardList size={20} />, end: true },
+        { to: '/workspace/organization/reports', label: 'التقارير والمالية', icon: <BarChart3 size={20} /> },
         { to: '/workspace/reception', label: 'لوحة اليوم', icon: <CalendarClock size={20} /> },
       ];
   }

@@ -90,7 +90,7 @@ function PharmacyDetail({ dispatchId, pharmacyId, onClose, onChanged, toast }: {
     <Sheet open onClose={onClose} title={d.data ? `وصفة ${d.data.rx_number}` : 'وصفة'}
            footer={d.data && !cancelled ? <>
              {d.data.dispatch_status === 'sent' && <Button icon={<CheckCheck size={18} />} onClick={receive}>تسجيل الاستلام</Button>}
-             <Link className="btn btn-secondary" to={`/print/rx/${d.data.prescription_id}?facility=${pharmacyId}`} target="_blank"><Printer size={18} aria-hidden />طباعة</Link>
+             <Link className="btn btn-secondary" to={`/print/rx/${d.data.prescription_id}?facility=${pharmacyId}`}><Printer size={18} aria-hidden />طباعة</Link>
            </> : undefined}>
       {d.status === 'loading' && <SkeletonList />}
       {d.status === 'error' && <ErrorState error={d.error} onRetry={d.reload} />}

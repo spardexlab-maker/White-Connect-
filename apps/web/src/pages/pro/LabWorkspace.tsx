@@ -8,6 +8,7 @@ import { newIdempotencyKey } from '../../lib/idempotency';
 import { Alert, Badge, Button, ConfirmDialog, EmptyState, ErrorState, Ltr, PageHead, SelectField, Sheet, SkeletonList, TextField, TextareaField, useToast } from '../../components/ui';
 import { LabResultView, type LabDetail, type LabResult } from '../../components/clinical/LabResultView';
 import { Attachments } from '../../components/clinical/Attachments';
+import { InvoiceSheet } from '../../components/InvoiceSheet';
 
 interface Row { order_id: string; order_number: string; status: LabStatus; source: string; created_at: string; patient_name: string; patient_code: string;
   ordering_doctor: string | null; ordering_facility: string | null; item_count: number; released_count: number; latest_barcode: string | null }
@@ -94,6 +95,7 @@ function OrderSheet({ orderId, isApprover, onClose, onChanged }: { orderId: stri
   const [releaseIds, setReleaseIds] = useState<string[]>([]);
   const [confirmRelease, setConfirmRelease] = useState(false);
   const [correcting, setCorrecting] = useState<LabResult | null>(null);
+  const [fees, setFees] = useState(false);
   const run = async (p: PromiseLike<{ error: unknown }>, ok: string) => {
     const { error } = await p;
     if (error) { toast(errorMessage(error), 'danger'); return false; }
@@ -118,6 +120,7 @@ function OrderSheet({ orderId, isApprover, onClose, onChanged }: { orderId: stri
         <div className="row">
           {o.order.status === 'ordered' && <Button variant="secondary" onClick={() => run(supabase.rpc('lab_check_in', { p_order_id: o.order.id }), 'سُجل حضور المراجع')}>تسجيل حضور</Button>}
           {canCollect && <Button icon={<TestTube2 size={18} />} onClick={() => run(supabase.rpc('collect_specimen', { p_order_id: o.order.id, p_specimen_type: o.items[0]?.catalog.specimen_type ?? 'دم' }), 'سُحبت العينة وأُنشئ باركود مستقل')}>سحب العينة</Button>}
+          <Button variant="ghost" onClick={() => setFees(true)}>الرسوم والإيصال</Button>
           {collected && !['released'].includes(o.order.status) && <Button variant="danger" icon={<XCircle size={18} />} onClick={() => setReject(collected.id)}>رفض العينة</Button>}
         </div>
 
@@ -147,6 +150,7 @@ function OrderSheet({ orderId, isApprover, onClose, onChanged }: { orderId: stri
         <p>المستلمون: المريض (إن كان له حساب){o.ordering_doctor ? <> + الطبيب الطالب <strong>{o.ordering_doctor}</strong> (مهمة مراجعة)</> : ''}.</p>
         <p className="small muted">بعد النشر لا تُعدّل النتيجة إلا بإصدار مصحح يحتفظ بالأصل والسبب.</p>
       </ConfirmDialog>
+      {fees && <InvoiceSheet labOrderId={o.order.id} onClose={() => setFees(false)} />}
       {correcting && <CorrectDialog result={correcting} onClose={() => setCorrecting(null)} onDone={() => { setCorrecting(null); d.reload(); onChanged(); }} />}
     </Sheet>
   );

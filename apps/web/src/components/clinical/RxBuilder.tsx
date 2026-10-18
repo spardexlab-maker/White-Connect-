@@ -114,7 +114,7 @@ export function RxBuilder({ encounterId, facilityId, patientName, orders, onChan
           {current.dispatches.length ? `أُرسلت إلى: ${current.dispatches.map((d) => d.pharmacy).join('، ')}` : 'للطباعة فقط (لم تُرسل لصيدلية).'}
         </Alert>
         <div className="row">
-          <Link className="btn btn-primary" to={`/print/rx/${current.id}?facility=${facilityId}`} target="_blank"><Printer size={18} aria-hidden />طباعة PDF</Link>
+          <Link className="btn btn-primary" to={`/print/rx/${current.id}?facility=${facilityId}`}><Printer size={18} aria-hidden />طباعة PDF</Link>
           <Button variant="secondary" icon={<FilePen size={18} />} onClick={startRevision}>تعديل (إصدار جديد)</Button>
         </div>
         <p className="small muted">الطباعة ليست إرسالاً والإرسال ليس صرفاً؛ إعادة الطباعة لا تغيّر أي عدّاد.</p>

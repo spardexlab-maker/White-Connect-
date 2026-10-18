@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   AlarmClock, CalendarDays, CalendarPlus, Check, ChevronLeft, ChevronRight, Clock3, DoorOpen, Hourglass, IdCard,
-  ListOrdered, LogIn, Megaphone, Stethoscope, UserX, X,
+  ListOrdered, LogIn, Megaphone, Stethoscope, UserX, Wallet, X,
 } from 'lucide-react';
 import {
   addDays, bookingSource, errorMessage, formatDate, formatTime, localDateKey, minutesBetween, reasonSchema,
@@ -16,6 +16,7 @@ import {
   SelectField, SkeletonList, TextField, TextareaField, useToast,
 } from '../../components/ui';
 import { PrintCardDialog, QuickBookSheet, SlotPicker, usePractitioners, type Practitioner } from './reception-shared';
+import { InvoiceSheet } from '../../components/InvoiceSheet';
 
 export interface BoardRow {
   appointment_id: string; booking_number: string; status: AppointmentStatus; starts_at: string; ends_at: string;
@@ -61,6 +62,7 @@ export function ReceptionDashboard() {
   const [printFor, setPrintFor] = useState<string | null>(null);
   const [assigning, setAssigning] = useState<QueueRow | null>(null);
   const [delayOpen, setDelayOpen] = useState(false);
+  const [feesFor, setFeesFor] = useState<string | null>(null);
   const [, tick] = useState(0);
 
   const practitioners = usePractitioners(facilityId);
@@ -179,13 +181,13 @@ export function ReceptionDashboard() {
           {view === 'list'
             ? rows.map((r) => <AppointmentRow key={r.appointment_id} r={r} tz={tz} busy={busyId === r.appointment_id} today={date === today}
                                                onChange={change} onReason={(to) => { setReasonAction({ row: r, to }); setReason(''); setReasonError(undefined); }}
-                                               onPrint={() => setPrintFor(r.patient_id)} showDoctor={!doctor} />)
+                                               onPrint={() => setPrintFor(r.patient_id)} onFees={() => setFeesFor(r.appointment_id)} showDoctor={!doctor} />)
             : byHour.map(([h, list]) => (
                 <div key={h}>
                   <div className="label-text" style={{ padding: 'var(--s-2) var(--s-4)', background: 'var(--c-surface-sunken)' }}><Ltr>{h}</Ltr></div>
                   {list.map((r) => <AppointmentRow key={r.appointment_id} r={r} tz={tz} busy={busyId === r.appointment_id} today={date === today}
                                                    onChange={change} onReason={(to) => { setReasonAction({ row: r, to }); setReason(''); setReasonError(undefined); }}
-                                                   onPrint={() => setPrintFor(r.patient_id)} showDoctor={!doctor} />)}
+                                                   onPrint={() => setPrintFor(r.patient_id)} onFees={() => setFeesFor(r.appointment_id)} showDoctor={!doctor} />)}
                 </div>
               ))}
         </section>
@@ -233,14 +235,15 @@ export function ReceptionDashboard() {
 
       {printFor && <PrintCardDialog facilityId={facilityId} patientId={printFor} onClose={() => setPrintFor(null)} />}
       {assigning && <AssignWalkIn entry={assigning} facilityId={facilityId} tz={tz} date={date} practitioners={docs} onClose={() => setAssigning(null)} onDone={() => { setAssigning(null); reloadAll(); }} />}
+      {feesFor && <InvoiceSheet appointmentId={feesFor} onClose={() => setFeesFor(null)} />}
       {delayOpen && <DelayNotice facilityId={facilityId} practitioners={docs} defaultDoctor={doctor} onClose={() => setDelayOpen(false)} />}
     </div>
   );
 }
 
-function AppointmentRow({ r, tz, busy, today, onChange, onReason, onPrint, showDoctor }: {
+function AppointmentRow({ r, tz, busy, today, onChange, onReason, onPrint, onFees, showDoctor }: {
   r: BoardRow; tz: string; busy: boolean; today: boolean; showDoctor: boolean;
-  onChange: (r: BoardRow, to: AppointmentStatus) => void; onReason: (to: ReasonAction['to']) => void; onPrint: () => void;
+  onChange: (r: BoardRow, to: AppointmentStatus) => void; onReason: (to: ReasonAction['to']) => void; onPrint: () => void; onFees: () => void;
 }) {
   const lateMin = r.status === 'confirmed' ? minutesBetween(r.starts_at, new Date()) : 0;
   return (
@@ -270,6 +273,7 @@ function AppointmentRow({ r, tz, busy, today, onChange, onReason, onPrint, showD
           <Button size="sm" variant="ghost" onClick={() => onReason('cancelled')}>إلغاء</Button>
         </>}
         {r.status === 'checked_in' && <Button size="sm" variant="secondary" icon={<DoorOpen size={16} />} loading={busy} onClick={() => onChange(r, 'fulfilled')}>تسجيل مغادرة</Button>}
+        {['confirmed', 'checked_in', 'fulfilled'].includes(r.status) && <Button size="sm" variant="ghost" icon={<Wallet size={16} />} onClick={onFees}>رسوم</Button>}
         <Button size="sm" variant="ghost" icon={<IdCard size={16} />} onClick={onPrint} aria-label={`بطاقة ${r.patient_name}`}>بطاقة</Button>
       </div>
     </div>

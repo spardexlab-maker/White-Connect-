@@ -35,6 +35,9 @@ const PharmacyInbox = lazy(() => import('./pages/pro/PharmacyInbox').then((m) =>
 const PharmacyStock = lazy(() => import('./pages/pro/pharmacy/Stock').then((m) => ({ default: m.PharmacyStock })));
 const PharmacySales = lazy(() => import('./pages/pro/pharmacy/Sales').then((m) => ({ default: m.PharmacySales })));
 const PharmacyReports = lazy(() => import('./pages/pro/pharmacy/Reports').then((m) => ({ default: m.PharmacyReports })));
+const FacilityReports = lazy(() => import('./pages/pro/FacilityReports').then((m) => ({ default: m.FacilityReports })));
+const AdminHealth = lazy(() => import('./pages/admin/Health').then((m) => ({ default: m.AdminHealth })));
+const PrintReceipt = lazy(() => import('./pages/PrintReceipt').then((m) => ({ default: m.PrintReceipt })));
 const LabWorkspace = lazy(() => import('./pages/pro/LabWorkspace').then((m) => ({ default: m.LabWorkspace })));
 const PrintRx = lazy(() => import('./pages/PrintRx').then((m) => ({ default: m.PrintRx })));
 const Security = lazy(() => import('./pages/pro/Security').then((m) => ({ default: m.Security })));
@@ -97,10 +100,13 @@ export function App() {
                 <Route path="/platform-admin" element={<RequirePlatformAdmin><AdminOverview /></RequirePlatformAdmin>} />
                 <Route path="/platform-admin/organizations" element={<RequirePlatformAdmin><AdminOrganizations /></RequirePlatformAdmin>} />
                 <Route path="/platform-admin/members" element={<RequirePlatformAdmin><AdminMembers /></RequirePlatformAdmin>} />
+                <Route path="/workspace/organization/reports" element={<RequireWorkspaceRole roles={['facility_admin', 'organization_admin']}><FacilityReports /></RequireWorkspaceRole>} />
+                <Route path="/platform-admin/health" element={<RequirePlatformAdmin><AdminHealth /></RequirePlatformAdmin>} />
                 <Route path="/platform-admin/audit" element={<RequirePlatformAdmin><AdminAudit /></RequirePlatformAdmin>} />
               </Route>
 
               <Route path="/print/rx/:id" element={<RequireStaffOrPatient><PrintRx /></RequireStaffOrPatient>} />
+              <Route path="/print/receipt/:id" element={<RequireStaffOrPatient><PrintReceipt /></RequireStaffOrPatient>} />
               <Route path="/verify/rx" element={<VerifyRx />} />
               <Route path="/dev/components" element={<ComponentGallery />} />
               <Route path="*" element={<Navigate to="/patient" replace />} />

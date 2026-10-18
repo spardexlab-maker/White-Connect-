@@ -615,6 +615,32 @@ isOneToOne: true
       referencedColumns: ["id"]
     }
                   ]
+                },"expenses": {
+                  Row: {
+                    "amount_minor": number,"category": string,"created_at": string,"created_by": string,"facility_id": string,"id": string,"note": string | null,"spent_on": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount_minor": number,"category": string,"created_at"?: string,"created_by": string,"facility_id": string,"id"?: string,"note"?: string | null,"spent_on"?: string
+                  }
+                  Update: {
+                    "amount_minor"?: number,"category"?: string,"created_at"?: string,"created_by"?: string,"facility_id"?: string,"id"?: string,"note"?: string | null,"spent_on"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "expenses_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "expenses_facility_id_fkey"
+      columns: ["facility_id"]
+isOneToOne: false
+      referencedRelation: "facilities"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"facilities": {
                   Row: {
                     "branch_id": string,"created_at": string,"default_lab_id": string | null,"default_pharmacy_id": string | null,"description": string | null,"id": string,"is_public": boolean,"name": string,"opening_hours_note": string | null,"organization_id": string,"phone": string | null,"status": Database["public"]['Enums']["entity_status"],"status_reason": string | null,"type": Database["public"]['Enums']["facility_type"],"updated_at": string,"version": number
@@ -740,6 +766,96 @@ isOneToOne: false
       columns: ["organization_id"]
 isOneToOne: false
       referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"invoice_lines": {
+                  Row: {
+                    "description": string,"id": string,"invoice_id": string,"line_total_minor": number,"quantity": number,"unit_price_minor": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "description": string,"id"?: string,"invoice_id": string,"line_total_minor": number,"quantity"?: number,"unit_price_minor": number
+                  }
+                  Update: {
+                    "description"?: string,"id"?: string,"invoice_id"?: string,"line_total_minor"?: number,"quantity"?: number,"unit_price_minor"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "invoice_lines_invoice_id_fkey"
+      columns: ["invoice_id"]
+isOneToOne: false
+      referencedRelation: "invoices"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"invoice_payments": {
+                  Row: {
+                    "amount_minor": number,"created_at": string,"id": string,"idempotency_key": string,"invoice_id": string,"method": string,"note": string | null,"received_by": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount_minor": number,"created_at"?: string,"id"?: string,"idempotency_key": string,"invoice_id": string,"method"?: string,"note"?: string | null,"received_by": string
+                  }
+                  Update: {
+                    "amount_minor"?: number,"created_at"?: string,"id"?: string,"idempotency_key"?: string,"invoice_id"?: string,"method"?: string,"note"?: string | null,"received_by"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "invoice_payments_invoice_id_fkey"
+      columns: ["invoice_id"]
+isOneToOne: false
+      referencedRelation: "invoices"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "invoice_payments_received_by_fkey"
+      columns: ["received_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"invoices": {
+                  Row: {
+                    "appointment_id": string | null,"created_at": string,"created_by": string,"currency": string,"facility_id": string,"id": string,"invoice_number": string,"lab_order_id": string | null,"patient_id": string,"status": string,"total_minor": number,"updated_at": string,"version": number,"void_reason": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "appointment_id"?: string | null,"created_at"?: string,"created_by": string,"currency"?: string,"facility_id": string,"id"?: string,"invoice_number"?: string,"lab_order_id"?: string | null,"patient_id": string,"status"?: string,"total_minor"?: number,"updated_at"?: string,"version"?: number,"void_reason"?: string | null
+                  }
+                  Update: {
+                    "appointment_id"?: string | null,"created_at"?: string,"created_by"?: string,"currency"?: string,"facility_id"?: string,"id"?: string,"invoice_number"?: string,"lab_order_id"?: string | null,"patient_id"?: string,"status"?: string,"total_minor"?: number,"updated_at"?: string,"version"?: number,"void_reason"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "invoices_appointment_id_fkey"
+      columns: ["appointment_id"]
+isOneToOne: false
+      referencedRelation: "appointments"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "invoices_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "invoices_facility_id_fkey"
+      columns: ["facility_id"]
+isOneToOne: false
+      referencedRelation: "facilities"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "invoices_lab_order_id_fkey"
+      columns: ["lab_order_id"]
+isOneToOne: false
+      referencedRelation: "lab_orders"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "invoices_patient_id_fkey"
+      columns: ["patient_id"]
+isOneToOne: false
+      referencedRelation: "patients"
       referencedColumns: ["id"]
     }
                   ]
@@ -1938,6 +2054,23 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"add_expense":
+{ Args: { "p_amount_minor": number,"p_category": string,"p_facility_id": string,"p_note"?: string,"p_spent_on"?: string }; Returns: {
+              "amount_minor": number,
+"category": string,
+"created_at": string,
+"created_by": string,
+"facility_id": string,
+"id": string,
+"note": string | null,
+"spent_on": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "expenses"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "add_schedule_exception":
 { Args: { "p_ends_at": string,"p_facility_id": string,"p_kind": string,"p_practitioner_id": string,"p_reason"?: string,"p_starts_at": string }; Returns: {
               "created_at": string,
@@ -2293,6 +2426,29 @@ isOneToOne: false
               "expires_at": string,"invitation_id": string,"token": string
             }[]
                            },
+"create_invoice":
+{ Args: { "p_appointment_id"?: string,"p_lab_order_id"?: string }; Returns: {
+              "appointment_id": string | null,
+"created_at": string,
+"created_by": string,
+"currency": string,
+"facility_id": string,
+"id": string,
+"invoice_number": string,
+"lab_order_id": string | null,
+"patient_id": string,
+"status": string,
+"total_minor": number,
+"updated_at": string,
+"version": number,
+"void_reason": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "invoices"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "create_medication_plan":
 { Args: { "p_dispatch_id"?: string,"p_line_no": number,"p_patient_consent": boolean,"p_prescription_id": string,"p_start_date": string,"p_times": (string)[] }; Returns: {
               "as_needed": boolean,
@@ -2386,6 +2542,9 @@ isOneToOne: false
               "appointment_id": string,"appointment_start": string,"arrived_at": string,"duration_minutes": number,"estimated_start": string,"kind": string,"patient_code": string,"patient_id": string,"patient_name": string,"practitioner_id": string,"priority": number,"priority_reason": string,"queue_entry_id": string,"queue_position": number,"status": Database["public"]['Enums']["queue_status"]
             }[]
                            },
+"facility_report":
+{ Args: { "p_facility_id": string,"p_from": string,"p_to": string }; Returns: Json
+                           },
 "get_available_slots":
 { Args: { "p_facility_id": string,"p_for_staff"?: boolean,"p_from": string,"p_practitioner_id": string,"p_service_id": string,"p_to": string }; Returns: {
               "slot_end": string,"slot_start": string
@@ -2415,6 +2574,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"invoice_document":
+{ Args: { "p_invoice_id": string }; Returns: Json
+                           },
 "issue_patient_card":
 { Args: { "p_facility_id": string,"p_patient_id": string,"p_rotate"?: boolean }; Returns: Json
                            },
@@ -2556,6 +2718,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"organization_report":
+{ Args: { "p_from": string,"p_organization_id": string,"p_to": string }; Returns: Json
+                           },
 "outbox_claim":
 { Args: { "p_lease_seconds"?: number,"p_limit"?: number }; Returns: {
               "attempts": number,
@@ -2668,6 +2833,29 @@ isOneToOne: false
 "record_dose":
 { Args: { "p_job_id": string,"p_status": string }; Returns: undefined
                            },
+"record_invoice_payment":
+{ Args: { "p_amount_minor": number,"p_idempotency_key": string,"p_invoice_id": string,"p_method"?: string,"p_note"?: string }; Returns: {
+              "appointment_id": string | null,
+"created_at": string,
+"created_by": string,
+"currency": string,
+"facility_id": string,
+"id": string,
+"invoice_number": string,
+"lab_order_id": string | null,
+"patient_id": string,
+"status": string,
+"total_minor": number,
+"updated_at": string,
+"version": number,
+"void_reason": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "invoices"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "record_payment":
 { Args: { "p_amount_minor": number,"p_method"?: string,"p_sale_id": string }; Returns: undefined
                            },
@@ -2982,6 +3170,9 @@ isOneToOne: false
 "submit_attachment":
 { Args: { "p_id": string }; Returns: undefined
                            },
+"system_health":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
 "update_queue_entry":
 { Args: { "p_priority"?: number,"p_priority_reason"?: string,"p_queue_entry_id": string,"p_status"?: Database["public"]['Enums']["queue_status"] }; Returns: {
               "appointment_id": string | null,
@@ -3063,6 +3254,9 @@ isOneToOne: false
       } },
 "verify_prescription":
 { Args: { "p_token": string }; Returns: Json
+                           },
+"void_invoice":
+{ Args: { "p_invoice_id": string,"p_reason": string }; Returns: undefined
                            }
           }
           Enums: {

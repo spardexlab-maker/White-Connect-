@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
-import { Printer } from 'lucide-react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { ArrowRight, Printer } from 'lucide-react';
 import { errorMessage } from '@app/shared';
 import { supabase } from '../lib/supabase';
 import { unwrap, useAsync } from '../lib/useAsync';
@@ -16,6 +16,7 @@ export function PrintRx() {
   const { id } = useParams();
   const [params] = useSearchParams();
   const facilityId = params.get('facility');
+  const navigate = useNavigate();
   const [size, setSize] = useState<'A4' | 'A5'>('A5');
   const [logError, setLogError] = useState<string | null>(null);
   const doc = useAsync(async () => (await unwrap(supabase.rpc('prescription_document', { p_prescription_id: id! }))) as unknown as RxDoc, [id]);
@@ -32,6 +33,7 @@ export function PrintRx() {
   return (
     <main className="p-main stack" style={{ maxWidth: 900 }}>
       <div className="row no-print">
+        <Button variant="ghost" icon={<ArrowRight size={18} />} onClick={() => navigate(-1)}>رجوع</Button>
         <div className="segmented" role="group" aria-label="حجم الورق">
           <button aria-pressed={size === 'A5'} onClick={() => setSize('A5')}>A5</button>
           <button aria-pressed={size === 'A4'} onClick={() => setSize('A4')}>A4</button>

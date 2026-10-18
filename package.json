@@ -16,7 +16,9 @@
     "screenshots": "node scripts/screenshots.mjs",
     "e2e": "node scripts/e2e-booking-journey.mjs",
     "e2e:clinical": "node scripts/e2e-clinical-journey.mjs",
-    "screenshots:clinical": "node scripts/e2e-clinical-journey.mjs && node scripts/screenshots-phase3.mjs"
+    "screenshots:clinical": "node scripts/e2e-clinical-journey.mjs && node scripts/screenshots-phase3.mjs",
+    "e2e:operations": "node scripts/e2e-operations.mjs",
+    "e2e:mfa": "node scripts/e2e-admin-mfa.mjs"
   },
   "devDependencies": {
     "@supabase/supabase-js": "^2.45.0",

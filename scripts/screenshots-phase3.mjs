@@ -76,7 +76,7 @@ for (const width of [390, 1440]) {
   await pt.getByText('92').waitFor();
   await shot(pt, '23-patient-lab-result', width);
   await pt.goBack(); await pt.locator('.card', { hasText: /^وصفة RX/ }).first().getByRole('link', { name: 'التفاصيل' }).click();
-  await pt.getByText('ثلاث مرات يومياً').waitFor();
+  await pt.getByText('ثلاث مرات يومياً').first().waitFor();
   await shot(pt, '24-patient-prescription', width);
 }
 await browser.close();

@@ -29,3 +29,12 @@ describe('pharmacy concurrency', () => {
     expect(row.on_hand).toBe(0);
   });
 });
+
+describe('invoice concurrency', () => {
+  it('parallel invoice creation for one visit returns one invoice', async () => {
+    const r = await signIn('reception.a@demo.test');
+    const res = await Promise.all(Array.from({ length: 5 }, () => r.rpc('create_invoice', { p_appointment_id: '00000000-0000-4000-4000-000000000002' })));
+    res.forEach((x) => expect(x.error).toBeNull());
+    expect(new Set(res.map((x) => (x.data as { id: string }).id)).size).toBe(1);
+  });
+});
