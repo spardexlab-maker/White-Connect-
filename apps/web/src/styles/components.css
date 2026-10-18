@@ -184,3 +184,10 @@ kbd { font-family: inherit; font-size: 12px; border: 1px solid var(--c-border-st
 .menu-item.danger { color: var(--c-danger); }
 .menu-item.danger svg { color: var(--c-danger); }
 .segmented.block { display: flex; } .segmented.block button { flex: 1; justify-content: center; }
+
+/* ---------- KPI tiles (reports, admin) ---------- */
+.kpi-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: var(--s-3); }
+.kpi { position: relative; overflow: hidden; background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-lg); padding: var(--s-4); display: flex; align-items: center; gap: var(--s-3); box-shadow: var(--shadow-1); }
+.kpi > svg { flex: none; width: 40px; height: 40px; padding: 9px; border-radius: 12px; background: var(--c-accent-soft); color: var(--c-accent); }
+.kpi .kpi-v { font-size: var(--f-h2); font-weight: 700; line-height: var(--lh-tight); font-variant-numeric: tabular-nums; }
+.kpi .kpi-l { font-size: var(--f-label); color: var(--c-muted); }

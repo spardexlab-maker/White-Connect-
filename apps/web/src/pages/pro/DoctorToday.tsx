@@ -7,7 +7,7 @@ import { unwrap, useAsync } from '../../lib/useAsync';
 import { useAuth } from '../../lib/auth';
 import { useWorkspace } from '../../lib/workspace';
 import { Alert, AppointmentStatusBadge, Badge, Button, ConfirmDialog, EmptyState, ErrorState, Ltr, PageHead, QueueStatusBadge, SkeletonList, useToast } from '../../components/ui';
-import { useFacilityRealtime, type BoardRow, type QueueRow } from './Reception';
+import { laneOf, useFacilityRealtime, type BoardRow, type QueueRow } from './Reception';
 
 interface Task { task_id: string; kind: string; created_at: string; patient_name: string; patient_code: string; lab_order_id: string | null; order_number: string | null; encounter_id: string | null; has_critical: boolean }
 interface OpenEnc { id: string; status: EncounterStatus; started_at: string; patients: { full_name: string; public_code: string } | null }
@@ -97,7 +97,7 @@ export function DoctorToday() {
           {board.status === 'error' && <ErrorState error={board.error} onRetry={board.reload} />}
           {board.data?.length === 0 && <EmptyState icon={<CalendarDays />} title="لا توجد مواعيد اليوم في هذا الموقع" />}
           {board.data?.map((r) => (
-            <div key={r.appointment_id} className="appt-row">
+            <div key={r.appointment_id} className="appt-row" data-lane={laneOf(r)}>
               <div className="time num">{formatTime(r.starts_at, tz)}</div>
               <div className="who"><strong className="truncate">{r.patient_name}</strong><span className="small muted"><Ltr>{r.patient_code}</Ltr> · {r.service_name}</span></div>
               <div className="actions"><AppointmentStatusBadge status={r.status} /></div>

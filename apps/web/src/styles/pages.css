@@ -237,3 +237,4 @@
   .stepper li:not([aria-current='step']) > span:last-child { display: none; }
   .stepper li + li::before { width: 12px; }
 }
+.appt-row .who > strong { display: block; }

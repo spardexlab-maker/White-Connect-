@@ -1,6 +1,6 @@
-import { type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
-  ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text as RNText, TextInput, View,
+  AccessibilityInfo, ActivityIndicator, Animated, Easing, Pressable, RefreshControl, ScrollView, StyleSheet, Text as RNText, TextInput, View,
   type PressableProps, type StyleProp, type TextInputProps, type TextProps, type TextStyle, type ViewStyle,
 } from 'react-native';
 import { AlertTriangle, CheckCircle2, Info, OctagonAlert, RefreshCw } from 'lucide-react-native';
@@ -264,3 +264,67 @@ const s = StyleSheet.create({
   alert: { flexDirection: 'row', gap: space[3], padding: space[3], borderRadius: radius.md, alignItems: 'flex-start' },
   emptyIcon: { width: 56, height: 56, borderRadius: 28, backgroundColor: color.surfaceSunken, alignItems: 'center', justifyContent: 'center' },
 });
+
+/* ---------------- motion (calm, transform/opacity only, honours Reduce Motion) ---------------- */
+export function useReduceMotion() {
+  const [reduce, setReduce] = useState(false);
+  useEffect(() => {
+    void AccessibilityInfo.isReduceMotionEnabled().then(setReduce);
+    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduce);
+    return () => sub.remove();
+  }, []);
+  return reduce;
+}
+
+/** Fade + slight rise on mount; `index` staggers the first few items only. */
+export function FadeIn({ children, index = 0, style }: { children: ReactNode; index?: number; style?: StyleProp<ViewStyle> }) {
+  const reduce = useReduceMotion();
+  const v = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (reduce) { v.setValue(1); return; }
+    Animated.timing(v, { toValue: 1, duration: 240, delay: Math.min(index, 5) * 40, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+  }, [reduce, index, v]);
+  return <Animated.View style={[{ opacity: v, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }] }, style]}>{children}</Animated.View>;
+}
+
+/** Pressable that scales slightly while pressed. */
+export function PressScale({ children, onPress, style, accessibilityLabel, accessibilityRole = 'button', selected }: {
+  children: ReactNode; onPress?: () => void; style?: StyleProp<ViewStyle>; accessibilityLabel?: string; accessibilityRole?: 'button' | 'link'; selected?: boolean;
+}) {
+  const v = useRef(new Animated.Value(1)).current;
+  const to = (x: number) => Animated.timing(v, { toValue: x, duration: 120, useNativeDriver: true }).start();
+  return (
+    <Pressable onPress={onPress} onPressIn={() => to(0.97)} onPressOut={() => to(1)} accessibilityRole={accessibilityRole}
+               accessibilityLabel={accessibilityLabel} accessibilityState={selected === undefined ? undefined : { selected }}>
+      <Animated.View style={[style, { transform: [{ scale: v }] }]}>{children}</Animated.View>
+    </Pressable>
+  );
+}
+
+export function SkeletonBox({ width = '100%', height = 14, radius: r = 8, style }: { width?: number | `${number}%`; height?: number; radius?: number; style?: StyleProp<ViewStyle> }) {
+  const reduce = useReduceMotion();
+  const v = useRef(new Animated.Value(0.55)).current;
+  useEffect(() => {
+    if (reduce) return;
+    const loop = Animated.loop(Animated.sequence([
+      Animated.timing(v, { toValue: 1, duration: 700, useNativeDriver: true }),
+      Animated.timing(v, { toValue: 0.55, duration: 700, useNativeDriver: true }),
+    ]));
+    loop.start();
+    return () => loop.stop();
+  }, [reduce, v]);
+  return <Animated.View style={[{ width, height, borderRadius: r, backgroundColor: color.surfaceSunken, opacity: v }, style]} accessibilityElementsHidden />;
+}
+
+/** Check mark that pops in — render only after the server confirmed. */
+export function SuccessMark({ pending }: { pending?: boolean }) {
+  const reduce = useReduceMotion();
+  const v = useRef(new Animated.Value(reduce ? 1 : 0.6)).current;
+  useEffect(() => { if (!reduce) Animated.spring(v, { toValue: 1, friction: 6, tension: 90, useNativeDriver: true }).start(); }, [reduce, v]);
+  const tone = pending ? toneColors.warning : toneColors.success;
+  return (
+    <Animated.View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: tone.bg, alignItems: 'center', justifyContent: 'center', transform: [{ scale: v }] }}>
+      <CheckCircle2 size={36} color={tone.fg} />
+    </Animated.View>
+  );
+}

@@ -1,15 +1,27 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
-import { Link, router } from 'expo-router';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { router } from 'expo-router';
 import * as Location from 'expo-location';
-import { BadgeCheck, Clock, FlaskConical, LocateFixed, MapPin, QrCode, Search, SearchX, Stethoscope, Wallet } from 'lucide-react-native';
+import {
+  Baby, BadgeCheck, Bone, Brain, CalendarClock, Clock, Droplets, Ear, Eye, FlaskConical, Flower2, HeartHandshake, HeartPulse, LocateFixed, MapPin,
+  QrCode, Search, SearchX, Smile, Sparkles, Stethoscope, Syringe, Users,
+} from 'lucide-react-native';
 import { addDays, formatDateShort, formatMoney, formatTime, localDateKey } from '@app/shared';
 import { supabase } from '../../src/lib/supabase';
 import { unwrap, useAsync } from '../../src/lib/useAsync';
 import { useAuth } from '../../src/lib/auth';
 import { providerHref } from '../../src/lib/routes';
-import { Avatar, Badge, Button, Card, Chip, EmptyState, ErrorState, Field, Loading, Row, Screen, Segmented, Stack, Text } from '../../src/components/ui';
-import { color, space } from '../../src/theme';
+import { Avatar, Card, Chip, EmptyState, ErrorState, FadeIn, PressScale, Row, Screen, SkeletonBox, Stack, Text } from '../../src/components/ui';
+import { color, family, radius, shadow, size, space, startAlign } from '../../src/theme';
+
+const specIcons: [RegExp, (c: string) => ReactNode][] = [
+  [/قلب/, (c) => <HeartPulse size={20} color={c} />], [/أطفال/, (c) => <Baby size={20} color={c} />], [/نسائية|توليد/, (c) => <Flower2 size={20} color={c} />],
+  [/عظام|مفاصل/, (c) => <Bone size={20} color={c} />], [/عيون/, (c) => <Eye size={20} color={c} />], [/أنف|أذن/, (c) => <Ear size={20} color={c} />],
+  [/أسنان/, (c) => <Smile size={20} color={c} />], [/جلد/, (c) => <Sparkles size={20} color={c} />], [/عصبي/, (c) => <Brain size={20} color={c} />],
+  [/نفسي/, (c) => <HeartHandshake size={20} color={c} />], [/جراحة/, (c) => <Syringe size={20} color={c} />], [/مسالك/, (c) => <Droplets size={20} color={c} />],
+  [/أسرة/, (c) => <Users size={20} color={c} />],
+];
+const specIcon = (name: string, c: string) => (specIcons.find(([re]) => re.test(name))?.[1] ?? ((x: string) => <Stethoscope size={20} color={x} />))(c);
 
 type Kind = 'doctor' | 'laboratory';
 interface Provider {
@@ -59,75 +71,126 @@ export default function Home() {
 
   return (
     <Screen refreshing={results.status === 'loading' && !!results.data} onRefresh={results.reload}>
-      <Stack gap={space[3]}>
-        <Row between>
-          <Text variant="h3">{session ? 'أهلاً بك' : 'مرحباً'}، كيف نساعدك اليوم؟</Text>
-          {session && <Button title="بطاقتي" small variant="secondary" icon={<QrCode size={16} color={color.primary} />} onPress={() => router.navigate('/account')} />}
-        </Row>
-        <View style={{ position: 'relative', justifyContent: 'center' }}>
-          <Field label="ابحث عن طبيب أو تحليل" placeholder="اسم طبيب، تحليل أو منطقة" value={query} onChangeText={setQuery}
-                 returnKeyType="search" style={{ paddingStart: 40 }} />
-          <View style={{ position: 'absolute', start: 12, bottom: 14 }} pointerEvents="none"><Search size={18} color={color.mutedText} /></View>
+      <FadeIn>
+        <View style={h.hero}>
+          <View style={h.glow} pointerEvents="none" />
+          <View style={h.ring} pointerEvents="none" />
+          <Row between style={{ alignItems: 'flex-start' }}>
+            <Stack gap={2} style={{ flex: 1 }}>
+              <Text variant="label" style={{ color: '#A9C3DA' }}>{session ? 'أهلاً بك من جديد' : 'مرحباً بك'}</Text>
+              <Text variant="h2" style={{ color: '#fff' }}>كيف نساعدك اليوم؟</Text>
+            </Stack>
+            {session && (
+              <Pressable onPress={() => router.navigate('/account')} style={h.pill} accessibilityRole="button" accessibilityLabel="بطاقتي">
+                <QrCode size={16} color="#fff" /><Text variant="small" weight="semibold" style={{ color: '#fff' }}>بطاقتي</Text>
+              </Pressable>
+            )}
+          </Row>
+          <View style={h.search}>
+            <Search size={20} color={color.mutedText} />
+            <TextInput value={query} onChangeText={setQuery} placeholder="ابحث عن طبيب أو تحليل أو منطقة" placeholderTextColor={color.mutedText}
+                       returnKeyType="search" accessibilityLabel="ابحث عن طبيب أو تحليل" style={h.searchInput} />
+          </View>
+          <View style={h.seg} accessibilityRole="tablist">
+            {(['doctor', 'laboratory'] as Kind[]).map((k) => {
+              const on = kind === k;
+              return (
+                <Pressable key={k} onPress={() => setKind(k)} style={[h.segBtn, on && { backgroundColor: '#fff' }]} accessibilityRole="tab" accessibilityState={{ selected: on }}>
+                  {k === 'doctor' ? <Stethoscope size={16} color={on ? color.primary : '#CFE0EE'} /> : <FlaskConical size={16} color={on ? color.primary : '#CFE0EE'} />}
+                  <Text variant="small" weight="semibold" style={{ color: on ? color.primary : '#CFE0EE' }}>{k === 'doctor' ? 'أطباء' : 'مختبرات'}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
-        <Segmented<Kind> value={kind} onChange={setKind} options={[
-          { id: 'doctor', label: 'أطباء', icon: <Stethoscope size={16} color={kind === 'doctor' ? color.primary : color.mutedText} /> },
-          { id: 'laboratory', label: 'مختبرات', icon: <FlaskConical size={16} color={kind === 'laboratory' ? color.primary : color.mutedText} /> },
-        ]} />
+      </FadeIn>
+
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space[2] }}>
+        <Chip label={geo === 'ok' ? 'الأقرب إليك' : geo === 'asking' ? 'جارٍ التحديد…' : 'استخدم موقعي'} selected={geo === 'ok'}
+              icon={<LocateFixed size={14} color={geo === 'ok' ? color.surface : color.accent} />}
+              onPress={() => (geo === 'ok' ? (setCoords(null), setGeo('idle')) : void askLocation())} />
+        <Chip label="كل المدن" selected={cityId === null} icon={<MapPin size={14} color={cityId === null ? color.surface : color.mutedText} />} onPress={() => setCityId(null)} />
+        {catalogs.data?.cities.map((c) => <Chip key={c.id} label={c.name_ar} selected={cityId === c.id} onPress={() => setCityId(c.id)} />)}
+      </ScrollView>
+      {geo === 'denied' && <Text variant="small" muted>لم يُمنح إذن الموقع — اختر المدينة يدوياً، والحجز لا يحتاج الموقع.</Text>}
+
+      {kind === 'doctor' && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space[2] }}>
-          <Chip label={geo === 'ok' ? 'حسب موقعك' : geo === 'asking' ? 'جارٍ التحديد…' : 'استخدم موقعي'} selected={geo === 'ok'}
-                icon={<LocateFixed size={14} color={geo === 'ok' ? color.surface : color.accent} />}
-                onPress={() => (geo === 'ok' ? (setCoords(null), setGeo('idle')) : void askLocation())} />
-          <Chip label="كل المدن" selected={cityId === null} onPress={() => setCityId(null)} />
-          {catalogs.data?.cities.map((c) => <Chip key={c.id} label={c.name_ar} selected={cityId === c.id} onPress={() => setCityId(c.id)} />)}
+          {[{ id: null as string | null, name_ar: 'الكل' }, ...(catalogs.data?.specialties ?? [])].map((sp) => {
+            const on = specialty === sp.id;
+            return (
+              <PressScale key={sp.id ?? 'all'} onPress={() => setSpecialty(on && sp.id ? null : sp.id)} selected={on} accessibilityLabel={sp.name_ar}
+                          style={[h.spec, on && { borderColor: color.accent, backgroundColor: color.accentSoft }]}>
+                <View style={[h.specIco, on && { backgroundColor: color.accent }]}>{sp.id ? specIcon(sp.name_ar, on ? '#fff' : color.primary) : <Stethoscope size={20} color={on ? '#fff' : color.primary} />}</View>
+                <Text variant="label" style={{ textAlign: 'center' }} numberOfLines={2}>{sp.name_ar}</Text>
+              </PressScale>
+            );
+          })}
         </ScrollView>
-        {geo === 'denied' && <Text variant="small" muted>لم يُمنح إذن الموقع — اختر المدينة يدوياً، والحجز لا يحتاج الموقع.</Text>}
-        {kind === 'doctor' && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space[2] }}>
-            <Chip label="كل التخصصات" selected={specialty === null} onPress={() => setSpecialty(null)} />
-            {catalogs.data?.specialties.map((sp) => <Chip key={sp.id} label={sp.name_ar} selected={specialty === sp.id} onPress={() => setSpecialty(sp.id)} />)}
-          </ScrollView>
-        )}
-      </Stack>
+      )}
 
       <Row between>
-        <Text variant="title">{kind === 'doctor' ? 'الأطباء' : 'المختبرات'}{coords ? ' الأقرب إليك' : ''}</Text>
+        <Text variant="h3" style={{ fontSize: 18 }}>{kind === 'doctor' ? 'الأطباء' : 'المختبرات'}{coords ? ' الأقرب إليك' : ''}</Text>
         {results.status === 'success' && <Text variant="small" muted>{results.data.length} نتيجة</Text>}
       </Row>
-      {results.status === 'loading' && !results.data && <Card><Loading /></Card>}
+      {results.status === 'loading' && !results.data && [0, 1].map((i) => (
+        <Card key={i}>
+          <Row gap={space[3]}><SkeletonBox width={48} height={48} radius={14} /><Stack gap={6} style={{ flex: 1 }}><SkeletonBox width="60%" /><SkeletonBox width="35%" height={12} /></Stack></Row>
+          <SkeletonBox width="55%" height={30} radius={12} />
+        </Card>
+      ))}
       {results.status === 'error' && <Card><ErrorState error={results.error} onRetry={results.reload} /></Card>}
       {results.data?.length === 0 && (
         <Card><EmptyState icon={<SearchX size={28} color={color.mutedText} />} title="لا توجد نتائج مطابقة">جرّب تخصصاً آخر أو احذف عبارة البحث أو اختر مدينة مختلفة.</EmptyState></Card>
       )}
-      {results.data?.map((p) => <ProviderCard key={`${p.facility_id}:${p.practitioner_id}`} p={p} kind={kind} />)}
+      {results.data?.map((p, i) => <FadeIn key={`${p.facility_id}:${p.practitioner_id}`} index={i}><ProviderCard p={p} kind={kind} /></FadeIn>)}
     </Screen>
   );
 }
 
+const h = StyleSheet.create({
+  hero: { backgroundColor: color.primary, borderRadius: 22, padding: space[5], gap: space[4], overflow: 'hidden', ...shadow },
+  glow: { position: 'absolute', top: -70, left: -50, width: 220, height: 220, borderRadius: 110, backgroundColor: 'rgba(94,234,212,0.16)' },
+  ring: { position: 'absolute', bottom: -110, right: -40, width: 260, height: 260, borderRadius: 130, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
+  pill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: space[3], minHeight: 38, borderRadius: radius.pill, backgroundColor: 'rgba(255,255,255,0.12)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
+  search: { flexDirection: 'row', alignItems: 'center', gap: space[2], backgroundColor: '#fff', borderRadius: radius.lg, paddingHorizontal: space[4], minHeight: 54 },
+  searchInput: { flex: 1, minWidth: 0, width: 0, fontFamily: family.regular, fontSize: size.bodyLg, color: color.text, textAlign: startAlign, paddingVertical: 10 },
+  seg: { flexDirection: 'row', gap: 4, padding: 4, borderRadius: radius.md, backgroundColor: 'rgba(255,255,255,0.1)' },
+  segBtn: { flex: 1, minHeight: 40, borderRadius: radius.sm, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
+  spec: { width: 86, paddingVertical: space[3], paddingHorizontal: 4, borderRadius: radius.lg, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, alignItems: 'center', gap: 6 },
+  specIco: { width: 40, height: 40, borderRadius: 13, backgroundColor: '#EEF3F8', alignItems: 'center', justifyContent: 'center' },
+});
+
 function ProviderCard({ p, kind }: { p: Provider; kind: Kind }) {
   const href = providerHref(p.facility_id, p.practitioner_id);
   return (
-    <Card>
-      <Link href={href} asChild>
-        <Pressable accessibilityRole="link" accessibilityLabel={`${p.display_name} — عرض التفاصيل`}>
-          <Row gap={space[3]} style={{ alignItems: 'flex-start' }}>
-            <Avatar name={p.display_name} />
-            <View style={{ flex: 1, gap: 2 }}>
-              <Text variant="title">{p.display_name}</Text>
-              <Text variant="small" muted>{kind === 'doctor' ? (p.specialty_name ?? p.title ?? '') : p.organization_name}</Text>
-              {kind === 'doctor' && <Text variant="small">{p.facility_name}</Text>}
-            </View>
-            {p.license_verified && kind === 'doctor' && <Badge label="موثّق" tone="success" icon={<BadgeCheck size={12} color={color.success} />} />}
-          </Row>
-        </Pressable>
-      </Link>
-      <Row wrap gap={space[3]}>
-        <Row gap={4}><MapPin size={14} color={color.mutedText} /><Text variant="small" muted>{[p.area, p.city_name].filter(Boolean).join('، ') || p.branch_name}</Text></Row>
-        {p.distance_km != null && <Text variant="small" muted>≈ {p.distance_km} كم</Text>}
-        {p.min_price_minor != null && <Row gap={4}><Wallet size={14} color={color.mutedText} /><Text variant="small" muted>يبدأ من {formatMoney(p.min_price_minor)}</Text></Row>}
-      </Row>
-      <NextSlot facilityId={p.facility_id} practitionerId={p.practitioner_id} />
-      <Button title={kind === 'doctor' ? 'عرض المواعيد والحجز' : 'عرض الفحوصات والحجز'} onPress={() => router.push(href)} />
-    </Card>
+    <PressScale onPress={() => router.push(href)} accessibilityRole="link" accessibilityLabel={`${p.display_name} — ${kind === 'doctor' ? 'عرض المواعيد والحجز' : 'عرض الفحوصات والحجز'}`}>
+      <Card>
+        <Row gap={space[3]} style={{ alignItems: 'flex-start' }}>
+          <Avatar name={p.display_name} />
+          <View style={{ flex: 1, gap: 2 }}>
+            <Row gap={6}><Text variant="title" numberOfLines={1} style={{ flexShrink: 1 }}>{p.display_name}</Text>{p.license_verified && kind === 'doctor' && <BadgeCheck size={18} color={color.accent} />}</Row>
+            <Text variant="small" muted>{kind === 'doctor' ? (p.specialty_name ?? p.title ?? '') : p.organization_name}</Text>
+          </View>
+        </Row>
+        <Row wrap gap={space[3]}>
+          {kind === 'doctor' && <Row gap={4}><Stethoscope size={14} color={color.mutedText} /><Text variant="small" muted>{p.facility_name}</Text></Row>}
+          <Row gap={4}><MapPin size={14} color={color.mutedText} /><Text variant="small" muted>{[p.area, p.city_name].filter(Boolean).join('، ') || p.branch_name}</Text></Row>
+          {p.distance_km != null && <Text variant="small" muted>≈ {p.distance_km} كم</Text>}
+        </Row>
+        <NextSlot facilityId={p.facility_id} practitionerId={p.practitioner_id} />
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderTopWidth: 1, borderStyle: 'dashed', borderColor: color.border, paddingTop: space[3] }}>
+          <View>
+            <Text variant="small" muted style={{ fontSize: 12 }}>{p.min_price_minor != null ? 'يبدأ من' : 'السعر'}</Text>
+            <Text variant="title" style={{ fontSize: 15 }}>{p.min_price_minor != null ? formatMoney(p.min_price_minor) : 'في العيادة'}</Text>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: color.accentSoft, paddingHorizontal: space[3], minHeight: 40, borderRadius: radius.md }}>
+            <CalendarClock size={16} color={color.accent} />
+            <Text variant="small" weight="semibold" style={{ color: color.accent }}>{kind === 'doctor' ? 'عرض المواعيد والحجز' : 'عرض الفحوصات والحجز'}</Text>
+          </View>
+        </View>
+      </Card>
+    </PressScale>
   );
 }
 
@@ -144,14 +207,15 @@ function NextSlot({ facilityId, practitionerId }: { facilityId: string; practiti
     }));
     return (slots as { slot_start: string }[])[0]?.slot_start ?? null;
   }, [facilityId, practitionerId, today]);
-  if (state.status === 'loading') return <Text variant="small" muted>…</Text>;
-  if (state.status === 'error' || !state.data) {
-    return <Row gap={4}><Clock size={14} color={color.mutedText} /><Text variant="small" muted>لا توجد أوقات متاحة خلال 7 أيام</Text></Row>;
-  }
+  if (state.status === 'loading') return <SkeletonBox width="60%" height={30} radius={12} />;
+  const none = state.status === 'error' || !state.data;
+  const isToday = !none && localDateKey(new Date(state.data!)) === today;
   return (
-    <Row gap={4}>
-      <Clock size={14} color={color.accent} />
-      <Text variant="small" weight="semibold" style={{ color: color.accent }}>أقرب موعد: {formatDateShort(state.data)} — {formatTime(state.data)}</Text>
-    </Row>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingHorizontal: space[3], paddingVertical: 6, borderRadius: radius.md, backgroundColor: none ? color.surfaceSunken : color.accentSoft }}>
+      <Clock size={14} color={none ? color.mutedText : color.accent} />
+      <Text variant="small" weight={none ? 'regular' : 'semibold'} style={{ color: none ? color.mutedText : color.accent }}>
+        {none ? 'لا توجد أوقات متاحة خلال 7 أيام' : `أقرب موعد: ${isToday ? 'اليوم' : formatDateShort(state.data!)} — ${formatTime(state.data!)}`}
+      </Text>
+    </View>
   );
 }

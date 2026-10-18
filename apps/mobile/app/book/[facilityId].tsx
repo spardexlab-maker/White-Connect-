@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text as RNText, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { CalendarCheck2, CalendarX2, CheckCircle2, Clock } from 'lucide-react-native';
+import { CalendarCheck2, CalendarX2, Clock } from 'lucide-react-native';
 import {
   addDays, errorCode, errorMessage, formatDate, formatDateTime, formatMoney, formatTime, localDateKey, weekdayLabel, weekdayOf,
 } from '@app/shared';
@@ -11,7 +11,7 @@ import { useAuth } from '../../src/lib/auth';
 import { newIdempotencyKey } from '../../src/lib/idempotency';
 import { useProviderProfile } from '../../src/lib/provider';
 import { AuthForm, RegisterSelf } from '../../src/components/AuthForms';
-import { Alert, AppointmentBadge, Button, Card, Chip, EmptyState, ErrorState, Field, Loading, Ltr, Row, Screen, Stack, Summary, Text } from '../../src/components/ui';
+import { Alert, AppointmentBadge, Button, Card, Chip, EmptyState, ErrorState, Field, Loading, Ltr, Row, Screen, Stack, SuccessMark, Summary, Text } from '../../src/components/ui';
 import { color, family, radius, space } from '../../src/theme';
 
 type Step = 1 | 2 | 3 | 4;
@@ -200,7 +200,10 @@ export default function BookingScreen() {
 
       {step === 4 && result && slot && (
         <Card>
-          <Row><CheckCircle2 size={28} color={color.success} /><Text variant="h3">تم تسجيل طلبك</Text></Row>
+          <View style={{ alignItems: 'center', gap: space[2], paddingVertical: space[2] }}>
+            <SuccessMark pending={result.status === 'awaiting_confirmation'} />
+            <Text variant="h3" style={{ textAlign: 'center' }}>{result.status === 'confirmed' ? 'تم تأكيد موعدك' : 'تم إرسال طلبك — بانتظار التأكيد'}</Text>
+          </View>
           <Summary rows={[
             ['رقم الحجز', <Text key="n" variant="title"><Ltr>{result.booking_number}</Ltr></Text>],
             ['الحالة', <AppointmentBadge key="s" status={result.status} />],

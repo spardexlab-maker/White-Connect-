@@ -33,7 +33,7 @@ try {
   step('home lists doctors with next free slot (RTL)');
   await shot(p, 'm01-home');
 
-  await p.getByRole('button', { name: 'عرض المواعيد والحجز' }).first().click();
+  await p.getByRole('link', { name: /عرض المواعيد والحجز/ }).first().click();
   await p.getByText('الخدمات').first().waitFor();
   step('provider profile opens');
   await shot(p, 'm02-provider');
@@ -58,7 +58,7 @@ try {
   await p.getByRole('button', { name: 'إرسال طلب الحجز' }).waitFor({ timeout: 15000 });
   step('signed in inline without losing the chosen slot');
   await p.getByRole('button', { name: 'إرسال طلب الحجز' }).click();
-  await p.getByText('تم تسجيل طلبك').waitFor({ timeout: 15000 });
+  await p.getByText(/تم إرسال طلبك|تم تأكيد موعدك/).waitFor({ timeout: 15000 });
   await shot(p, 'm05-booked');
   step('booking submitted');
 
