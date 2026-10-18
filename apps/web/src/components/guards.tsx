@@ -34,3 +34,11 @@ export function RequirePlatformAdmin({ children }: { children: ReactNode }) {
   if (!access.is_platform_admin) return <PermissionDenied />;
   return <>{children}</>;
 }
+
+/** Signed-in user of any kind (the RPC decides what they may read). */
+export function RequireStaffOrPatient({ children }: { children: ReactNode }) {
+  const { session, loading } = useAuth();
+  if (loading) return <SkeletonList />;
+  if (!session) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}

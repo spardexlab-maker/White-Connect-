@@ -83,3 +83,52 @@
   .print-card, .print-card * { visibility: visible !important; }
   .print-card { position: fixed; inset-block-start: 0; inset-inline-start: 0; width: 85mm; border: 1px solid #000; box-shadow: none; }
 }
+
+/* ---------- Prescription document (screen + print) ---------- */
+.rx-doc { position: relative; background: #fff; color: #000; border: 1px solid var(--c-border-strong); border-radius: var(--r-md); padding: 18px; display: flex; flex-direction: column; gap: 12px; font-size: 14px; line-height: 1.6; overflow: hidden; }
+.rx-a5 { max-width: 148mm; }
+.rx-a4 { max-width: 210mm; }
+.rx-head { display: flex; justify-content: space-between; gap: 12px; border-block-end: 2px solid #000; padding-block-end: 8px; }
+.rx-facility { font-size: 17px; }
+.rx-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 6px 12px; }
+.rx-meta > div { display: flex; flex-direction: column; }
+.rx-items { margin: 0; padding-inline-start: 22px; display: flex; flex-direction: column; gap: 10px; }
+.rx-items li { break-inside: avoid; page-break-inside: avoid; }
+.rx-drug { font-weight: 700; font-size: 15px; }
+.rx-sig { font-weight: 600; }
+.rx-foot { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; border-block-start: 1px solid #000; padding-block-start: 8px; }
+.rx-brand { text-align: center; }
+.rx-watermark { position: absolute; inset: 0; display: grid; place-items: center; font-size: 28px; font-weight: 700; color: rgb(185 28 28 / .18); transform: rotate(-18deg); pointer-events: none; }
+.print-only { display: none; }
+@media print {
+  @page { margin: 10mm; }
+  .print-area, .print-area * { visibility: visible !important; }
+  .print-area { position: absolute; inset-block-start: 0; inset-inline-start: 0; width: 100%; }
+  .print-area .rx-doc { border: 0; max-width: none; }
+  .no-print { display: none !important; }
+  .print-only { display: block; }
+}
+
+/* ---------- Doctor session ---------- */
+.session-header { position: sticky; inset-block-start: var(--topbar-h); z-index: 20; background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-lg); padding: var(--s-3) var(--s-4); display: flex; flex-wrap: wrap; gap: var(--s-3); align-items: center; box-shadow: var(--shadow-1); }
+.allergy-strip { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.save-state { font-size: var(--f-label); display: inline-flex; align-items: center; gap: 6px; }
+.session-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: var(--s-4); align-items: start; }
+@media (max-width: 1180px) { .session-grid { grid-template-columns: minmax(0, 1fr); } }
+.vitals-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: var(--s-2); }
+.rx-builder { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 420px); gap: var(--s-4); align-items: start; }
+.rx-preview { position: sticky; inset-block-start: calc(var(--topbar-h) + 90px); }
+.rx-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--s-2); }
+.rx-row legend { padding: 0; margin-block-end: var(--s-2); }
+.combo-list { position: absolute; z-index: 30; inset-inline: 0; inset-block-start: 76px; margin: 0; padding: 4px; list-style: none; background: var(--c-surface); border: 1px solid var(--c-border-strong); border-radius: var(--r-md); box-shadow: var(--shadow-2); max-height: 280px; overflow-y: auto; }
+.combo-list button { width: 100%; display: flex; justify-content: space-between; gap: var(--s-2); align-items: center; text-align: start; border: 0; background: none; padding: var(--s-2) var(--s-3); border-radius: var(--r-sm); cursor: pointer; min-height: 44px; }
+.combo-list button:hover, .combo-list button:focus-visible { background: var(--c-accent-soft); }
+.mobile-only { display: none; }
+@media (max-width: 1023px) {
+  .rx-builder { grid-template-columns: minmax(0, 1fr); }
+  .rx-preview { position: static; }
+  .mobile-only { display: block; }
+  [data-hidden-mobile='true'] { display: none !important; }
+}
+.result-table td, .result-table th { vertical-align: top; }
+.flag-critical { color: var(--c-danger); font-weight: 700; }

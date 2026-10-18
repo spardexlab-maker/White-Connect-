@@ -5,7 +5,7 @@ import { WorkspaceProvider } from './lib/workspace';
 import { configMissing, productName } from './lib/supabase';
 import { ToastProvider, Alert, SkeletonList } from './components/ui';
 import { PatientLayout } from './layouts/PatientLayout';
-import { RequireStaff, RequireWorkspaceRole, RequirePlatformAdmin } from './components/guards';
+import { RequireStaff, RequireStaffOrPatient, RequireWorkspaceRole, RequirePlatformAdmin } from './components/guards';
 import { PatientHome } from './pages/patient/Home';
 import { ProviderPage } from './pages/patient/Provider';
 import { BookingFlow } from './pages/patient/Booking';
@@ -13,6 +13,9 @@ import { MyAppointments } from './pages/patient/Appointments';
 import { Journey } from './pages/patient/Journey';
 import { Notifications } from './pages/patient/Notifications';
 import { Account } from './pages/patient/Account';
+import { PatientRx } from './pages/patient/PatientRx';
+import { LabOrderPage } from './pages/LabOrderPage';
+import { VerifyRx } from './pages/VerifyRx';
 
 // Professional and admin areas are code-split so patients on mobile do not download them.
 const ProLogin = lazy(() => import('./pages/pro/Login').then((m) => ({ default: m.ProLogin })));
@@ -21,12 +24,15 @@ const AcceptInvite = lazy(() => import('./pages/pro/AcceptInvite').then((m) => (
 const ReceptionDashboard = lazy(() => import('./pages/pro/Reception').then((m) => ({ default: m.ReceptionDashboard })));
 const DoctorToday = lazy(() => import('./pages/pro/DoctorToday').then((m) => ({ default: m.DoctorToday })));
 const DoctorSchedule = lazy(() => import('./pages/pro/DoctorSchedule').then((m) => ({ default: m.DoctorSchedule })));
-const PendingModule = lazy(() => import('./pages/pro/PendingModule').then((m) => ({ default: m.PendingModule })));
 const OrganizationAdmin = lazy(() => import('./pages/pro/OrganizationAdmin').then((m) => ({ default: m.OrganizationAdmin })));
 const AdminOverview = lazy(() => import('./pages/admin/Overview').then((m) => ({ default: m.AdminOverview })));
 const AdminOrganizations = lazy(() => import('./pages/admin/Organizations').then((m) => ({ default: m.AdminOrganizations })));
 const AdminMembers = lazy(() => import('./pages/admin/Members').then((m) => ({ default: m.AdminMembers })));
 const AdminAudit = lazy(() => import('./pages/admin/Audit').then((m) => ({ default: m.AdminAudit })));
+const DoctorSession = lazy(() => import('./pages/pro/DoctorSession').then((m) => ({ default: m.DoctorSession })));
+const PharmacyInbox = lazy(() => import('./pages/pro/PharmacyInbox').then((m) => ({ default: m.PharmacyInbox })));
+const LabWorkspace = lazy(() => import('./pages/pro/LabWorkspace').then((m) => ({ default: m.LabWorkspace })));
+const PrintRx = lazy(() => import('./pages/PrintRx').then((m) => ({ default: m.PrintRx })));
 const ComponentGallery = lazy(() => import('./pages/dev/Gallery').then((m) => ({ default: m.ComponentGallery })));
 const WorkspaceLayout = lazy(() => import('./layouts/WorkspaceLayout').then((m) => ({ default: m.WorkspaceLayout })));
 
@@ -61,6 +67,8 @@ export function App() {
                 <Route path="journey" element={<Journey />} />
                 <Route path="notifications" element={<Notifications />} />
                 <Route path="account" element={<Account />} />
+                <Route path="rx/:id" element={<PatientRx />} />
+                <Route path="labs/:orderId" element={<LabOrderPage back="/patient/journey" />} />
               </Route>
 
               {/* Professional portal */}
@@ -70,9 +78,11 @@ export function App() {
               <Route element={<RequireStaff><WorkspaceLayout /></RequireStaff>}>
                 <Route path="/workspace/reception" element={<RequireWorkspaceRole roles={['receptionist', 'facility_admin', 'doctor']}><ReceptionDashboard /></RequireWorkspaceRole>} />
                 <Route path="/workspace/doctor" element={<RequireWorkspaceRole roles={['doctor']}><DoctorToday /></RequireWorkspaceRole>} />
+                <Route path="/workspace/doctor/session/:encounterId" element={<RequireWorkspaceRole roles={['doctor']}><DoctorSession /></RequireWorkspaceRole>} />
+                <Route path="/workspace/doctor/lab/:orderId" element={<RequireWorkspaceRole roles={['doctor']}><LabOrderPage back="/workspace/doctor" /></RequireWorkspaceRole>} />
                 <Route path="/workspace/doctor/schedule" element={<RequireWorkspaceRole roles={['doctor']}><DoctorSchedule /></RequireWorkspaceRole>} />
-                <Route path="/workspace/pharmacy" element={<RequireWorkspaceRole roles={['pharmacist', 'pharmacy_staff']}><PendingModule module="pharmacy" /></RequireWorkspaceRole>} />
-                <Route path="/workspace/lab" element={<RequireWorkspaceRole roles={['lab_technician', 'lab_approver']}><PendingModule module="lab" /></RequireWorkspaceRole>} />
+                <Route path="/workspace/pharmacy" element={<RequireWorkspaceRole roles={['pharmacist', 'pharmacy_staff']}><PharmacyInbox /></RequireWorkspaceRole>} />
+                <Route path="/workspace/lab" element={<RequireWorkspaceRole roles={['lab_technician', 'lab_approver']}><LabWorkspace /></RequireWorkspaceRole>} />
                 <Route path="/workspace/organization" element={<RequireWorkspaceRole roles={['facility_admin', 'organization_admin']}><OrganizationAdmin /></RequireWorkspaceRole>} />
                 <Route path="/platform-admin" element={<RequirePlatformAdmin><AdminOverview /></RequirePlatformAdmin>} />
                 <Route path="/platform-admin/organizations" element={<RequirePlatformAdmin><AdminOrganizations /></RequirePlatformAdmin>} />
@@ -80,6 +90,8 @@ export function App() {
                 <Route path="/platform-admin/audit" element={<RequirePlatformAdmin><AdminAudit /></RequirePlatformAdmin>} />
               </Route>
 
+              <Route path="/print/rx/:id" element={<RequireStaffOrPatient><PrintRx /></RequireStaffOrPatient>} />
+              <Route path="/verify/rx" element={<VerifyRx />} />
               <Route path="/dev/components" element={<ComponentGallery />} />
               <Route path="*" element={<Navigate to="/patient" replace />} />
             </Routes>

@@ -37,6 +37,19 @@ const messages: Record<string, string> = {
   cannot_change_self: 'لا يمكنك تغيير حالة حسابك.',
   invalid_timezone: 'المنطقة الزمنية غير صحيحة.',
   not_found: 'العنصر غير موجود.',
+  another_session_in_progress: 'لديك جلسة جارية؛ أنهِها أو حوّلها لانتظار النتائج أولاً.',
+  no_draft: 'لا توجد مسودة قابلة للتعديل.',
+  signed_record_locked: 'السجل معتمد ومقفل؛ استخدم التصحيح بإصدار جديد.',
+  delete_not_allowed: 'لا يمكن حذف السجلات المعتمدة.',
+  encounter_closed: 'الجلسة مغلقة.',
+  items_required: 'أضف بنداً واحداً على الأقل.',
+  medication_required: 'اختر الدواء من القائمة أو اكتب اسمه.',
+  invalid_pharmacy: 'الصيدلية المختارة غير متاحة.',
+  already_dispensed: 'لا يمكن الإلغاء بعد الصرف.',
+  not_printable: 'لا توجد نسخة معتمدة للطباعة.',
+  invalid_lab: 'المختبر المختار غير متاح.',
+  invalid_test: 'فحص غير متاح في هذا المختبر.',
+  nothing_to_release: 'لا توجد نتائج مسودة محددة للاعتماد.',
 };
 
 export function errorCode(err: unknown): string | null {

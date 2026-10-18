@@ -1,6 +1,6 @@
 # المعمارية والقرارات
 
-> الحالة: المراحل 0–2 منفذة ومختبرة محلياً (انظر [TRACEABILITY.md](TRACEABILITY.md)). هذا نظام قيد البناء وليس معتمداً للاستخدام الطبي.
+> الحالة: المراحل 0–3 منفذة ومختبرة محلياً (انظر [TRACEABILITY.md](TRACEABILITY.md)). هذا نظام قيد البناء وليس معتمداً للاستخدام الطبي.
 
 ## 1. الصورة العامة
 
@@ -59,6 +59,10 @@
 | identity / organizations | 0002, 0004 | `profiles`, `platform_admins`, `organizations`, `branches`, `facilities`, `practitioner_profiles`, `memberships`, `reception_scopes`, `invitations`, `cities`, `specialties` |
 | patients | 0003, 0007 | `patients`, `patient_account_links`, `patient_identifiers`, `patient_qr_tokens`, `care_relationships`, `consent_grants` |
 | notifications | 0005, 0009 | `notification_outbox`, `notifications` |
+| clinical | 0010 | `encounters`, `clinical_notes` (مقفلة بعد الاعتماد بـtrigger)، `allergies`, `patient_reported_medications`, `clinical_tasks` |
+| prescriptions | 0011 | `medication_catalog`, `prescriptions`, `prescription_versions` (snapshot + verify_token)، `prescription_items` (مقفلة بعد الاعتماد)، `prescription_dispatches`, `prescription_events` |
+| laboratory | 0012 | `lab_test_catalog`, `lab_orders`, `lab_order_items`, `specimens`, `lab_results` (إصدارات، المنشور مقفل) |
+| read models | 0013 | `patient_journey`, `my_prescriptions`, `my_lab_orders`, `encounter_orders`, `my_clinical_tasks`, `lab_choices` |
 | scheduling | 0006, 0008 | `clinic_services`, `facility_resources`, `booking_policies`, `schedules`, `schedule_exceptions`, `appointments`, `appointment_events`, `queue_entries`, `delay_notices` |
 
 المخطط `private` غير معروض عبر Data API ويحتوي دوال التفويض. كل دالة `SECURITY DEFINER` تثبت `search_path = ''` وتُسحب منها صلاحية التنفيذ العامة ثم تُمنح صراحة.
@@ -100,7 +104,9 @@ erDiagram
   notification_outbox ||--o| notifications : "in-app inbox"
 ```
 
-الجداول المخططة للمراحل التالية (من النموذج الأولي في التوصيف §14): `encounters`, `clinical_notes`, `allergies`, `patient_reported_medications`, `referrals`, `prescriptions`, `prescription_versions`, `prescription_items`, `medication_catalog`, `pharmacy_products`, `inventory_batches`, `stock_movements`, `stock_reservations`, `dispensing_records`, `lab_test_catalog`, `lab_orders`, `lab_order_items`, `specimens`, `lab_results`, `lab_result_versions`, `attachments`, `invoices`, `payments`, `refunds`, `expenses`, `medication_plans`, `reminder_jobs`, `print_jobs`.
+المرحلة 3 أضافت: `encounters`, `clinical_notes`, `allergies`, `clinical_tasks`, `medication_catalog`, `prescriptions`, `prescription_versions`, `prescription_items`, `prescription_dispatches`, `prescription_events`, `lab_test_catalog`, `lab_orders`, `lab_order_items`, `specimens`, `lab_results` (الإحالات ممثلة بـ`prescription_dispatches` و`lab_orders.source='referral'`).
+
+الجداول المخططة للمراحل التالية: `pharmacy_products`, `inventory_batches`, `stock_movements`, `stock_reservations`, `dispensing_records`, `attachments`, `invoices`, `payments`, `refunds`, `expenses`, `medication_plans`, `reminder_jobs`, `print_jobs`.
 
 ## 6. عقود API (RPC)
 
@@ -124,6 +130,15 @@ erDiagram
 
 ### الإدارة
 `my_workspaces`, `my_access_summary`, `admin_create_organization|branch|facility`, `admin_set_entity_status` (سبب إلزامي)، `admin_set_account_status`, `admin_upsert_practitioner`, `create_invitation` (رمز يظهر مرة، صلاحية ≤ 14 يوماً)، `revoke_invitation`, `accept_invitation` (البريد يجب أن يطابق)، `admin_grant_membership`, `set_membership_status`, `set_reception_scope`, `facility_members`, `platform_overview`, `admin_retry_dead_notification`.
+
+### الجلسة الطبية (الطبيب المؤلف فقط)
+`start_encounter(queue_entry, identity_verified)`, `encounter_context`, `save_clinical_note_draft(…, expected_version)`, `sign_clinical_note`, `amend_clinical_note(…, reason)`, `set_encounter_status`, `add_allergy`, `encounter_orders`, `my_clinical_tasks`, `complete_clinical_task`.
+
+### الوصفات
+`search_medications`, `save_prescription_draft(… idempotency)`, `approve_prescription(id, send_to_pharmacy?, revision_reason?)`, `revise_prescription`, `cancel_prescription(reason)`, `record_prescription_print`, `prescription_document`, `pharmacy_choices`, `verify_prescription(token)` (عام، بلا بيانات المريض)، الصيدلية: `pharmacy_inbox`, `pharmacy_prescription`, `pharmacy_mark_received`. المريض: `my_prescriptions`.
+
+### المختبر
+`lab_choices`, `order_lab_tests(… idempotency)`, `lab_register_direct`, `lab_check_in`, `collect_specimen`, `reject_specimen(reason)`, `save_lab_result_draft` (فني/معتمد)، `release_lab_results(order, items[])` (معتمد فقط، جزئي)، `correct_lab_result(…, reason)`, `lab_worklist`, `lab_order_detail` (المسودات للمختبر فقط)، المريض: `my_lab_orders`, `patient_journey`.
 
 ### العامل (service role فقط)
 `outbox_claim(p_limit, p_lease_seconds)`, `outbox_complete(...)`, `expire_pending_appointments()`.

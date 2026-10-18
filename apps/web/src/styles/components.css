@@ -97,7 +97,7 @@
 .tab[aria-selected='true'] { color: var(--c-primary); border-block-end-color: var(--c-accent); }
 
 /* ---------- Tables ---------- */
-.table-wrap { overflow-x: auto; }
+.table-wrap { overflow-x: auto; position: relative; }
 .table { width: 100%; border-collapse: collapse; font-size: var(--f-small); }
 .table th { text-align: start; font-weight: 600; color: var(--c-muted); font-size: var(--f-label); padding: var(--s-2) var(--s-3); border-block-end: 1px solid var(--c-border); white-space: nowrap; background: var(--c-surface); }
 .table td { padding: var(--s-3); border-block-end: 1px solid var(--c-border); vertical-align: middle; }

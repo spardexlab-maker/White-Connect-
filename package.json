@@ -14,7 +14,9 @@
     "db:types": "supabase gen types typescript --local > packages/shared/src/database.types.ts",
     "test:integration": "vitest run --root tests/integration",
     "screenshots": "node scripts/screenshots.mjs",
-    "e2e": "node scripts/e2e-booking-journey.mjs"
+    "e2e": "node scripts/e2e-booking-journey.mjs",
+    "e2e:clinical": "node scripts/e2e-clinical-journey.mjs",
+    "screenshots:clinical": "node scripts/e2e-clinical-journey.mjs && node scripts/screenshots-phase3.mjs"
   },
   "devDependencies": {
     "@supabase/supabase-js": "^2.45.0",

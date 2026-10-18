@@ -1,0 +1,144 @@
+// Phase 3 end-to-end UI journey (local stack + dev server, synthetic data):
+// reception walk-in (existing patient by code) → doctor session: note,
+// prescription to the visit-location pharmacy, lab order → pharmacy
+// receives → lab collects / drafts / approver releases → doctor review
+// task → patient sees prescription + released result in the journey.
+import { chromium } from 'playwright';
+
+const BASE = process.argv[2] ?? 'http://127.0.0.1:5173';
+const PASSWORD = 'Demo-Pass-2026!';
+const browser = await chromium.launch();
+const ctxOpts = { viewport: { width: 1366, height: 900 }, locale: 'ar-IQ', timezoneId: 'Asia/Baghdad' };
+const step = (m) => console.log(`✓ ${m}`);
+const errors = [];
+
+async function pro(email) {
+  const page = await (await browser.newContext(ctxOpts)).newPage();
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto(`${BASE}/login`);
+  await page.getByLabel('البريد الإلكتروني أو معرف الدخول').fill(email);
+  await page.getByLabel('كلمة المرور').fill(PASSWORD);
+  await page.getByRole('button', { name: 'دخول' }).click();
+  await page.waitForURL(/workspace|platform-admin/);
+  return page;
+}
+
+// 1) reception: existing patient (lookup by public code) → waiting list
+const r = await pro('reception.a@demo.test');
+await r.waitForURL(/reception/);
+await r.getByRole('button', { name: /حجز سريع/ }).click();
+await r.getByRole('button', { name: 'مريض موجود' }).click();
+await r.locator('#lookup').fill('PDEMO00050');
+await r.getByRole('button', { name: 'بحث' }).click();
+await r.locator('.lookup-result', { hasText: 'حسن علي' }).click();
+await r.getByLabel(/إضافة إلى قائمة الانتظار/).check();
+await r.getByRole('button', { name: 'إضافة إلى الانتظار' }).click();
+await r.getByText('أُضيف المريض إلى قائمة الانتظار').waitFor();
+step('reception found the patient by code and added a walk-in');
+
+// 2) doctor session
+const d = await pro('dr.ahmed@demo.test');
+await d.getByRole('button', { name: /عيادات الرافدين.*طبيب/ }).first().click();
+await d.waitForURL(/doctor$/);
+const qi = d.locator('.queue-item', { hasText: 'حسن علي' }).filter({ hasText: 'عابر' }).first();
+await qi.getByRole('button', { name: 'بدء الجلسة' }).click();
+await d.getByRole('button', { name: 'تأكيد الهوية وبدء الجلسة' }).click();
+await d.waitForURL(/session/);
+await d.getByText('حساسية: Penicillin').first().waitFor();
+step('session started after identity confirmation; documented allergy shown in the header');
+await d.getByLabel('سبب الزيارة').fill('صداع متكرر (تجريبي)');
+await d.getByLabel('التقييم / التشخيص').fill('تقييم تجريبي');
+await d.getByText(/محفوظ/).first().waitFor({ timeout: 10000 });
+step('note autosaved with visible save status');
+
+await d.getByRole('tab', { name: 'وصفة' }).click();
+await d.getByLabel('بحث بالمادة الفعالة أو الاسم التجاري').fill('Paracet');
+await d.locator('.combo-list button', { hasText: '500 mg' }).click();
+await d.getByLabel('الجرعة', { exact: true }).fill('1');
+await d.getByLabel('وحدة الجرعة').fill('قرص');
+await d.getByLabel('عدد المرات / الفاصل (كما تكتبه)').fill('ثلاث مرات يومياً');
+await d.getByLabel('المدة (أيام)').fill('5');
+await d.getByLabel('كمية الصرف').fill('15');
+const dest = await d.getByLabel('وجهة الوصفة').locator('option:checked').innerText();
+if (!dest.includes('صيدلية الرافدين')) throw new Error(`default pharmacy should be the visit location, got ${dest}`);
+await d.getByRole('button', { name: 'اعتماد وإرسال' }).click();
+await d.getByRole('alertdialog').getByText('حسن علي').waitFor();
+await d.getByRole('alertdialog').getByRole('button', { name: 'اعتماد وإرسال' }).click();
+await d.getByText(/معتمدة — إصدار 1/).waitFor();
+step('prescription approved and sent to the visit-location pharmacy (confirmation showed patient + pharmacy)');
+
+await d.getByRole('tab', { name: /تحاليل/ }).click();
+await d.locator('.radio-card', { hasText: 'سكر صائم' }).click();
+await d.getByRole('button', { name: /إرسال الطلب إلى/ }).click();
+await d.getByText(/أُرسل طلب التحاليل/).waitFor();
+step('lab order sent');
+
+await d.getByRole('tab', { name: 'الجلسة الحالية' }).click();
+await d.getByRole('button', { name: 'اعتماد الملاحظة' }).click();
+await d.getByRole('button', { name: 'اعتماد وقفل' }).click();
+await d.getByText(/الملاحظة معتمدة/).waitFor();
+await d.getByRole('button', { name: 'انتظار النتائج واستقبال التالي' }).click();
+await d.getByRole('alertdialog').getByRole('button', { name: 'تأكيد' }).click();
+await d.waitForURL(/doctor$/);
+step('note signed and locked; session moved to awaiting results, doctor back on the day list');
+
+// 3) pharmacy receives
+const ph = await pro('pharm.a@demo.test');
+await ph.waitForURL(/pharmacy/);
+const row = ph.locator('tr', { hasText: 'حسن علي' }).first();
+await row.getByText('جديدة').waitFor();
+await row.getByRole('button', { name: 'فتح' }).click();
+await ph.getByText('حساسية موثقة: Penicillin').waitFor();
+await ph.getByRole('button', { name: 'تسجيل الاستلام' }).click();
+await ph.getByText('سُجل الاستلام').waitFor();
+step('pharmacy sees the prescription (with documented allergy) and records receipt');
+
+// 4) lab: technician collects + drafts, approver releases
+const lt = await pro('lab.a@demo.test');
+await lt.waitForURL(/lab/);
+await lt.locator('tr', { hasText: 'حسن علي' }).first().getByRole('button', { name: 'فتح' }).click();
+await lt.getByRole('button', { name: 'تسجيل حضور' }).click();
+await lt.getByText('سُجل حضور المراجع').waitFor();
+await lt.getByRole('button', { name: 'سحب العينة' }).click();
+await lt.getByText(/العينة: S/).waitFor();
+await lt.getByLabel('القيمة').fill('92');
+await lt.getByLabel('المجال المرجعي').fill('70-100 (مختبر تجريبي)');
+await lt.getByRole('button', { name: 'حفظ مسودة' }).click();
+await lt.getByText('حُفظت المسودة (غير منشورة)').waitFor();
+if (await lt.getByRole('button', { name: /اعتماد ونشر/ }).count()) throw new Error('technician must not see release');
+step('technician collected a barcoded specimen and saved a draft (cannot release)');
+
+const la = await pro('labapprover.a@demo.test');
+await la.waitForURL(/lab/);
+await la.locator('tr', { hasText: 'حسن علي' }).first().getByRole('button', { name: 'فتح' }).click();
+await la.getByLabel(/تحديد سكر صائم للنشر/).check();
+await la.getByRole('button', { name: /اعتماد ونشر \(1\)/ }).click();
+await la.getByRole('alertdialog').getByText(/الطبيب الطالب/).waitFor();
+await la.getByRole('alertdialog').getByRole('button', { name: 'اعتماد ونشر' }).click();
+await la.getByText('نُشرت النتائج المحددة').waitFor();
+step('approver saw patient + specimen + recipients and released');
+
+// 5) doctor review task
+await d.reload();
+await d.getByText('نتائج تحتاج مراجعة').waitFor();
+await d.locator('.list-item', { hasText: 'حسن علي' }).getByRole('link', { name: 'عرض النتيجة' }).click();
+await d.getByText('92').waitFor();
+step('doctor got a review task and sees the released value (no automatic interpretation)');
+
+// 6) patient journey
+const p = await (await browser.newContext(ctxOpts)).newPage();
+await p.goto(`${BASE}/patient/account`);
+await p.getByLabel('البريد الإلكتروني').fill('hasan@demo.test');
+await p.getByLabel('كلمة المرور').fill(PASSWORD);
+await p.getByRole('button', { name: 'دخول' }).click();
+await p.locator('canvas').first().waitFor();
+await p.goto(`${BASE}/patient/journey`);
+await p.getByText(/^وصفة RX/).first().waitFor();
+await p.getByText(/نتائج معتمدة/).first().waitFor();
+await p.locator('.card', { hasText: /^وصفة RX/ }).first().getByRole('link', { name: 'التفاصيل' }).click();
+await p.getByText('ثلاث مرات يومياً').waitFor();
+step('patient journey shows the approved prescription and released results');
+
+await browser.close();
+if (errors.length) { console.log('PAGE ERRORS:\n' + errors.join('\n')); process.exit(1); }
+console.log('Phase 3 E2E journey passed');

@@ -1,76 +1,81 @@
 import { useMemo, useState } from 'react';
-import { CalendarCheck2, FlaskConical, Pill, Route } from 'lucide-react';
-import { formatDate, formatTime, type AppointmentStatus } from '@app/shared';
+import { Link } from 'react-router-dom';
+import { CalendarCheck2, FlaskConical, Pill, Route, Stethoscope } from 'lucide-react';
+import { appointmentStatus, encounterStatus, formatDate, formatTime, labStatus, type AppointmentStatus, type EncounterStatus, type LabStatus } from '@app/shared';
 import { supabase } from '../../lib/supabase';
 import { unwrap, useAsync } from '../../lib/useAsync';
 import { useAuth } from '../../lib/auth';
-import { Alert, AppointmentStatusBadge, EmptyState, ErrorState, SkeletonList } from '../../components/ui';
+import { Alert, Badge, EmptyState, ErrorState, SkeletonList } from '../../components/ui';
 import { SignInPrompt } from './Account';
 
-interface Row { appointment_id: string; status: AppointmentStatus; starts_at: string; timezone: string; facility_name: string; practitioner_name: string | null; service_name: string; patient_name: string }
+interface J { event_type: 'visit' | 'prescription' | 'lab'; occurred_at: string; ref_id: string; encounter_id: string | null; patient_name: string;
+  facility_name: string; practitioner_name: string | null; status: string; title: string; corrected: boolean }
+interface A { appointment_id: string; status: AppointmentStatus; starts_at: string; timezone: string; facility_name: string; practitioner_name: string | null; service_name: string; patient_name: string }
 type Filter = 'all' | 'visits' | 'prescriptions' | 'labs';
+type Ev = { kind: 'appointment' | J['event_type']; at: string; key: string; title: string; who: string; where: string; patient: string; badge: JSX.Element; link?: string; corrected?: boolean; group?: string | null };
 
-/**
- * Medical journey timeline. In this phase it contains visits (appointments).
- * Prescriptions and lab results join the same timeline when Phase 3/4 ship;
- * their filters are visible but clearly marked as not yet available.
- */
+/** One chronological journey; events of the same visit are grouped (§8, §23). */
 export function Journey() {
   const { session } = useAuth();
   const [filter, setFilter] = useState<Filter>('all');
-  const list = useAsync(async () => (session ? ((await unwrap(supabase.rpc('my_appointments'))) as Row[]) : []), [session?.user.id]);
-  const events = useMemo(() => (list.data ?? []).filter((r) => !['expired'].includes(r.status)), [list.data]);
-  if (!session) return <SignInPrompt title="رحلتي الطبية" />;
+  const data = useAsync(async () => {
+    if (!session) return { j: [] as J[], a: [] as A[] };
+    const [j, a] = await Promise.all([unwrap(supabase.rpc('patient_journey')), unwrap(supabase.rpc('my_appointments'))]);
+    return { j: j as J[], a: a as A[] };
+  }, [session?.user.id]);
 
-  const groups = new Map<string, Row[]>();
-  for (const e of events) {
-    const k = formatDate(e.starts_at, e.timezone);
-    groups.set(k, [...(groups.get(k) ?? []), e]);
-  }
+  const events = useMemo<Ev[]>(() => {
+    if (!data.data) return [];
+    const out: Ev[] = data.data.a.filter((x) => !['expired', 'fulfilled'].includes(x.status)).map((x) => ({
+      kind: 'appointment', at: x.starts_at, key: `a${x.appointment_id}`, title: `موعد — ${x.service_name}`, who: x.practitioner_name ?? x.facility_name,
+      where: x.facility_name, patient: x.patient_name, badge: <Badge tone={appointmentStatus[x.status].tone}>{appointmentStatus[x.status].label}</Badge>, link: '/patient/appointments' }));
+    for (const e of data.data.j) {
+      out.push({ kind: e.event_type, at: e.occurred_at, key: `${e.event_type}${e.ref_id}`, title: e.title, who: e.practitioner_name ?? '', where: e.facility_name,
+        patient: e.patient_name, corrected: e.corrected, group: e.encounter_id,
+        badge: e.event_type === 'visit' ? <Badge tone={encounterStatus[e.status as EncounterStatus].tone}>{encounterStatus[e.status as EncounterStatus].label}</Badge>
+          : e.event_type === 'lab' ? <Badge tone={labStatus[e.status as LabStatus].tone}>{e.status === 'released' ? 'نتائج معتمدة' : labStatus[e.status as LabStatus].label}</Badge>
+          : <Badge tone={e.status === 'active' ? 'success' : 'neutral'}>{e.status === 'active' ? 'معتمدة' : 'ملغاة'}</Badge>,
+        link: e.event_type === 'prescription' ? `/patient/rx/${e.ref_id}` : e.event_type === 'lab' ? `/patient/labs/${e.ref_id}` : undefined });
+    }
+    return out.sort((x, y) => y.at.localeCompare(x.at)).filter((e) =>
+      filter === 'all' || (filter === 'visits' && (e.kind === 'visit' || e.kind === 'appointment')) || (filter === 'prescriptions' && e.kind === 'prescription') || (filter === 'labs' && e.kind === 'lab'));
+  }, [data.data, filter]);
+
+  if (!session) return <SignInPrompt title="رحلتي الطبية" />;
+  const icon = { appointment: <CalendarCheck2 size={12} />, visit: <Stethoscope size={12} />, prescription: <Pill size={12} />, lab: <FlaskConical size={12} /> };
+  let lastDate = '';
 
   return (
     <div className="stack">
       <h1 style={{ fontSize: 'var(--f-h2)' }}>رحلتي الطبية</h1>
       <div className="chips" role="group" aria-label="تصفية الأحداث">
-        <button className="chip" aria-pressed={filter === 'all'} onClick={() => setFilter('all')}>الكل</button>
-        <button className="chip" aria-pressed={filter === 'visits'} onClick={() => setFilter('visits')}><CalendarCheck2 size={14} aria-hidden />الزيارات</button>
-        <button className="chip" aria-pressed={filter === 'prescriptions'} onClick={() => setFilter('prescriptions')}><Pill size={14} aria-hidden />الوصفات</button>
-        <button className="chip" aria-pressed={filter === 'labs'} onClick={() => setFilter('labs')}><FlaskConical size={14} aria-hidden />التحاليل</button>
+        {([['all', 'الكل'], ['visits', 'الزيارات'], ['prescriptions', 'الوصفات'], ['labs', 'التحاليل']] as [Filter, string][]).map(([v, l]) =>
+          <button key={v} className="chip" aria-pressed={filter === v} onClick={() => setFilter(v)}>{l}</button>)}
       </div>
-      {(filter === 'prescriptions' || filter === 'labs') ? (
-        <div className="card">
-          <EmptyState icon={filter === 'labs' ? <FlaskConical /> : <Pill />} title={filter === 'labs' ? 'نتائج التحاليل غير مفعّلة بعد' : 'الوصفات الإلكترونية غير مفعّلة بعد'}>
-            ستظهر هنا {filter === 'labs' ? 'النتائج المعتمدة من المختبر' : 'الوصفات المعتمدة من الطبيب'} مرتبطة بالزيارة نفسها عند تفعيل المرحلة الثالثة من المنصة.
-          </EmptyState>
-        </div>
-      ) : (
-        <div className="card">
-          {list.status === 'loading' && !list.data && <SkeletonList rows={3} />}
-          {list.status === 'error' && <ErrorState error={list.error} onRetry={list.reload} />}
-          {list.data && events.length === 0 && <EmptyState icon={<Route />} title="لا توجد أحداث بعد">بعد أول حجز أو زيارة ستتجمع الأحداث هنا بترتيب زمني.</EmptyState>}
-          {events.length > 0 && (
-            <ol className="timeline">
-              {[...groups.entries()].map(([dateLabel, rows]) => rows.map((r, i) => (
-                <li key={r.appointment_id}>
-                  <span className="dot" aria-hidden><CalendarCheck2 size={12} color="var(--c-accent)" /></span>
-                  {i === 0 && <div className="label-text" style={{ marginBlockEnd: 4 }}>{dateLabel}</div>}
+      <div className="card">
+        {data.status === 'loading' && !data.data && <SkeletonList rows={3} />}
+        {data.status === 'error' && <ErrorState error={data.error} onRetry={data.reload} />}
+        {data.data && events.length === 0 && <EmptyState icon={<Route />} title="لا توجد أحداث بعد">بعد أول حجز أو زيارة تتجمع الأحداث هنا بترتيب زمني.</EmptyState>}
+        {events.length > 0 && (
+          <ol className="timeline">
+            {events.map((e) => {
+              const d = formatDate(e.at); const showDate = d !== lastDate; lastDate = d;
+              return (
+                <li key={e.key}>
+                  <span className="dot" aria-hidden>{icon[e.kind]}</span>
+                  {showDate && <div className="label-text" style={{ marginBlockEnd: 4 }}>{d}</div>}
                   <div className="card" style={{ padding: 'var(--s-3)' }}>
-                    <div className="row-between">
-                      <strong>زيارة — {r.service_name}</strong>
-                      <AppointmentStatusBadge status={r.status} />
-                    </div>
-                    <div className="small muted">{r.practitioner_name ?? r.facility_name} · {r.facility_name} · <span className="num">{formatTime(r.starts_at, r.timezone)}</span></div>
-                    <div className="small muted">{r.patient_name}</div>
+                    <div className="row-between"><strong>{e.title}</strong><span className="row" style={{ gap: 4 }}>{e.corrected && <Badge tone="info">مصححة</Badge>}{e.badge}</span></div>
+                    <div className="small muted">{[e.who, e.where].filter(Boolean).join(' · ')} · <span className="num">{formatTime(e.at)}</span> · {e.patient}</div>
+                    {e.link && <Link to={e.link} className="small">التفاصيل</Link>}
                   </div>
                 </li>
-              )))}
-            </ol>
-          )}
-        </div>
-      )}
-      <Alert tone="info" title="عن هذه الصفحة">
-        تعرض الرحلة ما اعتمده المهنيون الصحيون. الملاحظات الداخلية والمسودات لا تُنشر لك تلقائياً.
-      </Alert>
+              );
+            })}
+          </ol>
+        )}
+      </div>
+      <Alert tone="info" title="عن هذه الصفحة">تعرض الرحلة ما اعتمده المهنيون الصحيون: الوصفات المعتمدة والنتائج المنشورة. الملاحظات الداخلية والمسودات لا تُنشر لك تلقائياً.</Alert>
     </div>
   );
 }

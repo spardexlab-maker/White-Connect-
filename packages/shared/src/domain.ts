@@ -67,3 +67,41 @@ export function workspaceArea(role: MemberRole): 'doctor' | 'reception' | 'pharm
 }
 
 export const weekdayLabel = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+
+export type EncounterStatus = Enums['encounter_status'];
+export type LabStatus = Enums['lab_status'];
+export type RxStatus = Enums['rx_status'];
+
+export const encounterStatus: Record<EncounterStatus, { label: string; tone: Tone }> = {
+  not_started: { label: 'لم تبدأ', tone: 'neutral' },
+  in_progress: { label: 'جارية', tone: 'accent' },
+  awaiting_results: { label: 'بانتظار النتائج', tone: 'warning' },
+  ready_for_review: { label: 'جاهزة للمراجعة', tone: 'info' },
+  completed: { label: 'مكتملة', tone: 'success' },
+  closed: { label: 'مغلقة', tone: 'neutral' },
+};
+
+export const labStatus: Record<LabStatus, { label: string; tone: Tone }> = {
+  ordered: { label: 'مطلوب', tone: 'neutral' },
+  scheduled: { label: 'مجدول', tone: 'info' },
+  checked_in: { label: 'حضر', tone: 'info' },
+  sample_collected: { label: 'سُحبت العينة', tone: 'accent' },
+  processing: { label: 'قيد المعالجة / جزئي', tone: 'warning' },
+  pending_review: { label: 'بانتظار الاعتماد', tone: 'warning' },
+  released: { label: 'معتمد ومنشور', tone: 'success' },
+  cancelled: { label: 'ملغى', tone: 'neutral' },
+  sample_rejected: { label: 'عينة مرفوضة — يلزم سحب جديد', tone: 'danger' },
+};
+
+export const rxDispatchStatus: Record<string, { label: string; tone: Tone }> = {
+  sent: { label: 'جديدة', tone: 'info' },
+  received: { label: 'مستلمة', tone: 'accent' },
+  preparing: { label: 'قيد التحضير', tone: 'warning' },
+  ready: { label: 'جاهزة', tone: 'success' },
+  partially_dispensed: { label: 'مصروفة جزئياً', tone: 'warning' },
+  dispensed: { label: 'مصروفة', tone: 'success' },
+  not_available: { label: 'غير متوفرة', tone: 'danger' },
+  cancelled: { label: 'ملغاة', tone: 'neutral' },
+};
+
+export const labFlag: Record<string, string> = { low: 'منخفض', high: 'مرتفع', abnormal: 'غير طبيعي', critical: 'حرج' };

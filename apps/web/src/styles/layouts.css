@@ -43,8 +43,9 @@
 .w-menu-btn { display: none; }
 @media (max-width: 1023px) {
   .w-shell { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'top' 'main'; }
-  .w-sidebar { position: fixed; z-index: 85; inset-inline-start: 0; inset-block: 0; width: min(280px, 86vw); transform: translateX(110%); transition: transform var(--t-slow) ease; }
-  .w-sidebar[data-open='true'] { transform: none; }
+  .w-sidebar { position: fixed; z-index: 85; inset-inline-start: 0; inset-block: 0; width: min(280px, 86vw); transform: translateX(110%); visibility: hidden; transition: transform var(--t-slow) ease, visibility 0s linear var(--t-slow); }
+  .w-sidebar[data-open='true'] { transform: none; visibility: visible; transition: transform var(--t-slow) ease; }
+  .w-shell { overflow-x: clip; }
   .w-menu-btn { display: inline-grid; }
   .w-main { padding: var(--s-4); }
   .ws-switcher { max-width: 60vw; }

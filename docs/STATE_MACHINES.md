@@ -31,5 +31,14 @@ stateDiagram-v2
 ## صندوق الإشعارات (`outbox_status`)
 `pending → processing → sent` ؛ عند الفشل `failed` مع backoff أُسّي (حد ساعة) ثم `dead` بعد `max_attempts` لمراجعة المشغل. الـlease المنتهي يعاد التقاطه؛ الإكمال idempotent.
 
-## الجلسة الطبية (المرحلة 3 — مخطط)
-`not_started → in_progress → awaiting_results → ready_for_review → completed → closed`، مستقلة عن الموعد والطابور، وبدايتها بضغط الطبيب فقط.
+## الجلسة الطبية (`encounter_status`)
+`in_progress → awaiting_results → ready_for_review → completed → closed` و`in_progress|awaiting_results → completed`. تبدأ فقط بـ`start_encounter` بعد تأكيد الهوية (لا بمرور الوقت)، جلسة جارية واحدة للطبيب. `awaiting_results` يحرر الطابور ويجعل الموعد `fulfilled`؛ اعتماد النتيجة ينقلها إلى `ready_for_review` وينشئ مهمة.
+
+## الملاحظة السريرية
+`draft → signed → superseded` (التصحيح ينشئ إصداراً `signed` جديداً بسبب). trigger يمنع تعديل المعتمد أو حذفه.
+
+## الوصفة
+رأس: `draft → active → cancelled`. إصدار: `draft → approved → superseded|cancelled` (إصدار معتمد واحد). أحداث منفصلة: approved/revised/sent/received/printed/…؛ الإرسال لكل صيدلية سجل واحد (`unique(prescription, pharmacy)`).
+
+## طلب المختبر (`lab_status`)
+`ordered → checked_in → sample_collected → pending_review → released`، مع `sample_rejected` (إعادة سحب) و`processing` للنشر الجزئي. النتيجة: `draft → released → superseded`.
