@@ -18,8 +18,9 @@
 | pg_net | ✔ في schema `extensions` |
 | Advisors | ✔ لا تحذيرات قابلة للإصلاح؛ المتبقي: SECURITY DEFINER RPCs (تصميم مقصود، تفويض داخلي) + INFO على قاعدة فارغة |
 | صلاحيات الجداول | ✔ مطابقة للمحلي (0015) — anon يُرفض على بيانات المرضى |
-| استضافة الواجهة | ☐ لم تُنشر بعد |
-| أول مشرف منصة | ☐ يحتاج إنشاء حساب ثم `bootstrap_platform_admin` |
+| استضافة الواجهة | ☐ `vercel.json` جاهز؛ يحتاج ربط حساب Vercel |
+| أول مشرف منصة | ✔ حساب المالك مُنح دور مشرف المنصة؛ يُطلب منه تفعيل المصادقة الثنائية عند أول دخول للوحة الإدارة |
+| كتالوجات مرجعية | ✔ مدن، تخصصات، قائمة أدوية مبدئية (يستبدلها المشغل بالدليل الوطني) |
 
 ## تطبيق migrations جديدة
 يتطلب مصادقة صاحب الحساب:
@@ -71,3 +72,8 @@ select private.bootstrap_platform_admin('admin@example.com');
 ## المراقبة
 * العامل يسجل أعداداً ومعرفات فقط (لا محتوى صحي). صفوف `dead` في `notification_outbox` تظهر لمشرف المنصة ويمكن إعادة محاولتها (`admin_retry_dead_notification`).
 * `access_audit` يسجل البحث عن المرضى، الدمج، تغيير الحالات، الدعوات، العضويات.
+
+## نشر الواجهة على Vercel
+1. Vercel → Add New Project → استيراد المستودع (الجذر). `vercel.json` يحدد التثبيت والبناء ومجلد الإخراج وإعادة توجيه SPA ورؤوس الأمان.
+2. Environment Variables: `VITE_SUPABASE_URL=https://utuwjykgubsqqescpiwz.supabase.co`، `VITE_SUPABASE_PUBLISHABLE_KEY=<publishable>`، اختياري `VITE_PRODUCT_NAME`.
+3. بعد أول نشر: Supabase → Authentication → URL Configuration: ضع رابط Vercel في Site URL و Redirect URLs (للدعوات وتأكيد البريد).

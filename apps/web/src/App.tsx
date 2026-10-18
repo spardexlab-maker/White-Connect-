@@ -33,6 +33,7 @@ const DoctorSession = lazy(() => import('./pages/pro/DoctorSession').then((m) =>
 const PharmacyInbox = lazy(() => import('./pages/pro/PharmacyInbox').then((m) => ({ default: m.PharmacyInbox })));
 const LabWorkspace = lazy(() => import('./pages/pro/LabWorkspace').then((m) => ({ default: m.LabWorkspace })));
 const PrintRx = lazy(() => import('./pages/PrintRx').then((m) => ({ default: m.PrintRx })));
+const Security = lazy(() => import('./pages/pro/Security').then((m) => ({ default: m.Security })));
 const ComponentGallery = lazy(() => import('./pages/dev/Gallery').then((m) => ({ default: m.ComponentGallery })));
 const WorkspaceLayout = lazy(() => import('./layouts/WorkspaceLayout').then((m) => ({ default: m.WorkspaceLayout })));
 
@@ -74,6 +75,7 @@ export function App() {
               {/* Professional portal */}
               <Route path="/login" element={<ProLogin />} />
               <Route path="/invite" element={<AcceptInvite />} />
+              <Route path="/security" element={<RequireStaff><Security /></RequireStaff>} />
               <Route path="/workspace" element={<RequireStaff><WorkspacePicker /></RequireStaff>} />
               <Route element={<RequireStaff><WorkspaceLayout /></RequireStaff>}>
                 <Route path="/workspace/reception" element={<RequireWorkspaceRole roles={['receptionist', 'facility_admin', 'doctor']}><ReceptionDashboard /></RequireWorkspaceRole>} />

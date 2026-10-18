@@ -28,9 +28,7 @@ export function RequireWorkspaceRole({ roles, children }: { roles: MemberRole[];
 export function RequirePlatformAdmin({ children }: { children: ReactNode }) {
   const { access } = useAuth();
   if (!access) return <SkeletonList />;
-  if (access.platform_admin_needs_mfa) {
-    return <PermissionDenied>حساب الإدارة يحتاج تفعيل المصادقة الثنائية (MFA) قبل الوصول.</PermissionDenied>;
-  }
+  if (access.platform_admin_needs_mfa) return <Navigate to="/security?next=/platform-admin" replace />;
   if (!access.is_platform_admin) return <PermissionDenied />;
   return <>{children}</>;
 }

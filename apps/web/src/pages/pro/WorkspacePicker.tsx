@@ -33,7 +33,9 @@ export function WorkspacePicker() {
         {access?.is_platform_admin && (
           <Link to="/platform-admin" className="btn btn-secondary"><ShieldCheck size={18} aria-hidden />إدارة المنصة</Link>
         )}
-        {access?.platform_admin_needs_mfa && <Alert tone="warning">حساب الإدارة يحتاج تفعيل المصادقة الثنائية قبل الوصول إلى لوحة المنصة.</Alert>}
+        {access?.platform_admin_needs_mfa && (
+          <Link to="/security?next=/platform-admin" className="btn btn-secondary"><ShieldCheck size={18} aria-hidden />إدارة المنصة (تتطلب المصادقة الثنائية)</Link>
+        )}
         {access && access.patient_ids.length > 0 && (
           <Link to="/patient" className="btn btn-ghost"><UserRound size={18} aria-hidden />مساحتي الشخصية كمريض</Link>
         )}
