@@ -7,6 +7,7 @@ import { unwrap, useAsync } from '../../lib/useAsync';
 import { useWorkspace } from '../../lib/workspace';
 import { Alert, Badge, Button, EmptyState, ErrorState, Ltr, PageHead, Sheet, SkeletonList, useToast } from '../../components/ui';
 import { RxDocument, type RxDoc } from '../../components/clinical/RxDocument';
+import { DispensePanel } from './pharmacy/DispensePanel';
 
 interface InboxRow {
   dispatch_id: string; prescription_id: string; rx_number: string; status: string; rx_status: 'active' | 'cancelled' | 'draft';
@@ -73,7 +74,6 @@ export function PharmacyInbox() {
           </div>
         )}
       </section>
-      <Alert tone="info">التحضير والصرف الكلي/الجزئي والمخزون والدفعات ضمن المرحلة الرابعة؛ هذه الصفحة تستلم الوصفات وتطبعها فقط.</Alert>
       {openId && <PharmacyDetail dispatchId={openId} pharmacyId={pharmacyId} onClose={() => { setOpenId(null); reload(); }} onChanged={reload} toast={toast} />}
     </div>
   );
@@ -100,9 +100,11 @@ function PharmacyDetail({ dispatchId, pharmacyId, onClose, onChanged, toast }: {
           {d.data.version_no > 1 && <Alert tone="warning" title={`إصدار معدّل (${d.data.version_no})`}>{d.data.revision_reason ?? ''} — الإصدارات السابقة باطلة للصرف.</Alert>}
           <div className="allergy-strip">
             {d.data.allergies.length
-              ? d.data.allergies.map((a) => <Badge key={a.substance} tone="danger" icon={<ShieldAlert aria-hidden />}>حساسية موثقة: {a.substance}</Badge>)
+              ? d.data.allergies.map((a) => <Badge key={a.substance} tone="danger" icon={<ShieldAlert aria-hidden />}>حساسية موثقة: <bdi dir="auto">{a.substance}</bdi></Badge>)
               : <Badge tone="neutral">لا توجد حساسية موثقة متاحة للصيدلية</Badge>}
           </div>
+          {!cancelled && d.data.dispatch_status !== 'sent' && <DispensePanel dispatchId={d.data.dispatch_id} status={d.data.dispatch_status} onChanged={() => { d.reload(); onChanged(); }} />}
+          {d.data.dispatch_status === 'sent' && !cancelled && <Alert tone="info">سجّل الاستلام أولاً ثم ابدأ التحضير والصرف.</Alert>}
           <RxDocument doc={d.data} />
           <div className="stack-sm">
             <h3 className="section-title">سجل الأحداث</h3>
@@ -113,4 +115,4 @@ function PharmacyDetail({ dispatchId, pharmacyId, onClose, onChanged, toast }: {
     </Sheet>
   );
 }
-const eventLabel: Record<string, string> = { approved: 'اعتمدها الطبيب', revised: 'عدّلها الطبيب (إصدار جديد)', sent: 'أُرسلت لهذه الصيدلية', received: 'استُلمت', printed: 'طُبعت', cancelled: 'أُلغيت' };
+const eventLabel: Record<string, string> = { approved: 'اعتمدها الطبيب', revised: 'عدّلها الطبيب (إصدار جديد)', sent: 'أُرسلت لهذه الصيدلية', received: 'استُلمت', printed: 'طُبعت', preparing: 'قيد التحضير (حجز)', partially_dispensed: 'صرف جزئي', dispensed: 'صُرفت', not_available: 'غير متوفرة', cancelled: 'أُلغيت' };

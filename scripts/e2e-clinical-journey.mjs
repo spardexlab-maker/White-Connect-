@@ -92,6 +92,24 @@ await ph.getByText('حساسية موثقة: Penicillin').waitFor();
 await ph.getByRole('button', { name: 'تسجيل الاستلام' }).click();
 await ph.getByText('سُجل الاستلام').waitFor();
 step('pharmacy sees the prescription (with documented allergy) and records receipt');
+await ph.getByText('التحضير والصرف').waitFor();
+const qtyField = ph.getByLabel('الكمية', { exact: true }).first();
+let qv = '';
+for (let i = 0; i < 20 && qv !== '15'; i++) { qv = await qtyField.inputValue(); if (qv !== '15') await ph.waitForTimeout(250); }
+if (qv !== '15') throw new Error(`expected default quantity = remaining prescribed (15), got "${qv}"`);
+await qtyField.fill('10');
+await ph.getByRole('button', { name: 'تحضير (حجز الكمية)' }).click();
+await ph.getByText('تم حجز الكميات للتحضير').waitFor();
+await ph.getByRole('button', { name: 'صرف', exact: true }).click();
+await ph.getByRole('alertdialog').getByRole('button', { name: 'صرف الآن' }).click();
+await ph.getByText('صرف جزئي — بقيت كميات').waitFor();
+await ph.getByRole('button', { name: 'تسجيل الدفع نقداً' }).click();
+await ph.getByText('سُجل الدفع').waitFor();
+step('pharmacy reserved, partially dispensed 10/15 (FEFO), and recorded payment');
+await ph.goto(`${BASE}/workspace/pharmacy/stock`);
+const prow = ph.locator('tr', { hasText: 'باراسيتامول 500' });
+await prow.getByText('250 قرص').waitFor();
+step('stock page shows 250 available (260 − 10), expired batch reported separately');
 
 // 4) lab: technician collects + drafts, approver releases
 const lt = await pro('lab.a@demo.test');

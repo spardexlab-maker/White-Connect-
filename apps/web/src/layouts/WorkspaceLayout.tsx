@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
-  Building2, CalendarClock, ChevronDown, ClipboardList, FlaskConical, HeartPulse, LayoutDashboard, LogOut, Menu,
+  BarChart3, Boxes, Receipt, Building2, CalendarClock, ChevronDown, ClipboardList, FlaskConical, HeartPulse, LayoutDashboard, LogOut, Menu,
   Pill, ScrollText, Settings2, ShieldCheck, Stethoscope, Users,
 } from 'lucide-react';
 import { facilityTypeLabel, roleLabel, workspaceArea, formatDate } from '@app/shared';
@@ -32,7 +32,12 @@ function navFor(ws: Workspace | null, isPlatformAdmin: boolean, path: string): N
         { to: '/workspace/doctor/schedule', label: 'الجدول والخدمات', icon: <Settings2 size={20} /> },
       ];
     case 'pharmacy':
-      return [{ to: '/workspace/pharmacy', label: 'وارد الوصفات', icon: <Pill size={20} />, end: true }];
+      return [
+        { to: '/workspace/pharmacy', label: 'وارد الوصفات', icon: <Pill size={20} />, end: true },
+        { to: '/workspace/pharmacy/stock', label: 'المخزون والدفعات', icon: <Boxes size={20} /> },
+        { to: '/workspace/pharmacy/sales', label: 'المبيعات والمرتجعات', icon: <Receipt size={20} /> },
+        ...(ws.role === 'pharmacist' ? [{ to: '/workspace/pharmacy/reports', label: 'التقارير', icon: <BarChart3 size={20} /> }] : []),
+      ];
     case 'lab':
       return [{ to: '/workspace/lab', label: 'طلبات المختبر', icon: <FlaskConical size={20} />, end: true }];
     default:

@@ -50,6 +50,12 @@ for (const width of [390, 1440]) {
   await ph.locator('tr', { hasText: 'حسن علي' }).first().getByRole('button', { name: 'فتح' }).click();
   await ph.getByText('سجل الأحداث').waitFor();
   await shot(ph, '19-pharmacy-detail', width);
+  await ph.keyboard.press('Escape');
+  for (const [path, name, wait] of [['stock', '25-pharmacy-stock', 'المخزون والدفعات'], ['sales', '26-pharmacy-sales', 'المبيعات والمرتجعات'], ['reports', '27-pharmacy-reports', 'الوصف مقابل الصرف']]) {
+    await ph.goto(`${BASE}/workspace/pharmacy/${path}`);
+    await ph.getByRole('heading', { name: wait }).first().waitFor();
+    await shot(ph, name, width);
+  }
   const lab = await page(width);
   await login(lab, 'labapprover.a@demo.test');
   await lab.locator('tr', { hasText: 'حسن علي' }).first().waitFor();

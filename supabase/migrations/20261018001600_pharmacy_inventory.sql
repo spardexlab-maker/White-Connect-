@@ -707,12 +707,16 @@ begin
       'prescribed_quantity', i.quantity, 'quantity_unit', i.quantity_unit,
       'dispensed', private.dispensed_qty(d.id, i.line_no),
       'reserved', coalesce((select sum(r.quantity) from public.stock_reservations r where r.dispatch_id = d.id and r.line_no = i.line_no and r.status = 'active'), 0),
+      'reserved_product_id', (select r.product_id from public.stock_reservations r where r.dispatch_id = d.id and r.line_no = i.line_no and r.status = 'active' limit 1),
       'notes', coalesce((select jsonb_agg(jsonb_build_object('kind', n.kind, 'note', n.note, 'at', n.created_at) order by n.created_at)
                           from public.dispatch_line_notes n where n.dispatch_id = d.id and n.line_no = i.line_no), '[]'::jsonb),
       'products', coalesce((select jsonb_agg(jsonb_build_object('product_id', p.id, 'name', p.name, 'unit_name', p.unit_name,
                               'unit_price_minor', p.unit_price_minor,
+                              -- this prescription's own reservations count as available to it
                               'available', coalesce((select sum(private.batch_available(b.id)) from public.inventory_batches b
-                                                      where b.product_id = p.id and b.expiry_date > current_date), 0),
+                                                      where b.product_id = p.id and b.expiry_date > current_date), 0)
+                                           + coalesce((select sum(r.quantity) from public.stock_reservations r
+                                                        where r.dispatch_id = d.id and r.product_id = p.id and r.status = 'active'), 0),
                               'manual_availability', p.manual_availability, 'manual_availability_at', p.manual_availability_at))
                             from public.pharmacy_products p
                            where p.pharmacy_id = d.pharmacy_id and p.is_active and (i.medication_id is null or p.medication_id = i.medication_id)), '[]'::jsonb))
