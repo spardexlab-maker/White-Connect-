@@ -28,7 +28,7 @@ const slotText = (await slotBtn.innerText()).trim();
 await slotBtn.click();
 await p.getByRole('button', { name: 'التالي: مراجعة' }).click();
 await p.getByRole('button', { name: 'إرسال طلب الحجز' }).click();
-await p.getByText('تم تسجيل طلبك').waitFor();
+await p.getByText(/تم إرسال طلبك|تم تأكيد موعدك/).waitFor();
 const bookingNo = (await p.locator('.code-pill').innerText()).trim();
 await p.getByText('بانتظار التأكيد').first().waitFor();
 step(`patient booked ${bookingNo} (${dayLabel}, ${slotText}) — status awaiting confirmation`);

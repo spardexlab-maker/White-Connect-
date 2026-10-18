@@ -3,17 +3,17 @@ import {
   type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
 } from 'react';
-import { AlertCircle, AlertTriangle, CheckCircle2, Info, Lock, RefreshCw, WifiOff, X } from 'lucide-react';
+import { AlertCircle, AlertTriangle, CheckCircle2, Info, Lock, MoreHorizontal, RefreshCw, WifiOff, X } from 'lucide-react';
 import { appointmentStatus, errorMessage, queueStatus, type AppointmentStatus, type QueueStatus, type Tone } from '@app/shared';
 import { useOnline } from '../lib/useOnline';
 
 /* ------------------------------------------------------------------ */
 /* Button                                                              */
 /* ------------------------------------------------------------------ */
-type Variant = 'primary' | 'accent' | 'secondary' | 'ghost' | 'danger';
+type Variant = 'primary' | 'accent' | 'secondary' | 'soft' | 'ghost' | 'danger';
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
-  size?: 'md' | 'sm';
+  size?: 'md' | 'sm' | 'lg';
   block?: boolean;
   loading?: boolean;
   icon?: ReactNode;
@@ -26,7 +26,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     <button
       ref={ref}
       type={type}
-      className={`btn btn-${variant} ${size === 'sm' ? 'btn-sm' : ''} ${block ? 'btn-block' : ''} ${className}`}
+      className={`btn btn-${variant} ${size === 'sm' ? 'btn-sm' : size === 'lg' ? 'btn-lg' : ''} ${block ? 'btn-block' : ''} ${className}`}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       {...rest}
@@ -323,9 +323,22 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 }
 export const useToast = () => useContext(ToastCtx);
 
-export function Avatar({ name, size = 'md' }: { name: string; size?: 'md' | 'lg' }) {
-  const initials = name.replace(/^د\.\s*/, '').trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('');
-  return <div className={`avatar ${size === 'lg' ? 'avatar-lg' : ''}`} aria-hidden>{initials}</div>;
+export function Avatar({ name, size = 'md', src }: { name: string; size?: 'sm' | 'md' | 'lg'; src?: string | null }) {
+  const initials = name.replace(/^(د\.|مختبر)\s*/, '').trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('');
+  return <div className={`avatar ${size === 'lg' ? 'avatar-lg' : size === 'sm' ? 'avatar-sm' : ''}`} aria-hidden>{src ? <img src={src} alt="" /> : initials}</div>;
+}
+
+/** Animated check — render only after the server confirmed the action. */
+export function SuccessMark() {
+  return (
+    <span className="success-mark" aria-hidden>
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+    </span>
+  );
+}
+
+export function Stat({ value, label, icon }: { value: ReactNode; label: string; icon?: ReactNode }) {
+  return <div className="stat"><span className="v">{value}</span><span className="l">{icon}{label}</span></div>;
 }
 
 export function PageHead({ title, subtitle, actions }: { title: string; subtitle?: ReactNode; actions?: ReactNode }) {
@@ -336,6 +349,55 @@ export function PageHead({ title, subtitle, actions }: { title: string; subtitle
         {subtitle && <div className="muted small">{subtitle}</div>}
       </div>
       {actions && <div className="row">{actions}</div>}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Menu (secondary actions; keyboard: arrows, Home/End, Esc)           */
+/* ------------------------------------------------------------------ */
+export interface MenuItem { label: string; icon?: ReactNode; onSelect: () => void; tone?: 'danger' }
+export function Menu({ label, items, triggerLabel = 'المزيد' }: { label: string; items: MenuItem[]; triggerLabel?: string }) {
+  const [open, setOpen] = useState(false);
+  const wrap = useRef<HTMLDivElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  useEffect(() => {
+    if (!open) return;
+    itemRefs.current[0]?.focus();
+    const onDown = (e: MouseEvent) => { if (!wrap.current?.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [open]);
+  const close = (focusTrigger = true) => { setOpen(false); if (focusTrigger) trigger.current?.focus(); };
+  const onKey = (e: React.KeyboardEvent, i: number) => {
+    const n = items.length;
+    const go = (j: number) => { e.preventDefault(); itemRefs.current[(j + n) % n]?.focus(); };
+    if (e.key === 'ArrowDown') go(i + 1);
+    else if (e.key === 'ArrowUp') go(i - 1);
+    else if (e.key === 'Home') go(0);
+    else if (e.key === 'End') go(n - 1);
+    else if (e.key === 'Escape') { e.preventDefault(); close(); }
+    else if (e.key === 'Tab') close(false);
+  };
+  if (!items.length) return null;
+  return (
+    <div className="menu" ref={wrap}>
+      <button ref={trigger} type="button" className="btn btn-ghost btn-sm" aria-haspopup="menu" aria-expanded={open} aria-label={`${triggerLabel} — ${label}`}
+              onClick={() => setOpen((v) => !v)}>
+        <MoreHorizontal size={18} aria-hidden /><span className="hide-sm">{triggerLabel}</span>
+      </button>
+      {open && (
+        <div className="menu-pop" role="menu" aria-label={label}>
+          {items.map((it, i) => (
+            <button key={it.label} ref={(el) => { itemRefs.current[i] = el; }} type="button" role="menuitem" tabIndex={-1}
+                    className={`menu-item ${it.tone === 'danger' ? 'danger' : ''}`} onKeyDown={(e) => onKey(e, i)}
+                    onClick={() => { close(false); it.onSelect(); }}>
+              {it.icon}{it.label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { AlertTriangle, CheckCircle2, CloudOff, FlaskConical, Hourglass, Loader2, LogOut, Save, ShieldAlert, Stethoscope } from 'lucide-react';
-import { encounterStatus, errorCode, errorMessage, formatDateTime, formatMoney, formatTime, type EncounterStatus } from '@app/shared';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Activity, AlertTriangle, CheckCircle2, ClipboardList, CloudOff, FlaskConical, Hourglass, Loader2, LogOut, NotebookPen, Pill, Save, ShieldAlert, Stethoscope, Users } from 'lucide-react';
+import { encounterStatus, errorCode, errorMessage, formatDateTime, formatMoney, formatTime, localDateKey, queueStatus, type EncounterStatus } from '@app/shared';
 import { supabase } from '../../lib/supabase';
 import { unwrap, useAsync } from '../../lib/useAsync';
 import { useWorkspace } from '../../lib/workspace';
 import { useAuth } from '../../lib/auth';
 import { newIdempotencyKey } from '../../lib/idempotency';
-import { Alert, Badge, Button, ConfirmDialog, EmptyState, ErrorState, Ltr, SkeletonList, Tabs, TextField, TextareaField, useToast } from '../../components/ui';
+import { Alert, Avatar, Badge, Button, ConfirmDialog, EmptyState, ErrorState, Ltr, Skeleton, SkeletonList, Tabs, TextField, TextareaField, useToast } from '../../components/ui';
+import { useFacilityRealtime, type QueueRow } from './Reception';
 import { RxBuilder, type EncounterOrders } from '../../components/clinical/RxBuilder';
 
 interface Note {
@@ -29,6 +30,13 @@ const FIELDS: [keyof Note, string][] = [
   ['reason_for_visit', 'سبب الزيارة'], ['history', 'التاريخ المرضي ذو الصلة'], ['examination', 'الفحص السريري'],
   ['assessment', 'التقييم / التشخيص'], ['plan', 'الخطة'], ['follow_up', 'المتابعة'], ['free_text', 'ملاحظات إضافية'],
 ];
+/** Visual grouping of the same fields (no field added or removed). */
+const GROUPS: { title: string; icon: JSX.Element; keys: (keyof Note)[] }[] = [
+  { title: 'الشكوى والفحص', icon: <NotebookPen size={18} aria-hidden />, keys: ['reason_for_visit', 'history', 'examination'] },
+  { title: 'التقييم والخطة', icon: <ClipboardList size={18} aria-hidden />, keys: ['assessment', 'plan', 'follow_up'] },
+  { title: 'ملاحظات أخرى', icon: <NotebookPen size={18} aria-hidden />, keys: ['free_text'] },
+];
+const fieldLabel = Object.fromEntries(FIELDS) as Record<string, string>;
 const VITALS: [string, string][] = [['bp_sys', 'الضغط الانقباضي'], ['bp_dia', 'الضغط الانبساطي'], ['pulse', 'النبض'], ['temp_c', 'الحرارة °م'], ['spo2', 'تشبع الأكسجين %'], ['weight_kg', 'الوزن كغ']];
 
 export function DoctorSession() {
@@ -118,12 +126,14 @@ function SessionInner({ encounterId }: { encounterId: string }) {
   const active = ['in_progress', 'awaiting_results', 'ready_for_review'].includes(c.encounter.status);
 
   return (
-    <div className="stack">
+    <div className="session-shell">
+      <TodayRail facilityId={c.encounter.facility_id} currentEncounterId={encounterId} />
+      <div className="stack" style={{ minWidth: 0 }}>
       {/* fixed identity + safety header (§24) */}
       <div className="session-header" role="region" aria-label="هوية المريض">
-        <Stethoscope size={22} aria-hidden color="var(--c-accent)" />
+        <Avatar name={c.patient.full_name} />
         <div className="grow" style={{ minWidth: 200 }}>
-          <strong style={{ fontSize: 'var(--f-body-lg)' }}>{c.patient.full_name}</strong>
+          <strong style={{ fontSize: 'var(--f-h4)' }}>{c.patient.full_name}</strong>
           <div className="small muted"><Ltr>{c.patient.public_code}</Ltr>{age != null ? ` · ${age} سنة` : ' · العمر غير مسجل'}{c.patient.sex ? ` · ${c.patient.sex === 'female' ? 'أنثى' : 'ذكر'}` : ''} · بدأت {formatTime(c.encounter.started_at)}</div>
         </div>
         <div className="allergy-strip" aria-label="الحساسية الموثقة">
@@ -131,8 +141,10 @@ function SessionInner({ encounterId }: { encounterId: string }) {
             ? c.allergies.map((a) => <Badge key={a.id} tone="danger" icon={<ShieldAlert aria-hidden />}>حساسية: <bdi dir="auto">{a.substance}</bdi>{a.source === 'patient_reported' ? ' (ذكرها المريض)' : ''}</Badge>)
             : <Badge tone="warning" icon={<AlertTriangle aria-hidden />}>{c.allergies_recorded ? 'لا حساسية نشطة مسجلة' : 'لم تُسجَّل حساسية — هذا لا يعني عدم وجودها'}</Badge>}
         </div>
-        <Badge tone={encounterStatus[c.encounter.status].tone}>{encounterStatus[c.encounter.status].label}</Badge>
-        <SaveIndicator state={locked ? 'saved' : saveState} lastSaved={lastSaved} locked={locked} onRetry={() => void save()} />
+        <div className="session-meta">
+          <Badge tone={encounterStatus[c.encounter.status].tone}>{encounterStatus[c.encounter.status].label}</Badge>
+          <SaveIndicator state={locked ? 'saved' : saveState} lastSaved={lastSaved} locked={locked} onRetry={() => void save()} />
+        </div>
       </div>
 
       {saveState === 'conflict' && <Alert tone="danger" title="تعارض في الحفظ">عُدّلت المسودة من نافذة أخرى. حدّث الصفحة قبل المتابعة حتى لا تُفقد تغييرات.</Alert>}
@@ -142,36 +154,45 @@ function SessionInner({ encounterId }: { encounterId: string }) {
           { id: 'summary', label: 'ملخص' }, { id: 'history', label: `سجل سابق (${c.history.length})` }, { id: 'session', label: 'الجلسة الحالية' },
           { id: 'labs', label: `تحاليل (${orders.data?.lab_orders.length ?? 0})` }, { id: 'rx', label: 'وصفة' },
         ]} />
-        <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`} style={{ padding: 'var(--s-4)' }}>
+        <div role="tabpanel" id={`panel-${tab}`} key={tab} aria-labelledby={`tab-${tab}`} style={{ padding: 'var(--s-5)' }}>
           {tab === 'summary' && <SummaryTab c={c} orders={orders.data ?? null} />}
           {tab === 'history' && <HistoryList c={c} />}
           {tab === 'session' && (
             <div className="session-grid">
               <div className="stack">
                 {locked && <Alert tone="success" title={`الملاحظة معتمدة (${note?.signed_at ? formatDateTime(note.signed_at) : ''})`}>النسخة مقفلة؛ أي تصحيح لاحق يُضاف كإصدار جديد مع السبب.</Alert>}
-                <fieldset className="stack-sm" disabled={locked} style={{ border: 0, padding: 0, margin: 0 }}>
-                  <legend className="section-title">العلامات الحيوية</legend>
+                <fieldset className="note-section" disabled={locked}>
+                  <legend className="note-title"><Activity size={18} aria-hidden />العلامات الحيوية <span className="muted small">(اختياري)</span></legend>
                   <div className="vitals-grid">
                     {VITALS.map(([k, label]) => (
                       <TextField key={k} label={label} inputMode="decimal" ltr value={form.vitals?.[k] ?? ''} onChange={(e) => change({ vitals: { ...(form.vitals ?? {}), [k]: e.target.value } })} />
                     ))}
                   </div>
                 </fieldset>
-                <fieldset className="stack" disabled={locked} style={{ border: 0, padding: 0, margin: 0 }}>
-                  {FIELDS.map(([k, label]) => (
-                    <TextareaField key={k} label={label} optional={k !== 'assessment'} value={(form[k] as string) ?? ''} onChange={(e) => change({ [k]: e.target.value } as Partial<Note>)} style={{ minHeight: k === 'assessment' || k === 'plan' ? 96 : 72 }} />
-                  ))}
-                </fieldset>
+                {GROUPS.map((g) => (
+                  <fieldset key={g.title} className="note-section" disabled={locked}>
+                    <legend className="note-title">{g.icon}{g.title}</legend>
+                    {g.keys.map((k) => (
+                      <TextareaField key={k} label={fieldLabel[k]} optional={k !== 'assessment'} value={(form[k] as string) ?? ''}
+                                     onChange={(e) => change({ [k]: e.target.value } as Partial<Note>)} style={{ minHeight: k === 'assessment' || k === 'plan' ? 96 : 72 }} />
+                    ))}
+                  </fieldset>
+                ))}
               </div>
-              <aside className="card stack" style={{ position: 'sticky', insetBlockStart: 'calc(var(--topbar-h) + 100px)' }} aria-label="إجراءات الجلسة">
-                <h2 className="section-title">الإجراءات</h2>
-                {!locked && <Button variant="secondary" icon={<Save size={18} />} loading={saveState === 'saving'} onClick={() => void save()}>حفظ مسودة</Button>}
-                <Button variant="secondary" icon={<FlaskConical size={18} />} onClick={() => setTab('labs')} disabled={!active}>طلب تحليل</Button>
-                <Button variant="secondary" onClick={() => setTab('rx')} disabled={!active}>وصفة</Button>
-                {!locked && <Button variant="accent" icon={<CheckCircle2 size={18} />} onClick={() => setConfirm('sign')}>اعتماد الملاحظة</Button>}
-                {c.encounter.status === 'in_progress' && <Button variant="secondary" icon={<Hourglass size={18} />} onClick={() => setConfirm('await')}>انتظار النتائج واستقبال التالي</Button>}
-                {active && <Button icon={<LogOut size={18} />} onClick={() => setConfirm('complete')}>إنهاء الجلسة والتالي</Button>}
-                <p className="small muted">الحفظ التلقائي كل بضع ثوانٍ. «التالي» يفتح قائمة اليوم دون نقل أي نموذج للمريض التالي.</p>
+              <aside className="session-actions" aria-label="إجراءات الجلسة">
+                <div className="card stack-sm">
+                  <h2 className="eyebrow">أدوات الجلسة</h2>
+                  {!locked && <Button variant="secondary" icon={<Save size={18} />} loading={saveState === 'saving'} onClick={() => void save()}>حفظ مسودة</Button>}
+                  <Button variant="secondary" icon={<FlaskConical size={18} />} onClick={() => setTab('labs')} disabled={!active}>طلب تحليل</Button>
+                  <Button variant="secondary" icon={<Pill size={18} />} onClick={() => setTab('rx')} disabled={!active}>وصفة</Button>
+                </div>
+                <div className="card stack-sm">
+                  <h2 className="eyebrow">قرارات</h2>
+                  {!locked && <Button variant="accent" icon={<CheckCircle2 size={18} />} onClick={() => setConfirm('sign')}>اعتماد الملاحظة</Button>}
+                  {c.encounter.status === 'in_progress' && <Button variant="soft" icon={<Hourglass size={18} />} onClick={() => setConfirm('await')}>انتظار النتائج واستقبال التالي</Button>}
+                  {active && <Button icon={<LogOut size={18} />} onClick={() => setConfirm('complete')}>إنهاء الجلسة والتالي</Button>}
+                  <p className="small muted">الحفظ التلقائي كل بضع ثوانٍ. «التالي» يفتح قائمة اليوم دون نقل أي نموذج للمريض التالي.</p>
+                </div>
               </aside>
             </div>
           )}
@@ -180,6 +201,7 @@ function SessionInner({ encounterId }: { encounterId: string }) {
             ? <RxBuilder encounterId={encounterId} facilityId={c.encounter.facility_id} patientName={c.patient.full_name} orders={orders.data ?? null} onChanged={orders.reload} preview={previewBase} />
             : <EmptyState icon={<Stethoscope />} title="الجلسة مغلقة" />)}
         </div>
+      </div>
       </div>
 
       <ConfirmDialog open={confirm === 'sign'} title="اعتماد الملاحظة؟" confirmLabel="اعتماد وقفل" loading={busy} onCancel={() => setConfirm(null)} onConfirm={() => act('sign')}>
@@ -192,6 +214,47 @@ function SessionInner({ encounterId }: { encounterId: string }) {
         {!locked ? 'الملاحظة لم تُعتمد بعد وستبقى مسودة. ' : ''}سيُسجل وقت الانتهاء الفعلي الآن.
       </ConfirmDialog>
     </div>
+  );
+}
+
+/** Today's list beside the session (desktop): open sessions link back; waiting patients are started from «اليوم والطابور». */
+function TodayRail({ facilityId, currentEncounterId }: { facilityId: string; currentEncounterId: string }) {
+  const { current, } = useWorkspace();
+  const { access } = useAuth();
+  const me = access?.practitioner_id ?? undefined;
+  const tz = current?.timezone ?? 'Asia/Baghdad';
+  const today = useMemo(() => localDateKey(new Date(), tz), [tz]);
+  const queue = useAsync(async () => (me ? ((await unwrap(supabase.rpc('facility_queue', { p_facility_id: facilityId, p_date: today, p_practitioner_id: me }))) as QueueRow[]) : []), [facilityId, today, me]);
+  const open = useAsync(async () => (me ? ((await unwrap(supabase.from('encounters').select('id, status, patients(full_name)')
+    .eq('practitioner_id', me).eq('facility_id', facilityId).in('status', ['in_progress', 'awaiting_results', 'ready_for_review'])
+    .order('started_at', { ascending: false }))) as unknown as { id: string; status: EncounterStatus; patients: { full_name: string } | null }[]) : []), [me, facilityId]);
+  const reload = useCallback(() => { queue.reload(); open.reload(); }, [queue.reload, open.reload]); // eslint-disable-line react-hooks/exhaustive-deps
+  useFacilityRealtime(facilityId, reload);
+  const waiting = (queue.data ?? []).filter((q) => ['waiting', 'called'].includes(q.status));
+  return (
+    <nav className="today-rail card card-flush" aria-label="مرضى اليوم">
+      <div className="card-header"><h2 className="row" style={{ gap: 8 }}><Users size={18} aria-hidden />مرضى اليوم</h2><Link to="/workspace/doctor" className="small">الكل</Link></div>
+      {(queue.status === 'loading' && !queue.data) && <div className="stack-sm" style={{ padding: 'var(--s-4)' }}><Skeleton height={40} /><Skeleton height={40} /></div>}
+      <div className="rail-group">
+        <span className="rail-label">جلسات مفتوحة</span>
+        {open.data?.map((e) => (
+          <Link key={e.id} to={`/workspace/doctor/session/${e.id}`} className="rail-item" aria-current={e.id === currentEncounterId ? 'page' : undefined}>
+            <Avatar name={e.patients?.full_name ?? '؟'} size="sm" />
+            <span className="grow" style={{ minWidth: 0 }}><strong className="truncate">{e.patients?.full_name}</strong><span className="truncate">{encounterStatus[e.status].label}</span></span>
+          </Link>
+        ))}
+      </div>
+      <div className="rail-group">
+        <span className="rail-label">في الانتظار ({waiting.length})</span>
+        {waiting.length === 0 && <span className="small muted" style={{ paddingInline: 'var(--s-4)' }}>لا أحد في الانتظار.</span>}
+        {waiting.map((q) => (
+          <Link key={q.queue_entry_id} to="/workspace/doctor" className="rail-item">
+            <span className="pos num">{q.queue_position ?? '–'}</span>
+            <span className="grow" style={{ minWidth: 0 }}><strong className="truncate">{q.patient_name}</strong><span className="truncate">{queueStatus[q.status].label}{q.appointment_start ? ` · ${formatTime(q.appointment_start, tz)}` : ' · عابر'}</span></span>
+          </Link>
+        ))}
+      </div>
+    </nav>
   );
 }
 

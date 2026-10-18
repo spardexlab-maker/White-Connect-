@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   Activity, BarChart3, Boxes, Receipt, Building2, CalendarClock, ChevronDown, ClipboardList, FlaskConical, HeartPulse, LayoutDashboard, LogOut, Menu,
-  Pill, ScrollText, Settings2, ShieldCheck, Stethoscope, Users,
+  LockKeyhole, Pill, ScrollText, Settings2, ShieldCheck, Stethoscope, Users,
 } from 'lucide-react';
 import { facilityTypeLabel, roleLabel, workspaceArea, formatDate } from '@app/shared';
 import { useAuth } from '../lib/auth';
@@ -61,43 +61,50 @@ export function WorkspaceLayout() {
 
   const nav = navFor(current, !!access?.is_platform_admin, location.pathname);
   const onAdmin = location.pathname.startsWith('/platform-admin');
+  const pageTitle = [...nav].sort((a, b) => b.to.length - a.to.length).find((n) => location.pathname.startsWith(n.to))?.label
+    ?? (current ? roleLabel[current.role] : '');
 
   return (
     <div className="w-shell">
       <a href="#main" className="skip-link">تخطَّ إلى المحتوى</a>
       <aside className="w-sidebar" data-open={menuOpen} aria-label="القائمة الجانبية">
         <div className="brand"><span className="brand-mark"><HeartPulse size={18} aria-hidden /></span>{productName}</div>
-        <nav aria-label="أقسام مساحة العمل">
-          <ul className="w-nav">
-            {nav.map((n) => <li key={n.to}><NavLink to={n.to} end={n.end}>{n.icon}{n.label}</NavLink></li>)}
-          </ul>
-        </nav>
-        <div className="w-sidebar-foot">
-          {access?.is_platform_admin && !onAdmin && (
-            <NavLink to="/platform-admin" className="row" style={{ color: '#fff' }}><ShieldCheck size={16} />إدارة المنصة</NavLink>
-          )}
-          {access?.patient_ids?.length ? (
-            <NavLink to="/patient" className="row" style={{ color: '#fff', marginBlockStart: 8 }}>
-              <HeartPulse size={16} />مساحتي الشخصية كمريض
-            </NavLink>
-          ) : null}
-        </div>
-      </aside>
-      {menuOpen && <div className="overlay" style={{ zIndex: 84 }} onClick={() => setMenuOpen(false)} aria-hidden />}
-
-      <header className="w-topbar">
-        <button className="icon-btn w-menu-btn" onClick={() => setMenuOpen(true)} aria-label="فتح القائمة"><Menu size={22} /></button>
         {onAdmin ? (
-          <strong>إدارة المنصة</strong>
+          <div className="w-ws-card" aria-label="مساحة العمل الحالية">
+            <span className="ws-ico"><ShieldCheck size={20} aria-hidden /></span>
+            <span className="grow"><strong>إدارة المنصة</strong><span>صلاحيات المشرف العام</span></span>
+          </div>
         ) : current ? (
-          <button className="ws-switcher" onClick={() => setSwitcherOpen(true)} aria-label="تبديل مساحة العمل" disabled={workspaces.length < 2}>
-            <span className="ws-meta">
+          <button className="w-ws-card" onClick={() => setSwitcherOpen(true)} disabled={workspaces.length < 2}
+                  aria-label={`مساحة العمل الحالية: ${current.facility_name ?? current.organization_name}${workspaces.length > 1 ? ' — تبديل' : ''}`}>
+            <span className="ws-ico">{wsIcon(current)}</span>
+            <span className="grow" style={{ minWidth: 0 }}>
               <strong className="truncate">{current.facility_name ?? current.organization_name}</strong>
               <span className="truncate">{roleLabel[current.role]}{current.branch_name ? ` · ${current.branch_name}` : ''}</span>
             </span>
             {workspaces.length > 1 && <ChevronDown size={16} aria-hidden />}
           </button>
         ) : null}
+        <nav aria-label="أقسام مساحة العمل">
+          <div className="w-nav-label" aria-hidden>الأقسام</div>
+          <ul className="w-nav">
+            {nav.map((n) => <li key={n.to}><NavLink to={n.to} end={n.end}>{n.icon}{n.label}</NavLink></li>)}
+          </ul>
+        </nav>
+        <div className="w-sidebar-foot">
+          {access?.is_platform_admin && !onAdmin && <NavLink to="/platform-admin"><ShieldCheck size={16} aria-hidden />إدارة المنصة</NavLink>}
+          {access?.patient_ids?.length ? <NavLink to="/patient"><HeartPulse size={16} aria-hidden />مساحتي الشخصية كمريض</NavLink> : null}
+          <NavLink to="/security"><LockKeyhole size={16} aria-hidden />الأمان والمصادقة الثنائية</NavLink>
+        </div>
+      </aside>
+      {menuOpen && <div className="overlay" style={{ zIndex: 84 }} onClick={() => setMenuOpen(false)} aria-hidden />}
+
+      <header className="w-topbar">
+        <button className="icon-btn w-menu-btn" onClick={() => setMenuOpen(true)} aria-label="فتح القائمة"><Menu size={22} /></button>
+        <div className="w-crumb">
+          <strong className="truncate">{onAdmin ? 'إدارة المنصة' : current?.facility_name ?? current?.organization_name ?? ''}</strong>
+          <span className="truncate">{pageTitle}</span>
+        </div>
         <span className="grow" />
         <span className="muted small hide-sm">{formatDate(new Date())}</span>
         <button className="btn btn-ghost btn-sm" onClick={async () => { await signOut(); navigate('/login'); }}>
@@ -107,12 +114,17 @@ export function WorkspaceLayout() {
 
       <main id="main" className="w-main">
         <OfflineBanner />
-        <Outlet />
+        <div key={location.pathname} className="page"><Outlet /></div>
       </main>
 
       <WorkspaceSwitcher open={switcherOpen} onClose={() => setSwitcherOpen(false)} />
     </div>
   );
+}
+
+function wsIcon(w: Workspace) {
+  return w.facility_type === 'pharmacy' ? <Pill size={20} aria-hidden /> : w.facility_type === 'laboratory' ? <FlaskConical size={20} aria-hidden />
+    : w.facility_type === 'clinic' ? <Stethoscope size={20} aria-hidden /> : <Building2 size={20} aria-hidden />;
 }
 
 export function WorkspaceSwitcher({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -141,7 +153,7 @@ export function WorkspaceList({ workspaces, currentId, onPick }: { workspaces: W
         {workspaces.map((w) => (
           <li key={w.membership_id}>
             <button className="list-item" aria-current={w.membership_id === currentId} onClick={() => onPick(w)}>
-              <div className="avatar" aria-hidden>{w.facility_type === 'pharmacy' ? <Pill size={20} /> : w.facility_type === 'laboratory' ? <FlaskConical size={20} /> : w.facility_type === 'clinic' ? <Stethoscope size={20} /> : <Building2 size={20} />}</div>
+              <div className="avatar" aria-hidden>{wsIcon(w)}</div>
               <div className="grow">
                 <strong className="truncate" style={{ display: 'block' }}>{w.facility_name ?? w.organization_name}</strong>
                 <span className="muted small">{roleLabel[w.role]}{w.facility_type ? ` · ${facilityTypeLabel[w.facility_type]}` : ''}{w.branch_name ? ` · ${w.branch_name}` : ''}</span>

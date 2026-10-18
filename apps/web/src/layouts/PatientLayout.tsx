@@ -1,4 +1,4 @@
-import { NavLink, Outlet, Link } from 'react-router-dom';
+import { NavLink, Outlet, Link, useLocation } from 'react-router-dom';
 import { Bell, CalendarDays, Home, Route, UserRound, HeartPulse, Briefcase } from 'lucide-react';
 import { productName } from '../lib/supabase';
 import { OfflineBanner } from '../components/ui';
@@ -14,6 +14,7 @@ const items = [
 
 export function PatientLayout() {
   const { session } = useAuth();
+  const location = useLocation();
   return (
     <div className="p-shell">
       <a href="#main" className="skip-link">تخطَّ إلى المحتوى</a>
@@ -27,11 +28,11 @@ export function PatientLayout() {
           {!session && <Link to="/login" className="btn btn-ghost btn-sm"><Briefcase size={16} aria-hidden />دخول المهنيين</Link>}
         </div>
       </header>
-      <main id="main" className="p-main"><Outlet /></main>
+      <main id="main" className="p-main"><div key={location.pathname} className="page"><Outlet /></div></main>
       <nav className="p-bottomnav" aria-label="التنقل الرئيسي">
         <ul>
           {items.map(({ to, label, icon: Icon, end }) => (
-            <li key={to}><NavLink to={to} end={end}><Icon size={22} aria-hidden />{label}</NavLink></li>
+            <li key={to}><NavLink to={to} end={end}><span className="ico"><Icon size={21} aria-hidden /></span>{label}</NavLink></li>
           ))}
         </ul>
       </nav>

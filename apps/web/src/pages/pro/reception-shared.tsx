@@ -150,7 +150,7 @@ export function QuickBookSheet({ open, onClose, facilityId, timezone, practition
              </Button>
            </>}>
       <form id="quick-book" className="stack" onSubmit={submit} noValidate>
-        <div className="segmented" role="group" aria-label="نوع المريض" style={{ alignSelf: 'flex-start' }}>
+        <div className="segmented block" role="group" aria-label="نوع المريض">
           <button type="button" aria-pressed={mode === 'name'} onClick={() => setMode('name')}>اسم فقط</button>
           <button type="button" aria-pressed={mode === 'existing'} onClick={() => setMode('existing')}>مريض موجود</button>
         </div>
