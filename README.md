@@ -64,7 +64,7 @@ pnpm dev                       # http://127.0.0.1:5173
 
 ## الاختبارات
 ```bash
-supabase test db                          # pgTAP: 108 اختبارات (حجز، مهلة، عابر، اسم فقط، دمج، عزل، outbox، جلسات، وصفات، مختبر)
+supabase test db                          # pgTAP: 115 اختباراً (حجز، مهلة، عابر، اسم فقط، دمج، عزل، outbox، جلسات، وصفات، مختبر، صلاحيات الجداول)
 pnpm test:integration                     # تزامن حقيقي عبر API: طلبات متوازية من التطبيق والاستقبال وفرعين
 pnpm --filter @app/shared test            # تباين الألوان WCAG AA، التحقق، التنسيق
 pnpm typecheck
@@ -74,7 +74,7 @@ pnpm screenshots                          # يتطلب pnpm dev: لقطات 360�
 
 ## Supabase Cloud و Claude Code MCP
 - `.mcp.json` يضيف خادم Supabase MCP بنطاق المشروع `utuwjykgubsqqescpiwz` (بلا أسرار). صاحب الحساب ينفذ `claude /mcp` → supabase → Authenticate.
-- تطبيق migrations على السحابة ونشر العامل: [docs/OPERATIONS.md](docs/OPERATIONS.md). **لم يُطبق شيء على المشروع السحابي بعد** (يحتاج مصادقة المالك)؛ فُحص أنه فارغ (schema عامة بلا جداول).
+- **المشروع السحابي مُهيأ (18 أكتوبر 2026):** طُبقت الـ15 migration (بدون seed تجريبي)، نُشر `notifications-worker` مع سره، وجدولة pg_cron تعمل كل دقيقة (انتهاء المهلة + العامل)، وفحوصات الأمان/الأداء نظيفة من التحذيرات القابلة للإصلاح. التفاصيل في [docs/OPERATIONS.md](docs/OPERATIONS.md).
 - العميل يستخدم المفتاح العام (publishable) فقط. المفاتيح السرية لا تدخل الواجهة ولا هذا المستودع؛ المفتاح السري المشارك سابقاً يجب تدويره.
 
 ## خدمات خارجية تحتاج حساباً/دفعاً (غير مهيأة)

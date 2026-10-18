@@ -57,4 +57,4 @@
 | 18-م | إلغاء العضوية؛ فشل مزود الإشعار | | db:20, db:30 | ◐ (الاستعادة والنسخ الاحتياطي ☐) |
 | 21 | تجربتان، دخول مهني موحد، دعوة بلا اختيار دور ذاتي، اختيار مساحة العمل، مسارات محمية خادمياً | | ui, db | ✔ (MFA للمهنيين ◐: مفروض للإدارة) |
 | 22–26 | نظام تصميم موثق، tokens، مكتبة مكونات، RTL، تباين، لقطات فعلية | DESIGN_SYSTEM.md, `/dev/components` | unit (تباين), ui | ✔ |
-| 27–28 | إعداد MCP، migrations، أنواع TS، Edge Functions، advisors | `.mcp.json`, migrations, `database.types.ts`, worker | — | ◐ التطبيق على المشروع السحابي يحتاج مصادقة المالك |
+| 27–28 | إعداد MCP، migrations، أنواع TS، Edge Functions، advisors | `.mcp.json`, migrations مطبقة على السحابة، `database.types.ts`, worker منشور، pg_cron، advisors نظيفة | db:50 + فحوص خارجية | ✔ (استضافة الواجهة ☐) |

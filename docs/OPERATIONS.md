@@ -6,8 +6,23 @@
 | تطوير محلي | `supabase start` (Docker) + `supabase/seed.sql` الاصطناعي | `pnpm dev` |
 | السحابة (المشروع `utuwjykgubsqqescpiwz`) | يُطبق عليه `supabase/migrations` فقط — **لا يُشغل seed على بيئة فيها بيانات حقيقية** | استضافة frontend منفصلة (Vercel/Netlify/Cloudflare Pages) |
 
-## تطبيق المخطط على المشروع السحابي
-يتطلب مصادقة صاحب الحساب (لم تتم في هذه الجلسة):
+## حالة المشروع السحابي (طُبق في 18 أكتوبر 2026)
+| البند | الحالة |
+|---|---|
+| migrations 0001–0015 | ✔ مطبقة ومسجلة في `supabase_migrations.schema_migrations` (متوافقة مع `supabase db push` لاحقاً) |
+| seed تجريبي | ✘ لم يُطبق عمداً (لا حسابات بكلمة مرور معروفة على السحابة) |
+| `require_admin_mfa` | true |
+| `notifications-worker` | ✔ منشور (`--no-verify-jwt`، يتحقق من `x-worker-secret`)، يرفض السر الخاطئ بـ401 |
+| السر `WORKER_SHARED_SECRET` | ✔ في Edge Function secrets + Vault (`worker_secret`) |
+| pg_cron | ✔ `expire-pending-appointments` و`notifications-worker` كل دقيقة، تنفيذات ناجحة |
+| pg_net | ✔ في schema `extensions` |
+| Advisors | ✔ لا تحذيرات قابلة للإصلاح؛ المتبقي: SECURITY DEFINER RPCs (تصميم مقصود، تفويض داخلي) + INFO على قاعدة فارغة |
+| صلاحيات الجداول | ✔ مطابقة للمحلي (0015) — anon يُرفض على بيانات المرضى |
+| استضافة الواجهة | ☐ لم تُنشر بعد |
+| أول مشرف منصة | ☐ يحتاج إنشاء حساب ثم `bootstrap_platform_admin` |
+
+## تطبيق migrations جديدة
+يتطلب مصادقة صاحب الحساب:
 ```bash
 supabase login                      # تفاعلي في المتصفح
 supabase link --project-ref utuwjykgubsqqescpiwz
@@ -28,7 +43,7 @@ supabase functions deploy notifications-worker --no-verify-jwt
 
 المفتاح السري الذي شورك في المحادثة يجب **تدويره** قبل الإنتاج.
 
-## جدولة العامل (بعد ضبط السر)
+## جدولة العامل (مطبقة على المشروع؛ للمرجع)
 ```sql
 -- مرة واحدة من SQL editor، مع استبدال القيم:
 select vault.create_secret('<WORKER_SHARED_SECRET>', 'worker_secret');
