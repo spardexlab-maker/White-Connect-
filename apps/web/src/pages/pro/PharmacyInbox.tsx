@@ -103,7 +103,7 @@ function PharmacyDetail({ dispatchId, pharmacyId, onClose, onChanged, toast }: {
               ? d.data.allergies.map((a) => <Badge key={a.substance} tone="danger" icon={<ShieldAlert aria-hidden />}>حساسية موثقة: <bdi dir="auto">{a.substance}</bdi></Badge>)
               : <Badge tone="neutral">لا توجد حساسية موثقة متاحة للصيدلية</Badge>}
           </div>
-          {!cancelled && d.data.dispatch_status !== 'sent' && <DispensePanel dispatchId={d.data.dispatch_id} status={d.data.dispatch_status} onChanged={() => { d.reload(); onChanged(); }} />}
+          {!cancelled && d.data.dispatch_status !== 'sent' && <DispensePanel dispatchId={d.data.dispatch_id} status={d.data.dispatch_status} prescriptionId={d.data.prescription_id} items={d.data.items} onChanged={() => { d.reload(); onChanged(); }} />}
           {d.data.dispatch_status === 'sent' && !cancelled && <Alert tone="info">سجّل الاستلام أولاً ثم ابدأ التحضير والصرف.</Alert>}
           <RxDocument doc={d.data} />
           <div className="stack-sm">

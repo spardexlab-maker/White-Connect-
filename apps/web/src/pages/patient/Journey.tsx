@@ -47,7 +47,7 @@ export function Journey() {
 
   return (
     <div className="stack">
-      <h1 style={{ fontSize: 'var(--f-h2)' }}>رحلتي الطبية</h1>
+      <div className="row-between"><h1 style={{ fontSize: 'var(--f-h2)' }}>رحلتي الطبية</h1><Link to="/patient/meds" className="btn btn-secondary btn-sm"><Pill size={16} aria-hidden />خطة الدواء</Link></div>
       <div className="chips" role="group" aria-label="تصفية الأحداث">
         {([['all', 'الكل'], ['visits', 'الزيارات'], ['prescriptions', 'الوصفات'], ['labs', 'التحاليل']] as [Filter, string][]).map(([v, l]) =>
           <button key={v} className="chip" aria-pressed={filter === v} onClick={() => setFilter(v)}>{l}</button>)}

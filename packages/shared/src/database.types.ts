@@ -853,6 +853,44 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"medication_plans": {
+                  Row: {
+                    "as_needed": boolean,"consent_at": string,"created_at": string,"created_by": string,"display_name": string,"end_date": string | null,"id": string,"instructions": string | null,"line_no": number,"patient_id": string,"prescription_id": string,"source": string,"start_date": string,"status": string,"status_reason": string | null,"times_local": (string)[],"timezone": string,"updated_at": string,"version": number,"version_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "as_needed"?: boolean,"consent_at": string,"created_at"?: string,"created_by": string,"display_name": string,"end_date"?: string | null,"id"?: string,"instructions"?: string | null,"line_no": number,"patient_id": string,"prescription_id": string,"source": string,"start_date": string,"status"?: string,"status_reason"?: string | null,"times_local"?: (string)[],"timezone"?: string,"updated_at"?: string,"version"?: number,"version_id": string
+                  }
+                  Update: {
+                    "as_needed"?: boolean,"consent_at"?: string,"created_at"?: string,"created_by"?: string,"display_name"?: string,"end_date"?: string | null,"id"?: string,"instructions"?: string | null,"line_no"?: number,"patient_id"?: string,"prescription_id"?: string,"source"?: string,"start_date"?: string,"status"?: string,"status_reason"?: string | null,"times_local"?: (string)[],"timezone"?: string,"updated_at"?: string,"version"?: number,"version_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "medication_plans_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "medication_plans_patient_id_fkey"
+      columns: ["patient_id"]
+isOneToOne: false
+      referencedRelation: "patients"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "medication_plans_prescription_id_fkey"
+      columns: ["prescription_id"]
+isOneToOne: false
+      referencedRelation: "prescriptions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "medication_plans_version_id_fkey"
+      columns: ["version_id"]
+isOneToOne: false
+      referencedRelation: "prescription_versions"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"memberships": {
                   Row: {
                     "created_at": string,"facility_id": string | null,"granted_by": string | null,"id": string,"organization_id": string,"revoked_at": string | null,"role": Database["public"]['Enums']["member_role"],"status": Database["public"]['Enums']["membership_status"],"status_reason": string | null,"updated_at": string,"user_id": string,"version": number
@@ -1523,6 +1561,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"reminder_jobs": {
+                  Row: {
+                    "dose_recorded_at": string | null,"dose_status": string | null,"id": string,"plan_id": string,"queued_at": string | null,"scheduled_at": string,"snooze_count": number,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "dose_recorded_at"?: string | null,"dose_status"?: string | null,"id"?: string,"plan_id": string,"queued_at"?: string | null,"scheduled_at": string,"snooze_count"?: number,"status"?: string
+                  }
+                  Update: {
+                    "dose_recorded_at"?: string | null,"dose_status"?: string | null,"id"?: string,"plan_id"?: string,"queued_at"?: string | null,"scheduled_at"?: string,"snooze_count"?: number,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "reminder_jobs_plan_id_fkey"
+      columns: ["plan_id"]
+isOneToOne: false
+      referencedRelation: "medication_plans"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"sale_lines": {
                   Row: {
                     "batch_id": string,"id": string,"line_total_minor": number,"product_id": string,"quantity": number,"returned_quantity": number,"rx_line_no": number | null,"sale_id": string,"unit_price_minor": number
@@ -2189,6 +2247,35 @@ isOneToOne: false
               "expires_at": string,"invitation_id": string,"token": string
             }[]
                            },
+"create_medication_plan":
+{ Args: { "p_dispatch_id"?: string,"p_line_no": number,"p_patient_consent": boolean,"p_prescription_id": string,"p_start_date": string,"p_times": (string)[] }; Returns: {
+              "as_needed": boolean,
+"consent_at": string,
+"created_at": string,
+"created_by": string,
+"display_name": string,
+"end_date": string | null,
+"id": string,
+"instructions": string | null,
+"line_no": number,
+"patient_id": string,
+"prescription_id": string,
+"source": string,
+"start_date": string,
+"status": string,
+"status_reason": string | null,
+"times_local": (string)[],
+"timezone": string,
+"updated_at": string,
+"version": number,
+"version_id": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "medication_plans"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "create_provisional_patient":
 { Args: { "p_birth_year"?: number,"p_facility_id": string,"p_full_name": string,"p_phone"?: string,"p_sex"?: Database["public"]['Enums']["patient_sex"] }; Returns: {
               "birth_date": string | null,
@@ -2216,6 +2303,9 @@ isOneToOne: false
       } },
 "direct_sale":
 { Args: { "p_idempotency_key": string,"p_lines": Json,"p_patient_id"?: string,"p_pharmacy_id": string,"p_source": string,"p_source_note"?: string }; Returns: Json
+                           },
+"dispatch_due_reminders":
+{ Args: Record<PropertyKey, never>; Returns: number
                            },
 "dispatch_line_note":
 { Args: { "p_dispatch_id": string,"p_kind": string,"p_line_no": number,"p_note"?: string }; Returns: undefined
@@ -2372,6 +2462,9 @@ isOneToOne: false
               "created_at": string,"item_count": number,"lab_name": string,"order_id": string,"order_number": string,"ordering_doctor": string,"patient_name": string,"released_count": number,"status": Database["public"]['Enums']["lab_status"]
             }[]
                            },
+"my_medication_plans":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
 "my_patient_card":
 { Args: { "p_patient_id": string }; Returns: Json
                            },
@@ -2520,6 +2613,9 @@ isOneToOne: false
                            },
 "reception_quick_book":
 { Args: { "p_birth_year"?: number,"p_facility_id": string,"p_idempotency_key": string,"p_new_patient_name"?: string,"p_patient_id"?: string,"p_phone"?: string,"p_practitioner_id": string,"p_service_id"?: string,"p_sex"?: Database["public"]['Enums']["patient_sex"],"p_start"?: string }; Returns: Json
+                           },
+"record_dose":
+{ Args: { "p_job_id": string,"p_status": string }; Returns: undefined
                            },
 "record_payment":
 { Args: { "p_amount_minor": number,"p_method"?: string,"p_sale_id": string }; Returns: undefined
@@ -2763,6 +2859,9 @@ isOneToOne: false
       } },
 "set_manual_availability":
 { Args: { "p_product_id": string,"p_status": string }; Returns: undefined
+                           },
+"set_medication_plan_status":
+{ Args: { "p_plan_id": string,"p_status": string }; Returns: undefined
                            },
 "set_membership_status":
 { Args: { "p_membership_id": string,"p_reason": string,"p_status": Database["public"]['Enums']["membership_status"] }; Returns: undefined

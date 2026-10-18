@@ -5,6 +5,7 @@ import { supabase } from '../../../lib/supabase';
 import { unwrap, useAsync } from '../../../lib/useAsync';
 import { newIdempotencyKey } from '../../../lib/idempotency';
 import { Alert, Badge, Button, ConfirmDialog, SelectField, TextField, TextareaField, useToast } from '../../../components/ui';
+import { ReminderSetup } from '../../../components/clinical/ReminderSetup';
 
 interface Line {
   line_no: number; display_name: string; prescribed_quantity: number | null; quantity_unit: string | null; dispensed: number; reserved: number; reserved_product_id: string | null;
@@ -17,7 +18,8 @@ interface Line {
  * separate buttons. The pharmacist never edits the prescription: a line
  * can only be marked unavailable or sent back for clarification.
  */
-export function DispensePanel({ dispatchId, status, onChanged }: { dispatchId: string; status: string; onChanged: () => void }) {
+export function DispensePanel({ dispatchId, status, onChanged, prescriptionId, items }: { dispatchId: string; status: string; onChanged: () => void;
+  prescriptionId: string; items: { line_no: number; display_name: string; frequency_text: string | null; as_needed: boolean; duration_days: number | null }[] }) {
   const toast = useToast();
   const lines = useAsync(async () => (await unwrap(supabase.rpc('dispatch_lines', { p_dispatch_id: dispatchId }))) as unknown as Line[], [dispatchId]);
   const [pick, setPick] = useState<Record<number, { product_id: string; quantity: string }>>({});
@@ -131,6 +133,13 @@ export function DispensePanel({ dispatchId, status, onChanged }: { dispatchId: s
         <Alert tone="success" title={`عملية بيع ${sale.sale_number}`} action={<Button size="sm" icon={<Wallet size={16} />} onClick={pay}>تسجيل الدفع نقداً</Button>}>
           المبلغ: {formatMoney(sale.total_minor)}
         </Alert>
+      )}
+      {['partially_dispensed', 'dispensed'].includes(status) && (
+        <details className="stack-sm">
+          <summary className="section-title" style={{ cursor: 'pointer' }}>تفعيل تذكيرات الدواء للمريض (بموافقته)</summary>
+          {items.map((i) => <ReminderSetup key={i.line_no} prescriptionId={prescriptionId} lineNo={i.line_no} displayName={i.display_name}
+            frequencyText={i.frequency_text} asNeeded={i.as_needed} durationDays={i.duration_days} dispatchId={dispatchId} />)}
+        </details>
       )}
       <ConfirmDialog open={confirm} title="تأكيد الصرف" confirmLabel="صرف الآن" loading={busy === 'dispense'} onCancel={() => setConfirm(false)} onConfirm={dispense}>
         {chosen().map((c) => {

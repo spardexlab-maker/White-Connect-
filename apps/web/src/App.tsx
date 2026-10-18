@@ -14,6 +14,7 @@ import { Journey } from './pages/patient/Journey';
 import { Notifications } from './pages/patient/Notifications';
 import { Account } from './pages/patient/Account';
 import { PatientRx } from './pages/patient/PatientRx';
+import { Meds } from './pages/patient/Meds';
 import { LabOrderPage } from './pages/LabOrderPage';
 import { VerifyRx } from './pages/VerifyRx';
 
@@ -72,6 +73,7 @@ export function App() {
                 <Route path="notifications" element={<Notifications />} />
                 <Route path="account" element={<Account />} />
                 <Route path="rx/:id" element={<PatientRx />} />
+                <Route path="meds" element={<Meds />} />
                 <Route path="labs/:orderId" element={<LabOrderPage back="/patient/journey" />} />
               </Route>
 
