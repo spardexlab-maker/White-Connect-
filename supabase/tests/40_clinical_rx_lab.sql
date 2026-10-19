@@ -146,11 +146,10 @@ select public.collect_specimen((select id from t where k = 'lo1'), 'دم');
 insert into t (k, id) select 'item_fbs', id from public.lab_order_items where order_id = (select id from t where k = 'lo1') and test_id = (select id from t where k = 'fbs');
 insert into t (k, id) select 'item_cbc', id from public.lab_order_items where order_id = (select id from t where k = 'lo1') and test_id = (select id from t where k = 'cbc');
 select public.save_lab_result_draft((select id from t where k = 'item_fbs'), null, 95, 'mg/dL', '70-100 (lab)', null, null);
-select throws_ok(format('select public.release_lab_results(%L, array[%L]::uuid[])', (select id from t where k = 'lo1'), (select id from t where k = 'item_fbs')),
-                 'P0001', 'app:forbidden', 'a technician cannot release results');
-
 select tests.login(:U_DRAHMED);
 select is((select count(*)::int from public.lab_results), 0, 'the ordering doctor does not see drafts');
+select throws_ok(format('select public.release_lab_results(%L, array[%L]::uuid[])', (select id from t where k = 'lo1'), (select id from t where k = 'item_fbs')),
+                 'P0001', 'app:forbidden', 'someone outside the lab (the doctor) cannot release results');
 
 select tests.login(:U_LABAPPR);
 select public.release_lab_results((select id from t where k = 'lo1'), array[(select id from t where k = 'item_fbs')]);

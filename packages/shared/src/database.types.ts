@@ -733,14 +733,14 @@ isOneToOne: false
                   ]
                 },"invitations": {
                   Row: {
-                    "accepted_at": string | null,"accepted_by": string | null,"created_at": string,"email": string,"expires_at": string,"facility_id": string | null,"id": string,"invited_by": string,"organization_id": string,"revoked_at": string | null,"role": Database["public"]['Enums']["member_role"],"token_hash": string
+                    "accepted_at": string | null,"accepted_by": string | null,"created_at": string,"email": string,"expires_at": string,"facility_id": string | null,"id": string,"invited_by": string,"organization_id": string,"reception_practitioner_id": string | null,"revoked_at": string | null,"role": Database["public"]['Enums']["member_role"],"token_hash": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "accepted_at"?: string | null,"accepted_by"?: string | null,"created_at"?: string,"email": string,"expires_at": string,"facility_id"?: string | null,"id"?: string,"invited_by": string,"organization_id": string,"revoked_at"?: string | null,"role": Database["public"]['Enums']["member_role"],"token_hash": string
+                    "accepted_at"?: string | null,"accepted_by"?: string | null,"created_at"?: string,"email": string,"expires_at": string,"facility_id"?: string | null,"id"?: string,"invited_by": string,"organization_id": string,"reception_practitioner_id"?: string | null,"revoked_at"?: string | null,"role": Database["public"]['Enums']["member_role"],"token_hash": string
                   }
                   Update: {
-                    "accepted_at"?: string | null,"accepted_by"?: string | null,"created_at"?: string,"email"?: string,"expires_at"?: string,"facility_id"?: string | null,"id"?: string,"invited_by"?: string,"organization_id"?: string,"revoked_at"?: string | null,"role"?: Database["public"]['Enums']["member_role"],"token_hash"?: string
+                    "accepted_at"?: string | null,"accepted_by"?: string | null,"created_at"?: string,"email"?: string,"expires_at"?: string,"facility_id"?: string | null,"id"?: string,"invited_by"?: string,"organization_id"?: string,"reception_practitioner_id"?: string | null,"revoked_at"?: string | null,"role"?: Database["public"]['Enums']["member_role"],"token_hash"?: string
                   }
                   Relationships: [
                     {
@@ -766,6 +766,12 @@ isOneToOne: false
       columns: ["organization_id"]
 isOneToOne: false
       referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "invitations_reception_practitioner_id_fkey"
+      columns: ["reception_practitioner_id"]
+isOneToOne: false
+      referencedRelation: "practitioner_profiles"
       referencedColumns: ["id"]
     }
                   ]
@@ -2445,7 +2451,7 @@ isOneToOne: false
 { Args: Record<PropertyKey, never>; Returns: string
                            },
 "create_invitation":
-{ Args: { "p_email": string,"p_facility_id": string,"p_organization_id": string,"p_role": Database["public"]['Enums']["member_role"],"p_valid_hours"?: number }; Returns: {
+{ Args: { "p_email": string,"p_facility_id": string,"p_organization_id": string,"p_reception_practitioner_id"?: string,"p_role": Database["public"]['Enums']["member_role"],"p_valid_hours"?: number }; Returns: {
               "expires_at": string,"invitation_id": string,"token": string
             }[]
                            },

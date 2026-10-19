@@ -32,6 +32,12 @@ try {
   await a.getByLabel('الجهة').first().selectOption({ label: 'عيادات الرافدين' });
   const opts = await a.getByLabel('الدور').locator('option').allTextContents();
   if (opts.some((o) => /مدير/.test(o))) throw new Error('admin roles still offered: ' + opts.join(','));
+  await a.getByLabel('الدور').selectOption({ label: 'سكرتير' });
+  await a.getByLabel('سكرتير الطبيب').selectOption({ label: 'د. أحمد سالم (تجريبي)' });
+  await a.getByLabel('البريد الإلكتروني').first().fill('new.receptionist@demo.test');
+  await a.getByRole('button', { name: 'إنشاء الدعوة' }).click();
+  await a.getByText('رابط الدعوة').waitFor();
+  step('receptionist invitation requires choosing the doctor');
   step(`invite roles: ${opts.filter((o) => o !== 'اختر').join('، ')} (no manager roles)`);
   await a.getByText('موظفو الجهة').waitFor();
   await a.getByRole('button', { name: 'تعليق' }).first().waitFor();
@@ -39,17 +45,18 @@ try {
   const staff = a.locator('section', { hasText: 'موظفو الجهة' });
   await staff.getByLabel('الجهة').selectOption({ label: 'عيادات الرافدين — مجمع الرافدين الطبي (تجريبي)' });
   const recRow = staff.locator('.list-item', { hasText: 'reception.a@demo.test' });
-  await recRow.getByRole('button', { name: 'الأطباء' }).click();
-  const sara = a.getByRole('dialog').locator('label', { hasText: 'سارة' });
-  // the box reflects the server state after each change
-  const box = sara.getByRole('checkbox');
-  await box.click(); await sara.getByText('يدير مواعيده').waitFor({ state: 'detached' });
-  if (await box.isChecked()) throw new Error('scope not removed');
-  await box.click(); await sara.getByText('يدير مواعيده').waitFor();
-  if (!(await box.isChecked())) throw new Error('scope not restored');
+  await recRow.getByRole('button', { name: 'الطبيب' }).click();
+  const dlg = a.getByRole('dialog');
+  // one doctor per receptionist: choosing Sara replaces Ahmed, then back to Ahmed
+  await dlg.locator('label', { hasText: 'سارة' }).getByRole('radio').click();
+  await dlg.locator('label', { hasText: 'أحمد' }).getByText('يدير مواعيده').waitFor({ state: 'detached', timeout: 10000 })
+    .catch(() => { throw new Error('two doctors still assigned'); });
+  await dlg.locator('label', { hasText: 'سارة' }).getByText('يدير مواعيده').waitFor();
+  await dlg.locator('label', { hasText: 'أحمد' }).getByRole('radio').click();
+  await dlg.locator('label', { hasText: 'أحمد' }).getByText('يدير مواعيده').waitFor();
   if (out) await a.screenshot({ path: `${out}/admin-scope.png` });
   await a.keyboard.press('Escape');
-  step('super admin assigns which doctors a receptionist manages');
+  step('super admin sets the receptionist’s single doctor (choosing another replaces it)');
   // 3) reports for any complex / facility
   await a.goto(`${BASE}/platform-admin/reports`);
   await a.getByText('المحصّل').first().waitFor();
@@ -61,7 +68,8 @@ try {
   const r = await login('reception.a@demo.test');
   await r.goto(`${BASE}/workspace/reception`);
   await r.getByLabel('الأطباء الذين تدير مواعيدهم').getByText('د. أحمد سالم (تجريبي)').waitFor();
-  step('receptionist sees the doctors they manage on the board');
+  if (await r.getByLabel('الأطباء الذين تدير مواعيدهم').getByText('د. سارة').count()) throw new Error('receptionist still sees a second doctor');
+  step('receptionist sees only their doctor on the board');
   // 4) pharmacist sees complex doctors
   const ph = await login('pharm.a@demo.test');
   await ph.goto(`${BASE}/workspace/pharmacy/doctors`);

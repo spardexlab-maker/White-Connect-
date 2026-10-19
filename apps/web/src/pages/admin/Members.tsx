@@ -17,12 +17,13 @@ export function AdminMembers() {
     ]);
     return { orgs: orgs ?? [], facs: facs ?? [], invites: invites ?? [], specialties: specialties ?? [] };
   }, []);
-  const [f, setF] = useState({ email: '', org: '', facility: '', role: '' as MemberRole | '' });
+  const [f, setF] = useState({ email: '', org: '', facility: '', role: '' as MemberRole | '', doctor: '' });
   const [link, setLink] = useState<string | null>(null);
 
   const create = async () => {
     const { data: res, error } = await supabase.rpc('create_invitation', {
       p_email: f.email, p_organization_id: f.org, p_facility_id: f.facility, p_role: f.role as MemberRole,
+      p_reception_practitioner_id: f.role === 'receptionist' && f.doctor ? f.doctor : undefined,
     });
     if (error) { toast(errorMessage(error), 'danger'); return; }
     setLink(`${window.location.origin}/invite?token=${(res as { token: string }[])[0].token}`);
@@ -33,7 +34,11 @@ export function AdminMembers() {
   // Staff roles only: administration (staff, reports, finance) is done by the platform admin.
   const roleOptions: MemberRole[] = !f.facility ? []
     : facilityType === 'clinic' ? ['doctor', 'receptionist']
-    : facilityType === 'pharmacy' ? ['pharmacist', 'pharmacy_staff'] : ['lab_technician', 'lab_approver'];
+    : facilityType === 'pharmacy' ? ['pharmacist', 'pharmacy_staff'] : ['lab_technician'];
+  // doctors of the chosen clinic, for a receptionist invitation (one doctor per receptionist)
+  const clinicDoctors = useAsync(async () => (f.facility && facilityType === 'clinic'
+    ? ((await unwrap(supabase.rpc('organization_doctors', { p_facility_id: f.facility }))) as { practitioner_id: string; full_name: string; facility_id: string }[]).filter((d) => d.facility_id === f.facility)
+    : []), [f.facility, facilityType]);
 
   return (
     <div className="stack">
@@ -51,11 +56,16 @@ export function AdminMembers() {
             <SelectField label="الجهة" value={f.facility} onChange={(e) => setF({ ...f, facility: e.target.value, role: '' })}>
               <option value="">اختر</option>{data.data.facs.filter((x) => x.organization_id === f.org).map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
             </SelectField>
-            <SelectField label="الدور" value={f.role} onChange={(e) => setF({ ...f, role: e.target.value as MemberRole })}>
+            <SelectField label="الدور" value={f.role} onChange={(e) => setF({ ...f, role: e.target.value as MemberRole, doctor: '' })}>
               <option value="">اختر</option>{roleOptions.map((r) => <option key={r} value={r}>{roleLabel[r]}</option>)}
             </SelectField>
+            {f.role === 'receptionist' && (
+              <SelectField label="سكرتير الطبيب" hint="كل سكرتير يعمل لطبيب واحد ويدير مواعيده فقط." value={f.doctor} onChange={(e) => setF({ ...f, doctor: e.target.value })}>
+                <option value="">اختر الطبيب</option>{clinicDoctors.data?.map((d) => <option key={d.practitioner_id} value={d.practitioner_id}>{d.full_name}</option>)}
+              </SelectField>
+            )}
             <Alert tone="info">للطبيب: أنشئ هويته المهنية أدناه (بعد أن يسجّل حسابه) حتى يظهر للمرضى في البحث.</Alert>
-            <Button disabled={!f.email || !f.org || !f.facility || !f.role} onClick={create}>إنشاء الدعوة</Button>
+            <Button disabled={!f.email || !f.org || !f.facility || !f.role || (f.role === 'receptionist' && !f.doctor)} onClick={create}>إنشاء الدعوة</Button>
             {link && <Alert tone="success" title="رابط الدعوة (يظهر مرة واحدة)"><div className="code-pill" style={{ fontSize: 12, wordBreak: 'break-all' }}>{link}</div></Alert>}
           </section>
           <PractitionerForm specialties={data.data.specialties} />
@@ -156,7 +166,7 @@ function FacilityMembers({ facs, orgs }: { facs: { id: string; organization_id: 
               <span className="small muted"><Ltr>{m.email}</Ltr> · {roleLabel[m.role]}</span>
             </div>
             <Badge tone={m.status === 'active' ? 'success' : 'danger'}>{m.status === 'active' ? 'فعّال' : m.status === 'suspended' ? 'معلّق' : 'ملغى'}</Badge>
-            {m.role === 'receptionist' && m.status === 'active' && <Button size="sm" variant="soft" icon={<Stethoscope size={14} />} onClick={() => setScopeFor(m)}>الأطباء</Button>}
+            {m.role === 'receptionist' && m.status === 'active' && <Button size="sm" variant="soft" icon={<Stethoscope size={14} />} onClick={() => setScopeFor(m)}>الطبيب</Button>}
             {m.status !== 'revoked' && (
               <Button size="sm" variant={m.status === 'active' ? 'danger' : 'secondary'} onClick={() => { setTarget(m); setReason(''); setReasonErr(undefined); }}>
                 {m.status === 'active' ? 'تعليق' : 'إعادة تفعيل'}
@@ -189,15 +199,15 @@ function ReceptionScopeSheet({ member, onClose }: { member: Member; onClose: () 
     opts.reload();
   };
   return (
-    <Sheet open onClose={onClose} title={`أطباء ${member.display_name ?? member.email}`}>
+    <Sheet open onClose={onClose} title={`طبيب ${member.display_name ?? member.email}`}>
       <div className="stack">
-        <p className="small muted">السكرتير يرى ويدير مواعيد وطابور الأطباء المحددين فقط في هذه العيادة. التغيير يسري فوراً.</p>
+        <p className="small muted">كل سكرتير يعمل لطبيب واحد: يرى ويدير مواعيده وطابوره فقط. اختيار طبيب آخر يستبدل الحالي فوراً.</p>
         {opts.status === 'loading' && !opts.data && <SkeletonList rows={2} />}
         {opts.status === 'error' && <ErrorState error={opts.error} onRetry={opts.reload} />}
         {opts.data?.length === 0 && <EmptyState icon={<Stethoscope />} title="لا يوجد أطباء في هذه العيادة بعد" />}
         {opts.data?.map((d) => (
           <label key={d.practitioner_id} className="lookup-result" aria-pressed={d.allowed} style={{ cursor: 'pointer' }}>
-            <input type="checkbox" checked={d.allowed} disabled={busy === d.practitioner_id} onChange={(e) => void toggle(d.practitioner_id, e.target.checked)}
+            <input type="radio" name="rec-doctor" checked={d.allowed} disabled={busy !== null} onChange={() => undefined} onClick={() => void toggle(d.practitioner_id, true)}
                    style={{ width: 18, height: 18, accentColor: 'var(--c-accent)' }} />
             <span className="grow"><strong style={{ display: 'block' }}>{d.full_name}</strong><span className="small muted">{d.specialty ?? '—'}</span></span>
             {d.allowed && <Badge tone="success">يدير مواعيده</Badge>}

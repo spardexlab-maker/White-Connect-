@@ -165,7 +165,7 @@ export function ReceptionDashboard() {
         </>}
       />
 
-      {noScope && <Alert tone="warning" title="لا يوجد أطباء ضمن صلاحياتك">اطلب من المدير العام ربطك بالأطباء الذين تدير مواعيدهم (الحسابات والعضويات ← موظفو الجهة ← الأطباء).</Alert>}
+      {noScope && <Alert tone="warning" title="لا يوجد أطباء ضمن صلاحياتك">اطلب من المدير العام ربطك بالأطباء الذين تدير مواعيدهم (الحسابات والعضويات ← موظفو الجهة ← الطبيب).</Alert>}
       {docs.length > 0 && (
         <div className="row small" style={{ gap: 6 }} aria-label="الأطباء الذين تدير مواعيدهم">
           <span className="muted">تدير مواعيد:</span>

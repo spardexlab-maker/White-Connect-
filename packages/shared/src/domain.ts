@@ -41,7 +41,7 @@ export const roleLabel: Record<MemberRole, string> = {
   receptionist: 'سكرتير',
   pharmacist: 'صيدلاني',
   pharmacy_staff: 'موظف صيدلية',
-  lab_technician: 'فني مختبر',
+  lab_technician: 'موظف المختبر',
   lab_approver: 'معتمد نتائج',
   facility_admin: 'مدير منشأة',
   organization_admin: 'مدير مجمع',

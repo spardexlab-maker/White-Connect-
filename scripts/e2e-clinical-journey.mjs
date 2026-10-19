@@ -120,7 +120,7 @@ const prow = ph.locator('tr', { hasText: 'باراسيتامول 500' });
 await prow.getByText('250 قرص').waitFor();
 step('stock page shows 250 available (260 − 10), expired batch reported separately');
 
-// 4) lab: technician collects + drafts, approver releases
+// 4) lab: ONE lab member checks in, collects, saves a draft, then releases
 const lt = await pro('lab.a@demo.test');
 await lt.waitForURL(/lab/);
 await lt.locator('tr', { hasText: 'حسن علي' }).first().getByRole('button', { name: 'فتح' }).click();
@@ -132,18 +132,16 @@ await lt.getByLabel('القيمة').fill('92');
 await lt.getByLabel('المجال المرجعي').fill('70-100 (مختبر تجريبي)');
 await lt.getByRole('button', { name: 'حفظ مسودة' }).click();
 await lt.getByText('حُفظت المسودة (غير منشورة)').waitFor();
-if (await lt.getByRole('button', { name: /اعتماد ونشر/ }).count()) throw new Error('technician must not see release');
-step('technician collected a barcoded specimen and saved a draft (cannot release)');
+await lt.getByText('غير منشورة — لا يراها المريض').waitFor();
+step('lab member collected a barcoded specimen and saved a draft (not published yet)');
 
-const la = await pro('labapprover.a@demo.test');
-await la.waitForURL(/lab/);
-await la.locator('tr', { hasText: 'حسن علي' }).first().getByRole('button', { name: 'فتح' }).click();
+const la = lt;
 await la.getByLabel(/تحديد سكر صائم للنشر/).check();
 await la.getByRole('button', { name: /اعتماد ونشر \(1\)/ }).click();
 await la.getByRole('alertdialog').getByText(/الطبيب الطالب/).waitFor();
 await la.getByRole('alertdialog').getByRole('button', { name: 'اعتماد ونشر' }).click();
 await la.getByText('نُشرت النتائج المحددة').waitFor();
-step('approver saw patient + specimen + recipients and released');
+step('the same lab member saw patient + specimen + recipients and released');
 
 // 5) doctor review task
 await d.reload();

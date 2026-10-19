@@ -23,7 +23,8 @@ const STAGES: { id: string; label: string; statuses: LabStatus[] | null }[] = [
 export function LabWorkspace() {
   const { current } = useWorkspace();
   const labId = current!.facility_id!;
-  const isApprover = current!.role === 'lab_approver';
+  // one person can run a small lab: every lab member records, follows up and releases
+  const isApprover = current!.role === 'lab_technician' || current!.role === 'lab_approver';
   const [stage, setStage] = useState('all');
   const [q, setQ] = useState('');
   const [open, setOpen] = useState<string | null>(null);
@@ -45,7 +46,7 @@ export function LabWorkspace() {
 
   return (
     <div className="stack">
-      <PageHead title="طلبات المختبر" subtitle={`${current!.facility_name} · ${isApprover ? 'معتمد نتائج' : 'فني مختبر'}`}
+      <PageHead title="طلبات المختبر" subtitle={`${current!.facility_name} · موظف المختبر`}
                 actions={<Button icon={<Plus size={18} />} onClick={() => setDirect(true)}>مراجع مباشر</Button>} />
       <div className="row-between">
         <div className="chips" role="group" aria-label="مراحل العمل">
@@ -131,11 +132,11 @@ function OrderSheet({ orderId, isApprover, onClose, onChanged }: { orderId: stri
         <Attachments kind="lab_result" refId={o.order.id} canUpload={o.order.status !== 'cancelled'} />
         {isApprover && drafts.length > 0 && (
           <div className="card stack-sm">
-            <p className="small">حدد الفحوصات الجاهزة للنشر. يمكن نشر جزء منها؛ لن يُعتبر الطلب كله جاهزاً.</p>
+            <p className="small">الخطوة الأخيرة: راجع القيم ثم حدد الفحوصات الجاهزة واضغط «اعتماد ونشر» لتظهر للمريض والطبيب. يمكن نشر جزء منها.</p>
             <Button variant="accent" icon={<Send size={18} />} disabled={!releaseIds.length} onClick={() => setConfirmRelease(true)}>اعتماد ونشر ({releaseIds.length})</Button>
           </div>
         )}
-        {!isApprover && drafts.length > 0 && <Alert tone="info">المسودات بانتظار معتمد النتائج؛ لا تظهر للمريض أو الطبيب قبل الاعتماد.</Alert>}
+        {drafts.length > 0 && <Alert tone="info">المسودة محفوظة لكنها غير منشورة — لا يراها المريض أو الطبيب قبل «اعتماد ونشر».</Alert>}
         {o.order.status === 'released' && <LabResultView d={o} />}
       </div>
 
