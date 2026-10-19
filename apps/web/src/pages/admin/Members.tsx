@@ -3,7 +3,7 @@ import { MailPlus, Stethoscope, UserCog, Users } from 'lucide-react';
 import { errorMessage, reasonSchema, roleLabel, type MemberRole } from '@app/shared';
 import { supabase } from '../../lib/supabase';
 import { unwrap, useAsync } from '../../lib/useAsync';
-import { Alert, Badge, Button, ConfirmDialog, EmptyState, ErrorState, Ltr, PageHead, SelectField, SkeletonList, TextField, TextareaField, useToast } from '../../components/ui';
+import { Alert, Badge, Button, ConfirmDialog, EmptyState, ErrorState, Ltr, PageHead, SelectField, Sheet, SkeletonList, TextField, TextareaField, useToast } from '../../components/ui';
 
 /** Invitations and membership overview for the platform admin. */
 export function AdminMembers() {
@@ -124,6 +124,7 @@ function FacilityMembers({ facs, orgs }: { facs: { id: string; organization_id: 
   const toast = useToast();
   const [facilityId, setFacilityId] = useState(facs[0]?.id ?? '');
   const [target, setTarget] = useState<Member | null>(null);
+  const [scopeFor, setScopeFor] = useState<Member | null>(null);
   const [reason, setReason] = useState('');
   const [reasonErr, setReasonErr] = useState<string>();
   const members = useAsync(async () => (facilityId ? ((await unwrap(supabase.rpc('facility_members', { p_facility_id: facilityId }))) as Member[]) : []), [facilityId]);
@@ -155,6 +156,7 @@ function FacilityMembers({ facs, orgs }: { facs: { id: string; organization_id: 
               <span className="small muted"><Ltr>{m.email}</Ltr> · {roleLabel[m.role]}</span>
             </div>
             <Badge tone={m.status === 'active' ? 'success' : 'danger'}>{m.status === 'active' ? 'فعّال' : m.status === 'suspended' ? 'معلّق' : 'ملغى'}</Badge>
+            {m.role === 'receptionist' && m.status === 'active' && <Button size="sm" variant="soft" icon={<Stethoscope size={14} />} onClick={() => setScopeFor(m)}>الأطباء</Button>}
             {m.status !== 'revoked' && (
               <Button size="sm" variant={m.status === 'active' ? 'danger' : 'secondary'} onClick={() => { setTarget(m); setReason(''); setReasonErr(undefined); }}>
                 {m.status === 'active' ? 'تعليق' : 'إعادة تفعيل'}
@@ -163,11 +165,45 @@ function FacilityMembers({ facs, orgs }: { facs: { id: string; organization_id: 
           </li>
         ))}
       </ul>
+      {scopeFor && <ReceptionScopeSheet member={scopeFor} onClose={() => setScopeFor(null)} />}
       <ConfirmDialog open={!!target} title={target?.status === 'active' ? `تعليق ${target?.display_name ?? target?.email}؟` : `إعادة تفعيل ${target?.display_name ?? target?.email}؟`}
                      confirmLabel="تأكيد" tone={target?.status === 'active' ? 'danger' : 'primary'} onCancel={() => setTarget(null)} onConfirm={apply}>
         <p className="small">{target?.status === 'active' ? 'يفقد الوصول لهذه الجهة فوراً. لا تُحذف أي سجلات.' : 'يستعيد الوصول بنفس الدور.'}</p>
         <TextareaField label="السبب" required value={reason} error={reasonErr} onChange={(e) => setReason(e.target.value)} style={{ minHeight: 64 }} />
       </ConfirmDialog>
     </section>
+  );
+}
+
+/** Which doctors a receptionist manages (their appointments, queue and bookings). */
+function ReceptionScopeSheet({ member, onClose }: { member: Member; onClose: () => void }) {
+  const toast = useToast();
+  const [busy, setBusy] = useState<string | null>(null);
+  const opts = useAsync(async () => (await unwrap(supabase.rpc('reception_scope_options', { p_membership_id: member.membership_id }))) as
+    { practitioner_id: string; full_name: string; specialty: string | null; allowed: boolean }[], [member.membership_id]);
+  const toggle = async (practitionerId: string, allowed: boolean) => {
+    setBusy(practitionerId);
+    const { error } = await supabase.rpc('set_reception_scope', { p_membership_id: member.membership_id, p_practitioner_id: practitionerId, p_allowed: allowed });
+    setBusy(null);
+    if (error) { toast(errorMessage(error), 'danger'); return; }
+    opts.reload();
+  };
+  return (
+    <Sheet open onClose={onClose} title={`أطباء ${member.display_name ?? member.email}`}>
+      <div className="stack">
+        <p className="small muted">السكرتير يرى ويدير مواعيد وطابور الأطباء المحددين فقط في هذه العيادة. التغيير يسري فوراً.</p>
+        {opts.status === 'loading' && !opts.data && <SkeletonList rows={2} />}
+        {opts.status === 'error' && <ErrorState error={opts.error} onRetry={opts.reload} />}
+        {opts.data?.length === 0 && <EmptyState icon={<Stethoscope />} title="لا يوجد أطباء في هذه العيادة بعد" />}
+        {opts.data?.map((d) => (
+          <label key={d.practitioner_id} className="lookup-result" aria-pressed={d.allowed} style={{ cursor: 'pointer' }}>
+            <input type="checkbox" checked={d.allowed} disabled={busy === d.practitioner_id} onChange={(e) => void toggle(d.practitioner_id, e.target.checked)}
+                   style={{ width: 18, height: 18, accentColor: 'var(--c-accent)' }} />
+            <span className="grow"><strong style={{ display: 'block' }}>{d.full_name}</strong><span className="small muted">{d.specialty ?? '—'}</span></span>
+            {d.allowed && <Badge tone="success">يدير مواعيده</Badge>}
+          </label>
+        ))}
+      </div>
+    </Sheet>
   );
 }

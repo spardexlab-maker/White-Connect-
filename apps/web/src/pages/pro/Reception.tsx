@@ -165,7 +165,13 @@ export function ReceptionDashboard() {
         </>}
       />
 
-      {noScope && <Alert tone="warning" title="لا يوجد أطباء ضمن صلاحياتك">اطلب من مدير المنشأة تحديد الأطباء الذين تدير مواعيدهم.</Alert>}
+      {noScope && <Alert tone="warning" title="لا يوجد أطباء ضمن صلاحياتك">اطلب من المدير العام ربطك بالأطباء الذين تدير مواعيدهم (الحسابات والعضويات ← موظفو الجهة ← الأطباء).</Alert>}
+      {docs.length > 0 && (
+        <div className="row small" style={{ gap: 6 }} aria-label="الأطباء الذين تدير مواعيدهم">
+          <span className="muted">تدير مواعيد:</span>
+          {docs.map((d) => <span key={d.practitioner_id} className="badge tone-accent">{d.full_name}</span>)}
+        </div>
+      )}
 
       <section className="day-toolbar card card-tight" aria-label="أدوات اليوم">
         <div className="row">

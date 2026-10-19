@@ -2858,6 +2858,11 @@ isOneToOne: false
 "reception_quick_book":
 { Args: { "p_birth_year"?: number,"p_facility_id": string,"p_idempotency_key": string,"p_new_patient_name"?: string,"p_patient_id"?: string,"p_phone"?: string,"p_practitioner_id": string,"p_service_id"?: string,"p_sex"?: Database["public"]['Enums']["patient_sex"],"p_start"?: string }; Returns: Json
                            },
+"reception_scope_options":
+{ Args: { "p_membership_id": string }; Returns: {
+              "allowed": boolean,"full_name": string,"practitioner_id": string,"specialty": string
+            }[]
+                           },
 "record_dose":
 { Args: { "p_job_id": string,"p_status": string }; Returns: undefined
                            },

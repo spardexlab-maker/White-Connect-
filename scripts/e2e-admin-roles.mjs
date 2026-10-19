@@ -36,6 +36,20 @@ try {
   await a.getByText('موظفو الجهة').waitFor();
   await a.getByRole('button', { name: 'تعليق' }).first().waitFor();
   step('super admin sees each facility’s staff with suspend');
+  const staff = a.locator('section', { hasText: 'موظفو الجهة' });
+  await staff.getByLabel('الجهة').selectOption({ label: 'عيادات الرافدين — مجمع الرافدين الطبي (تجريبي)' });
+  const recRow = staff.locator('.list-item', { hasText: 'reception.a@demo.test' });
+  await recRow.getByRole('button', { name: 'الأطباء' }).click();
+  const sara = a.getByRole('dialog').locator('label', { hasText: 'سارة' });
+  // the box reflects the server state after each change
+  const box = sara.getByRole('checkbox');
+  await box.click(); await sara.getByText('يدير مواعيده').waitFor({ state: 'detached' });
+  if (await box.isChecked()) throw new Error('scope not removed');
+  await box.click(); await sara.getByText('يدير مواعيده').waitFor();
+  if (!(await box.isChecked())) throw new Error('scope not restored');
+  if (out) await a.screenshot({ path: `${out}/admin-scope.png` });
+  await a.keyboard.press('Escape');
+  step('super admin assigns which doctors a receptionist manages');
   // 3) reports for any complex / facility
   await a.goto(`${BASE}/platform-admin/reports`);
   await a.getByText('المحصّل').first().waitFor();
@@ -43,6 +57,11 @@ try {
   await a.getByText('المجمع — حسب الجهة').waitFor();
   step('super admin opens facility and complex reports');
   if (out) await a.screenshot({ path: `${out}/admin-reports.png`, fullPage: true });
+  // receptionist sees whom they manage
+  const r = await login('reception.a@demo.test');
+  await r.goto(`${BASE}/workspace/reception`);
+  await r.getByLabel('الأطباء الذين تدير مواعيدهم').getByText('د. أحمد سالم (تجريبي)').waitFor();
+  step('receptionist sees the doctors they manage on the board');
   // 4) pharmacist sees complex doctors
   const ph = await login('pharm.a@demo.test');
   await ph.goto(`${BASE}/workspace/pharmacy/doctors`);
