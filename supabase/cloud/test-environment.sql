@@ -28,7 +28,7 @@ select pg_temp.mk_test_user('7e570000-0000-4000-a000-000000000011', 'spardexlab+
 select pg_temp.mk_test_user('7e570000-0000-4000-a000-000000000020', 'spardexlab+reception@gmail.com',    'سكرتير (اختبار)',        '__TEST_PASSWORD__');
 select pg_temp.mk_test_user('7e570000-0000-4000-a000-000000000030', 'spardexlab+pharmacy@gmail.com',     'صيدلاني (اختبار)',       '__TEST_PASSWORD__');
 select pg_temp.mk_test_user('7e570000-0000-4000-a000-000000000040', 'spardexlab+lab@gmail.com',          'فني مختبر (اختبار)',     '__TEST_PASSWORD__');
-select pg_temp.mk_test_user('7e570000-0000-4000-a000-000000000041', 'spardexlab+labapprover@gmail.com',  'معتمد نتائج (اختبار)',   '__TEST_PASSWORD__');
+select pg_temp.mk_test_user('7e570000-0000-4000-a000-000000000021', 'spardexlab+reception2@gmail.com',   'سكرتير د. أطفال (اختبار)', '__TEST_PASSWORD__');
 select pg_temp.mk_test_user('7e570000-0000-4000-a000-000000000050', 'spardexlab+patient@gmail.com',      'مريض (اختبار)',          '__TEST_PASSWORD__');
 
 -- organisation / branch / facilities
@@ -68,13 +68,14 @@ insert into public.memberships (id, user_id, organization_id, facility_id, role)
   ('7e570000-0000-4000-8000-000000000011', '7e570000-0000-4000-a000-000000000011', '7e570000-0000-4000-e000-000000000001', '7e570000-0000-4000-f000-000000000001', 'doctor'),
   ('7e570000-0000-4000-8000-000000000020', '7e570000-0000-4000-a000-000000000020', '7e570000-0000-4000-e000-000000000001', '7e570000-0000-4000-f000-000000000001', 'receptionist'),
   ('7e570000-0000-4000-8000-000000000030', '7e570000-0000-4000-a000-000000000030', '7e570000-0000-4000-e000-000000000001', '7e570000-0000-4000-f000-000000000002', 'pharmacist'),
-  ('7e570000-0000-4000-8000-000000000040', '7e570000-0000-4000-a000-000000000040', '7e570000-0000-4000-e000-000000000001', '7e570000-0000-4000-f000-000000000003', 'lab_technician'),
-  ('7e570000-0000-4000-8000-000000000041', '7e570000-0000-4000-a000-000000000041', '7e570000-0000-4000-e000-000000000001', '7e570000-0000-4000-f000-000000000003', 'lab_approver')
+  ('7e570000-0000-4000-8000-000000000021', '7e570000-0000-4000-a000-000000000021', '7e570000-0000-4000-e000-000000000001', '7e570000-0000-4000-f000-000000000001', 'receptionist'),
+  ('7e570000-0000-4000-8000-000000000040', '7e570000-0000-4000-a000-000000000040', '7e570000-0000-4000-e000-000000000001', '7e570000-0000-4000-f000-000000000003', 'lab_technician')
 on conflict (id) do nothing;
 
+-- one doctor per receptionist; the lab is run by one account (lab_technician)
 insert into public.reception_scopes (membership_id, practitioner_id) values
   ('7e570000-0000-4000-8000-000000000020', '7e570000-0000-4000-9000-000000000010'),
-  ('7e570000-0000-4000-8000-000000000020', '7e570000-0000-4000-9000-000000000011')
+  ('7e570000-0000-4000-8000-000000000021', '7e570000-0000-4000-9000-000000000011')
 on conflict do nothing;
 
 -- services, lab station, policies
