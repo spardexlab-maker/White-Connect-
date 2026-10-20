@@ -145,24 +145,20 @@ step('stock page shows 250 available (260 − 10), expired batch reported separa
 const lt = await pro('lab.a@demo.test');
 await lt.waitForURL(/lab/);
 await lt.locator('tr', { hasText: 'حسن علي' }).first().getByRole('button', { name: 'فتح' }).click();
-await lt.getByRole('button', { name: 'تسجيل حضور' }).click();
-await lt.getByText('سُجل حضور المراجع').waitFor();
-await lt.getByRole('button', { name: 'سحب العينة' }).click();
-await lt.getByText(/العينة: S/).waitFor();
+await lt.getByRole('button', { name: 'استقبال المراجع وبدء الفحص' }).click();
+await lt.getByText('استُقبل المراجع وسُجلت العينة').waitFor();
+await lt.getByText(/تم الاستقبال · العينة S/).waitFor();
 await lt.getByLabel('القيمة').fill('92');
 await lt.getByLabel('المجال المرجعي').fill('70-100 (مختبر تجريبي)');
-await lt.getByRole('button', { name: 'حفظ مسودة' }).click();
-await lt.getByText('حُفظت المسودة (غير منشورة)').waitFor();
-await lt.getByText('غير منشورة — لا يراها المريض').waitFor();
-step('lab member collected a barcoded specimen and saved a draft (not published yet)');
+await lt.getByRole('button', { name: 'حفظ بدون نشر' }).click();
+await lt.getByText('حُفظت القيم (غير منشورة بعد)').waitFor();
+step('lab member received the patient (check-in + barcoded sample in one step) and saved the value unpublished');
 
-const la = lt;
-await la.getByLabel(/تحديد سكر صائم للنشر/).check();
-await la.getByRole('button', { name: /اعتماد ونشر \(1\)/ }).click();
-await la.getByRole('alertdialog').getByText(/الطبيب الطالب/).waitFor();
-await la.getByRole('alertdialog').getByRole('button', { name: 'اعتماد ونشر' }).click();
-await la.getByText('نُشرت النتائج المحددة').waitFor();
-step('the same lab member saw patient + specimen + recipients and released');
+await lt.getByRole('button', { name: 'إكمال التحليل ونشر النتيجة' }).click();
+await lt.getByRole('alertdialog').getByText(/والطبيب/).waitFor();
+await lt.getByRole('alertdialog').getByRole('button', { name: 'إكمال ونشر' }).click();
+await lt.getByText('اكتمل التحليل ونُشرت النتيجة للمريض والطبيب').waitFor();
+step('one action completed the order and published it to the patient and the doctor');
 
 // 5) doctor review task
 await d.reload();

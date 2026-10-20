@@ -3,7 +3,7 @@
     "name": "منصة الرعاية",
     "slug": "white-connect",
     "scheme": "whiteconnect",
-    "version": "0.3.1",
+    "version": "0.3.2",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "icon": "./assets/icon.png",
@@ -36,7 +36,7 @@
         "RECORD_AUDIO",
         "READ_CONTACTS"
       ],
-      "versionCode": 4
+      "versionCode": 5
     },
     "web": {
       "output": "single",

@@ -2421,6 +2421,30 @@ isOneToOne: false
 "complete_clinical_task":
 { Args: { "p_task_id": string }; Returns: undefined
                            },
+"complete_lab_order":
+{ Args: { "p_order_id": string,"p_results"?: Json }; Returns: {
+              "clinical_note": string | null,
+"created_at": string,
+"created_by": string,
+"encounter_id": string | null,
+"id": string,
+"idempotency_key": string,
+"lab_facility_id": string,
+"order_number": string,
+"ordering_facility_id": string | null,
+"ordering_practitioner_id": string | null,
+"patient_id": string,
+"source": string,
+"status": Database["public"]['Enums']["lab_status"],
+"updated_at": string,
+"version": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "lab_orders"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "correct_lab_result":
 { Args: { "p_lab_flag"?: string,"p_notes"?: string,"p_reason": string,"p_reference_range"?: string,"p_result_id": string,"p_unit"?: string,"p_value_numeric"?: number,"p_value_text"?: string }; Returns: {
               "correction_reason": string | null,

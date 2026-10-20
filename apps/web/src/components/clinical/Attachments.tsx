@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FileText, Image as ImageIcon, Paperclip, ShieldAlert, Upload } from 'lucide-react';
 import { errorMessage, formatDateTime } from '@app/shared';
 import { supabase } from '../../lib/supabase';
@@ -15,11 +15,12 @@ const statusBadge: Record<string, JSX.Element> = {
 const reasonText: Record<string, string> = { unrecognized_content: 'المحتوى لا يطابق PDF/صورة', type_mismatch: 'النوع لا يطابق المصرح', size_mismatch: 'الحجم غير مطابق' };
 
 /** Private files: quarantine → content check → short-lived signed links (60 s). */
-export function Attachments({ kind, refId, canUpload }: { kind: 'lab_result' | 'encounter'; refId: string; canUpload?: boolean }) {
+export function Attachments({ kind, refId, canUpload, onCount }: { kind: 'lab_result' | 'encounter'; refId: string; canUpload?: boolean; onCount?: (available: number) => void }) {
   const toast = useToast();
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const list = useAsync(async () => (await unwrap(supabase.rpc('list_attachments', { p_kind: kind, p_ref_id: refId }))) as Att[], [kind, refId]);
+  useEffect(() => { if (list.data) onCount?.(list.data.filter((a) => a.status === 'available').length); }, [list.data, onCount]);
 
   const upload = async (file: File) => {
     setBusy(true);
@@ -59,7 +60,7 @@ export function Attachments({ kind, refId, canUpload }: { kind: 'lab_result' | '
         <>
           <input ref={input} type="file" accept="application/pdf,image/png,image/jpeg" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void upload(f); e.target.value = ''; }} />
           <Button size="sm" variant="secondary" icon={<Upload size={16} />} loading={busy} onClick={() => input.current?.click()}>رفع PDF أو صورة (حتى 10 MB)</Button>
-          <span className="small muted">يُفحص محتوى الملف قبل إتاحته، ولا يظهر للمريض أو الطبيب قبل اعتماد النتائج.</span>
+          <span className="small muted">يُفحص محتوى الملف قبل إتاحته، ويظهر للمريض والطبيب بعد نشر النتيجة.</span>
         </>
       )}
     </div>

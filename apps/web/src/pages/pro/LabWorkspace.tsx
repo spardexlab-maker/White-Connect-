@@ -88,125 +88,175 @@ export function LabWorkspace() {
   );
 }
 
+type ResultForm = { value: string; unit: string; range: string; flag: string; notes: string };
+
+/**
+ * One lab member runs the order in two steps: receive the patient (check-in +
+ * sample), then complete it with typed values and/or an uploaded result file —
+ * one action publishes it to the patient and the ordering doctor.
+ */
 function OrderSheet({ orderId, isApprover, onClose, onChanged }: { orderId: string; isApprover: boolean; onClose: () => void; onChanged: () => void }) {
   const toast = useToast();
   const d = useAsync(async () => (await unwrap(supabase.rpc('lab_order_detail', { p_order_id: orderId }))) as unknown as LabDetail, [orderId]);
   const [reject, setReject] = useState<string | null>(null);
   const [reason, setReason] = useState('');
-  const [releaseIds, setReleaseIds] = useState<string[]>([]);
-  const [confirmRelease, setConfirmRelease] = useState(false);
+  const [confirm, setConfirm] = useState(false);
   const [correcting, setCorrecting] = useState<LabResult | null>(null);
   const [fees, setFees] = useState(false);
-  const run = async (p: PromiseLike<{ error: unknown }>, ok: string) => {
-    const { error } = await p;
-    if (error) { toast(errorMessage(error), 'danger'); return false; }
-    toast(ok, 'success'); d.reload(); onChanged(); return true;
-  };
+  const [busy, setBusy] = useState<'receive' | 'save' | 'complete' | null>(null);
+  const [files, setFiles] = useState(0);
+  const [forms, setForms] = useState<Record<string, ResultForm>>({});
+
+  useEffect(() => {
+    if (!d.data) return;
+    setForms((prev) => {
+      const next = { ...prev };
+      for (const it of d.data!.items) {
+        if (next[it.id]) continue;
+        const dr = it.results.find((r) => r.status === 'draft');
+        next[it.id] = { value: dr ? String(dr.value_numeric ?? dr.value_text ?? '') : '', unit: dr?.unit ?? it.catalog.unit ?? '',
+          range: dr?.reference_range ?? it.catalog.reference_range_text ?? '', flag: dr?.lab_flag ?? '', notes: dr?.notes ?? '' };
+      }
+      return next;
+    });
+  }, [d.data]);
+
   if (!d.data) return <Sheet open size="lg" onClose={onClose} title="طلب مختبر">{d.status === 'error' ? <ErrorState error={d.error} onRetry={d.reload} /> : <SkeletonList />}</Sheet>;
   const o = d.data;
   const collected = o.specimens?.find((s) => s.status === 'collected');
-  const drafts = o.items.filter((i) => i.results.some((r) => r.status === 'draft'));
-  const canCollect = ['ordered', 'scheduled', 'checked_in', 'sample_rejected'].includes(o.order.status);
+  const received = !!collected && !['ordered', 'scheduled', 'checked_in', 'sample_rejected'].includes(o.order.status);
+  const pending = o.items.filter((i) => !['released', 'cancelled'].includes(i.status));
+  const hasValue = (id: string) => !!forms[id]?.value.trim() || !!o.items.find((i) => i.id === id)?.results.some((r) => r.status === 'draft');
+  const ready = pending.length > 0 && (files > 0 || pending.every((i) => hasValue(i.id)));
+  const done = () => { d.reload(); onChanged(); };
+  const set = (id: string, patch: Partial<ResultForm>) => setForms({ ...forms, [id]: { ...forms[id], ...patch } });
+
+  const receive = async () => {
+    setBusy('receive');
+    if (['ordered', 'scheduled'].includes(o.order.status)) {
+      const r = await supabase.rpc('lab_check_in', { p_order_id: o.order.id });
+      if (r.error) { setBusy(null); toast(errorMessage(r.error), 'danger'); return; }
+    }
+    const { error } = await supabase.rpc('collect_specimen', { p_order_id: o.order.id, p_specimen_type: o.items[0]?.catalog.specimen_type ?? 'عينة' });
+    setBusy(null);
+    if (error) toast(errorMessage(error), 'danger'); else { toast('استُقبل المراجع وسُجلت العينة', 'success'); done(); }
+  };
+  const payload = () => pending.map((i) => ({ item_id: i.id, ...forms[i.id] }));
+  const saveOnly = async () => {
+    setBusy('save');
+    for (const i of pending) {
+      const f = forms[i.id];
+      if (!f?.value.trim()) continue;
+      const numeric = /^-?\d+(\.\d+)?$/.test(f.value.trim());
+      const { error } = await supabase.rpc('save_lab_result_draft', {
+        p_order_item_id: i.id, p_value_numeric: numeric ? Number(f.value) : undefined, p_value_text: numeric ? undefined : f.value,
+        p_unit: f.unit || undefined, p_reference_range: f.range || undefined, p_lab_flag: f.flag || undefined, p_notes: f.notes || undefined });
+      if (error) { setBusy(null); toast(errorMessage(error), 'danger'); return; }
+    }
+    setBusy(null); toast('حُفظت القيم (غير منشورة بعد)', 'success'); done();
+  };
+  const complete = async () => {
+    setBusy('complete');
+    const { error } = await supabase.rpc('complete_lab_order', { p_order_id: o.order.id, p_results: payload() as never });
+    setBusy(null); setConfirm(false);
+    if (error) toast(errorMessage(error), 'danger'); else { toast('اكتمل التحليل ونُشرت النتيجة للمريض والطبيب', 'success'); done(); }
+  };
 
   return (
     <Sheet open size="lg" onClose={onClose} title={`طلب ${o.order.order_number}`}>
       <div className="stack">
-        {/* identity of patient + specimen always visible when approving (§26-5) */}
+        {/* identity of patient + specimen always visible when publishing (§26-5) */}
         <div className="card stack-sm" style={{ background: 'var(--c-surface-sunken)' }}>
           <strong>{o.patient.full_name}</strong>
-          <span className="small"><Ltr>{o.patient.public_code}</Ltr>{o.patient.birth_year ? ` · مواليد ${o.patient.birth_year}` : ''}{o.patient.sex ? ` · ${o.patient.sex === 'female' ? 'أنثى' : 'ذكر'}` : ''}</span>
-          {collected && <span className="small"><Barcode size={14} aria-hidden style={{ verticalAlign: '-2px' }} /> العينة: <Ltr>{collected.barcode}</Ltr> · {collected.specimen_type} · {formatDateTime(collected.collected_at)}</span>}
+          <span className="small"><Ltr>{o.patient.public_code}</Ltr>{o.patient.birth_year ? ` · مواليد ${o.patient.birth_year}` : ''}{o.patient.sex ? ` · ${o.patient.sex === 'female' ? 'أنثى' : 'ذكر'}` : ''}
+            {o.ordering_doctor ? ` · الطبيب: ${o.ordering_doctor}` : ' · مراجع مباشر'}</span>
+          <span className="small">الفحوصات: {o.items.map((i) => i.name).join('، ')}</span>
           {o.order.clinical_note && <span className="small">سبب الطلب: {o.order.clinical_note}</span>}
         </div>
-        <div className="row">
-          {o.order.status === 'ordered' && <Button variant="secondary" onClick={() => run(supabase.rpc('lab_check_in', { p_order_id: o.order.id }), 'سُجل حضور المراجع')}>تسجيل حضور</Button>}
-          {canCollect && <Button icon={<TestTube2 size={18} />} onClick={() => run(supabase.rpc('collect_specimen', { p_order_id: o.order.id, p_specimen_type: o.items[0]?.catalog.specimen_type ?? 'دم' }), 'سُحبت العينة وأُنشئ باركود مستقل')}>سحب العينة</Button>}
-          <Button variant="ghost" onClick={() => setFees(true)}>الرسوم والإيصال</Button>
-          {collected && !['released'].includes(o.order.status) && <Button variant="danger" icon={<XCircle size={18} />} onClick={() => setReject(collected.id)}>رفض العينة</Button>}
-        </div>
 
-        {o.items.map((it) => <ResultEditor key={it.id} item={it} isApprover={isApprover} onSaved={() => { d.reload(); onChanged(); }} onCorrect={setCorrecting}
-          selectable={isApprover && it.results.some((r) => r.status === 'draft')} selected={releaseIds.includes(it.id)}
-          onSelect={(v) => setReleaseIds(v ? [...releaseIds, it.id] : releaseIds.filter((x) => x !== it.id))} />)}
-
-        <Attachments kind="lab_result" refId={o.order.id} canUpload={o.order.status !== 'cancelled'} />
-        {isApprover && drafts.length > 0 && (
-          <div className="card stack-sm">
-            <p className="small">الخطوة الأخيرة: راجع القيم ثم حدد الفحوصات الجاهزة واضغط «اعتماد ونشر» لتظهر للمريض والطبيب. يمكن نشر جزء منها.</p>
-            <Button variant="accent" icon={<Send size={18} />} disabled={!releaseIds.length} onClick={() => setConfirmRelease(true)}>اعتماد ونشر ({releaseIds.length})</Button>
-          </div>
+        {o.order.status !== 'released' && (
+          <section className="card stack-sm" aria-labelledby="step-receive">
+            <h3 id="step-receive" className="section-title">١. استقبال المراجع</h3>
+            {received ? (
+              <div className="row-between">
+                <span className="small"><CheckCircle2 size={16} aria-hidden style={{ verticalAlign: '-3px', color: 'var(--c-success)' }} /> تم الاستقبال · العينة <Ltr>{collected!.barcode}</Ltr> · {formatDateTime(collected!.collected_at)}</span>
+                <Button size="sm" variant="ghost" icon={<XCircle size={16} />} onClick={() => setReject(collected!.id)}>رفض العينة</Button>
+              </div>
+            ) : (
+              <>
+                <p className="small muted">عند حضور المراجع: اضغط ليُسجَّل الحضور وتُنشأ العينة برقم وباركود.</p>
+                <Button icon={<TestTube2 size={18} />} loading={busy === 'receive'} onClick={() => void receive()}>استقبال المراجع وبدء الفحص</Button>
+              </>
+            )}
+          </section>
         )}
-        {drafts.length > 0 && <Alert tone="info">المسودة محفوظة لكنها غير منشورة — لا يراها المريض أو الطبيب قبل «اعتماد ونشر».</Alert>}
+
+        {pending.length > 0 && (
+          <section className="card stack" aria-labelledby="step-result">
+            <h3 id="step-result" className="section-title">٢. النتيجة</h3>
+            <p className="small muted">اكتب قيمة كل تحليل، أو ارفع ملف النتيجة (PDF أو صورة)، أو الاثنين. بعدها «إكمال التحليل».</p>
+            {pending.map((it) => {
+              const f = forms[it.id] ?? { value: '', unit: '', range: '', flag: '', notes: '' };
+              return (
+                <fieldset key={it.id} className="stack-sm lab-result-row">
+                  <legend className="row-between" style={{ width: '100%' }}><strong>{it.name}</strong>
+                    {it.results.some((r) => r.status === 'draft') ? <Badge tone="neutral">محفوظة — غير منشورة</Badge> : null}</legend>
+                  <div className="rx-grid">
+                    <TextField label="القيمة" optional={files > 0} ltr value={f.value} onChange={(e) => set(it.id, { value: e.target.value })} />
+                    <TextField label="الوحدة" ltr value={f.unit} onChange={(e) => set(it.id, { unit: e.target.value })} />
+                    <TextField label="المجال المرجعي" value={f.range} onChange={(e) => set(it.id, { range: e.target.value })} />
+                    <SelectField label="وسم المختبر" value={f.flag} onChange={(e) => set(it.id, { flag: e.target.value })}>
+                      <option value="">—</option><option value="low">منخفض</option><option value="high">مرتفع</option><option value="abnormal">غير طبيعي</option><option value="critical">حرج (سياسة المختبر)</option>
+                    </SelectField>
+                  </div>
+                  <TextField label="ملاحظة" optional value={f.notes} onChange={(e) => set(it.id, { notes: e.target.value })} />
+                </fieldset>
+              );
+            })}
+            <Attachments kind="lab_result" refId={o.order.id} canUpload onCount={setFiles} />
+            <div className="row" style={{ justifyContent: 'space-between' }}>
+              <Button variant="ghost" size="sm" loading={busy === 'save'} disabled={!received} onClick={() => void saveOnly()}>حفظ بدون نشر</Button>
+              <Button variant="accent" icon={<Send size={18} />} disabled={!ready} onClick={() => setConfirm(true)}>إكمال التحليل ونشر النتيجة</Button>
+            </div>
+            {!ready && <span className="small muted">يتفعّل الزر عندما تُكتب كل القيم أو يُرفع ملف النتيجة.</span>}
+          </section>
+        )}
+
+        {o.items.some((i) => i.results.some((r) => r.status === 'released')) && (
+          <section className="stack-sm">
+            {o.items.map((it) => {
+              const rel = it.results.find((r) => r.status === 'released');
+              return rel ? (
+                <div key={it.id} className="row-between small">
+                  <span>{it.name}: <strong className="num">{rel.value_numeric ?? rel.value_text}</strong> {rel.unit ?? ''} {rel.lab_flag ? `(${rel.lab_flag})` : ''}</span>
+                  {isApprover && <Button size="sm" variant="ghost" icon={<PencilLine size={14} />} onClick={() => setCorrecting(rel)}>تصحيح</Button>}
+                </div>
+              ) : null;
+            })}
+          </section>
+        )}
         {o.order.status === 'released' && <LabResultView d={o} />}
+        <div className="row"><Button variant="ghost" size="sm" onClick={() => setFees(true)}>الرسوم والإيصال</Button></div>
       </div>
 
       <ConfirmDialog open={!!reject} title="رفض العينة" confirmLabel="رفض وطلب سحب جديد" tone="danger" onCancel={() => setReject(null)}
-                     onConfirm={async () => { if (await run(supabase.rpc('reject_specimen', { p_specimen_id: reject!, p_reason: reason }), 'رُفضت العينة؛ يلزم سحب جديد')) { setReject(null); setReason(''); } }}>
+                     onConfirm={async () => {
+                       const { error } = await supabase.rpc('reject_specimen', { p_specimen_id: reject!, p_reason: reason });
+                       if (error) { toast(errorMessage(error), 'danger'); return; }
+                       toast('رُفضت العينة؛ يلزم سحب جديد', 'success'); setReject(null); setReason(''); done();
+                     }}>
         <TextareaField label="السبب" required value={reason} onChange={(e) => setReason(e.target.value)} />
       </ConfirmDialog>
-      <ConfirmDialog open={confirmRelease} title="اعتماد ونشر النتائج" confirmLabel="اعتماد ونشر" onCancel={() => setConfirmRelease(false)}
-                     onConfirm={async () => { if (await run(supabase.rpc('release_lab_results', { p_order_id: o.order.id, p_item_ids: releaseIds }), 'نُشرت النتائج المحددة')) { setConfirmRelease(false); setReleaseIds([]); } }}>
+      <ConfirmDialog open={confirm} title="إكمال التحليل ونشر النتيجة" confirmLabel="إكمال ونشر" loading={busy === 'complete'} onCancel={() => setConfirm(false)} onConfirm={() => void complete()}>
         <p>المريض: <strong>{o.patient.full_name}</strong> (<Ltr>{o.patient.public_code}</Ltr>){collected && <> · العينة <Ltr>{collected.barcode}</Ltr></>}</p>
-        <p>الفحوصات: {o.items.filter((i) => releaseIds.includes(i.id)).map((i) => i.name).join('، ')}</p>
-        <p>المستلمون: المريض (إن كان له حساب){o.ordering_doctor ? <> + الطبيب الطالب <strong>{o.ordering_doctor}</strong> (مهمة مراجعة)</> : ''}.</p>
-        <p className="small muted">بعد النشر لا تُعدّل النتيجة إلا بإصدار مصحح يحتفظ بالأصل والسبب.</p>
+        <p>الفحوصات: {pending.map((i) => i.name).join('، ')}</p>
+        {files > 0 && <p>الملفات المرفقة: {files}</p>}
+        <p>تصل النتيجة إلى: المريض{o.ordering_doctor ? <> والطبيب <strong>{o.ordering_doctor}</strong></> : ''}.</p>
+        <p className="small muted">بعد النشر لا تُعدّل النتيجة إلا بتصحيح يحتفظ بالأصل والسبب.</p>
       </ConfirmDialog>
       {fees && <InvoiceSheet labOrderId={o.order.id} onClose={() => setFees(false)} />}
-      {correcting && <CorrectDialog result={correcting} onClose={() => setCorrecting(null)} onDone={() => { setCorrecting(null); d.reload(); onChanged(); }} />}
+      {correcting && <CorrectDialog result={correcting} onClose={() => setCorrecting(null)} onDone={() => { setCorrecting(null); done(); }} />}
     </Sheet>
-  );
-}
-
-function ResultEditor({ item, isApprover, onSaved, onCorrect, selectable, selected, onSelect }: {
-  item: LabDetail['items'][number]; isApprover: boolean; onSaved: () => void; onCorrect: (r: LabResult) => void;
-  selectable: boolean; selected: boolean; onSelect: (v: boolean) => void;
-}) {
-  const toast = useToast();
-  const draft = item.results.find((r) => r.status === 'draft');
-  const released = item.results.find((r) => r.status === 'released');
-  const [f, setF] = useState({ value: draft ? String(draft.value_numeric ?? draft.value_text ?? '') : '', unit: draft?.unit ?? item.catalog.unit ?? '',
-    range: draft?.reference_range ?? '', flag: draft?.lab_flag ?? '', notes: draft?.notes ?? '' });
-  const [busy, setBusy] = useState(false);
-  const editable = ['sample_collected', 'processing', 'pending_review'].includes(item.status);
-  const save = async () => {
-    if (!f.value.trim()) { toast('اكتب قيمة النتيجة', 'danger'); return; }
-    setBusy(true);
-    const numeric = /^-?\d+(\.\d+)?$/.test(f.value.trim());
-    const { error } = await supabase.rpc('save_lab_result_draft', {
-      p_order_item_id: item.id, p_value_numeric: numeric ? Number(f.value) : undefined, p_value_text: numeric ? undefined : f.value,
-      p_unit: f.unit || undefined, p_reference_range: f.range || undefined, p_lab_flag: f.flag || undefined, p_notes: f.notes || undefined,
-    });
-    setBusy(false);
-    if (error) toast(errorMessage(error), 'danger'); else { toast('حُفظت المسودة (غير منشورة)', 'success'); onSaved(); }
-  };
-  return (
-    <fieldset className="card stack-sm">
-      <legend className="row-between" style={{ width: '100%' }}>
-        <span className="row">{selectable && <input type="checkbox" aria-label={`تحديد ${item.name} للنشر`} checked={selected} onChange={(e) => onSelect(e.target.checked)} />}<strong>{item.name}</strong></span>
-        <Badge tone={labStatus[item.status].tone}>{labStatus[item.status].label}</Badge>
-      </legend>
-      {released && (
-        <div className="row-between small">
-          <span>المنشور: <strong className="num">{released.value_numeric ?? released.value_text}</strong> {released.unit} {released.lab_flag ? `(${released.lab_flag})` : ''}</span>
-          {isApprover && <Button size="sm" variant="ghost" icon={<PencilLine size={14} />} onClick={() => onCorrect(released)}>تصحيح</Button>}
-        </div>
-      )}
-      {editable && (
-        <>
-          <div className="rx-grid">
-            <TextField label="القيمة" ltr value={f.value} onChange={(e) => setF({ ...f, value: e.target.value })} />
-            <TextField label="الوحدة" ltr value={f.unit} onChange={(e) => setF({ ...f, unit: e.target.value })} />
-            <TextField label="المجال المرجعي" hint={item.catalog.reference_range_text ? `دليل المختبر: ${item.catalog.reference_range_text}` : undefined} value={f.range} onChange={(e) => setF({ ...f, range: e.target.value })} />
-            <SelectField label="وسم المختبر" value={f.flag} onChange={(e) => setF({ ...f, flag: e.target.value })}>
-              <option value="">—</option><option value="low">منخفض</option><option value="high">مرتفع</option><option value="abnormal">غير طبيعي</option><option value="critical">حرج (سياسة المختبر)</option>
-            </SelectField>
-          </div>
-          <TextField label="ملاحظة المختبر" optional value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} />
-          <Button variant="secondary" size="sm" loading={busy} onClick={save}>حفظ مسودة</Button>
-        </>
-      )}
-      {!editable && !released && <span className="small muted">{item.status === 'sample_rejected' ? 'العينة مرفوضة — اسحب عينة جديدة.' : 'إدخال النتيجة متاح بعد سحب العينة.'}</span>}
-    </fieldset>
   );
 }
 
