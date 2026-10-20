@@ -43,7 +43,7 @@ export const roleLabel: Record<MemberRole, string> = {
   pharmacy_staff: 'موظف صيدلية',
   lab_technician: 'موظف المختبر',
   lab_approver: 'معتمد نتائج',
-  facility_admin: 'مدير منشأة',
+  facility_admin: 'مدير منشأة (ملغى)',
   organization_admin: 'مدير مجمع',
 };
 

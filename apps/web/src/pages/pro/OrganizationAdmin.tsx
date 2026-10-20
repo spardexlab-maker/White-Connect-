@@ -18,7 +18,7 @@ const inviteRoles: Record<string, MemberRole[]> = {
 export function OrganizationAdmin() {
   const { current, workspaces } = useWorkspace();
   const toast = useToast();
-  const facilities = workspaces.filter((w) => w.facility_id && (w.role === 'facility_admin' || current?.role === 'organization_admin'));
+  const facilities = workspaces.filter((w) => w.facility_id && current?.role === 'organization_admin');
   const [facilityId, setFacilityId] = useState<string>(current?.facility_id ?? facilities[0]?.facility_id ?? '');
   const facility = workspaces.find((w) => w.facility_id === facilityId);
   const members = useAsync(async () => (facilityId ? ((await unwrap(supabase.rpc('facility_members', { p_facility_id: facilityId }))) as Member[]) : []), [facilityId]);

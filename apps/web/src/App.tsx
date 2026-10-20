@@ -97,7 +97,7 @@ export function App() {
               <Route path="/security" element={<RequireStaff><Security /></RequireStaff>} />
               <Route path="/workspace" element={<RequireStaff><WorkspacePicker /></RequireStaff>} />
               <Route element={<RequireStaff><WorkspaceLayout /></RequireStaff>}>
-                <Route path="/workspace/reception" element={<RequireWorkspaceRole roles={['receptionist', 'facility_admin', 'doctor']}><ReceptionDashboard /></RequireWorkspaceRole>} />
+                <Route path="/workspace/reception" element={<RequireWorkspaceRole roles={['receptionist', 'doctor']}><ReceptionDashboard /></RequireWorkspaceRole>} />
                 <Route path="/workspace/doctor" element={<RequireWorkspaceRole roles={['doctor']}><DoctorToday /></RequireWorkspaceRole>} />
                 <Route path="/workspace/doctor/session/:encounterId" element={<RequireWorkspaceRole roles={['doctor']}><DoctorSession /></RequireWorkspaceRole>} />
                 <Route path="/workspace/doctor/lab/:orderId" element={<RequireWorkspaceRole roles={['doctor']}><LabOrderPage back="/workspace/doctor" /></RequireWorkspaceRole>} />
@@ -109,11 +109,11 @@ export function App() {
                 <Route path="/workspace/lab" element={<RequireWorkspaceRole roles={['lab_technician', 'lab_approver']}><LabWorkspace /></RequireWorkspaceRole>} />
                 <Route path="/workspace/pharmacy/doctors" element={<RequireWorkspaceRole roles={['pharmacist', 'pharmacy_staff']}><ComplexDoctors /></RequireWorkspaceRole>} />
                 <Route path="/workspace/lab/doctors" element={<RequireWorkspaceRole roles={['lab_technician', 'lab_approver']}><ComplexDoctors /></RequireWorkspaceRole>} />
-                <Route path="/workspace/organization" element={<RequireWorkspaceRole roles={['facility_admin', 'organization_admin']}><OrganizationAdmin /></RequireWorkspaceRole>} />
+                <Route path="/workspace/organization" element={<RequireWorkspaceRole roles={['organization_admin']}><OrganizationAdmin /></RequireWorkspaceRole>} />
                 <Route path="/platform-admin" element={<RequirePlatformAdmin><AdminOverview /></RequirePlatformAdmin>} />
                 <Route path="/platform-admin/organizations" element={<RequirePlatformAdmin><AdminOrganizations /></RequirePlatformAdmin>} />
                 <Route path="/platform-admin/members" element={<RequirePlatformAdmin><AdminMembers /></RequirePlatformAdmin>} />
-                <Route path="/workspace/organization/reports" element={<RequireWorkspaceRole roles={['facility_admin', 'organization_admin']}><FacilityReports /></RequireWorkspaceRole>} />
+                <Route path="/workspace/organization/reports" element={<RequireWorkspaceRole roles={['organization_admin']}><FacilityReports /></RequireWorkspaceRole>} />
                 <Route path="/platform-admin/health" element={<RequirePlatformAdmin><AdminHealth /></RequirePlatformAdmin>} />
                 <Route path="/platform-admin/reports" element={<RequirePlatformAdmin><AdminReportsPage /></RequirePlatformAdmin>} />
                 <Route path="/platform-admin/audit" element={<RequirePlatformAdmin><AdminAudit /></RequirePlatformAdmin>} />

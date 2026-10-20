@@ -10,10 +10,11 @@ interface Rep { appointments_by_status: Record<string, number>; by_practitioner:
   walk_ins: number; invoiced_minor: number; collected_minor: number; refunded_minor: number; by_method: Record<string, number>; expenses_minor: number;
   expenses_by_category: Record<string, number>; open_invoices: number }
 
-/** Facility manager entry point (their own facilities). */
+/** Legacy complex-manager entry point (the facility-manager role is retired). */
 export function FacilityReports() {
   const { current, workspaces } = useWorkspace();
-  const facilities = workspaces.filter((w) => w.facility_id && w.role === 'facility_admin').map((w) => ({ id: w.facility_id!, name: w.facility_name ?? '' }));
+  const facilities = current?.role === 'organization_admin'
+    ? workspaces.filter((w) => w.facility_id).map((w) => ({ id: w.facility_id!, name: w.facility_name ?? '' })) : [];
   return <ReportsView facilities={facilities} initialFacilityId={current?.facility_id ?? undefined}
                       organizationId={current?.role === 'organization_admin' ? current.organization_id : undefined} />;
 }

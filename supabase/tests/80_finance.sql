@@ -2,7 +2,7 @@
 -- overpayment, refunds with reason, void rules), reports without medical
 -- data, platform health admin-only.
 begin;
-select plan(11);
+select plan(12);
 
 \set A1 '''00000000-0000-4000-f000-0000000000a1'''
 \set U_RECA '''00000000-0000-4000-a000-000000000020'''
@@ -29,8 +29,10 @@ select is((select status from public.invoices where id = (select id from t where
 select tests.login(:U_RECB);
 select throws_ok(format('select public.invoice_document(%L)', (select id from t where k = 'inv')), 'P0001', 'app:forbidden', 'another complex cannot read the invoice');
 
--- facility report: admin of the clinic (Dr. Ahmed is facility admin) — counts and money only
+-- facility report: run by the platform admin (facility-admin role retired) — counts and money only
 select tests.login(:U_DRAHMED);
+select throws_ok(format('select public.facility_report(%L, current_date, current_date)', :A1), 'P0001', 'app:forbidden', 'a doctor cannot open financial reports');
+select tests.login(:U_ADMIN, 'admin@demo.test', 'aal2');
 select is((public.facility_report(:A1, current_date, current_date) ->> 'collected_minor')::bigint, 25000::bigint, 'collected amount reported');
 select ok(not (public.facility_report(:A1, current_date, current_date)::text ~* 'assessment|diagnos|full_name'), 'report contains no clinical or patient names');
 

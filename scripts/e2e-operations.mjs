@@ -1,5 +1,5 @@
 // Phase 6 UI journey: fees + receipt at reception → facility report and
-// expense by the facility admin → platform system health.
+// expense by the platform admin → platform system health.
 import { chromium } from 'playwright';
 const BASE = process.argv[2] ?? 'http://127.0.0.1:5173';
 const PASSWORD = 'Demo-Pass-2026!';
@@ -28,18 +28,18 @@ await r.getByRole('button', { name: 'رجوع' }).click();
 await r.getByRole('heading', { name: 'لوحة اليوم' }).waitFor();
 step('reception created the visit invoice from the price snapshot, recorded payment, opened the receipt');
 
-const d = await pro('dr.ahmed@demo.test');
-await d.getByRole('button', { name: /عيادات الرافدين.*مدير منشأة/ }).click();
-await d.goto(`${BASE}/workspace/organization/reports`);
-await d.getByText('المحصّل').first().waitFor();
-await d.getByText('٢٥٬٠٠٠ د.ع').first().waitFor();
-await d.getByLabel('الفئة').fill('مستلزمات');
-await d.getByLabel('المبلغ (د.ع)').fill('15000');
-await d.getByRole('button', { name: 'إضافة' }).click();
-await d.getByText('سُجل المصروف').waitFor();
-step('facility admin sees collected revenue and records an expense (no medical data in the report)');
-
 const a = await pro('admin@demo.test');
+await a.goto(`${BASE}/platform-admin/reports`);
+await a.getByLabel('المجمع').selectOption({ label: 'مجمع الرافدين الطبي (تجريبي)' });
+await a.getByLabel('المنشأة').selectOption({ label: 'عيادات الرافدين' });
+await a.getByText('المحصّل').first().waitFor();
+await a.getByText('٢٥٬٠٠٠ د.ع').first().waitFor();
+await a.getByLabel('الفئة').fill('مستلزمات');
+await a.getByLabel('المبلغ (د.ع)').fill('15000');
+await a.getByRole('button', { name: 'إضافة' }).click();
+await a.getByText('سُجل المصروف').waitFor();
+step('platform admin sees collected revenue and records an expense (no medical data in the report)');
+
 await a.goto(`${BASE}/platform-admin/health`);
 await a.getByText('المهام المجدولة').waitFor();
 await a.getByText('expire-pending-appointments').waitFor();
