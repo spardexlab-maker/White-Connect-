@@ -561,14 +561,14 @@ isOneToOne: false
                   ]
                 },"encounters": {
                   Row: {
-                    "appointment_id": string | null,"created_at": string,"created_by": string,"ended_at": string | null,"facility_id": string,"follow_up_of": string | null,"id": string,"identity_verified": boolean,"patient_id": string,"practitioner_id": string,"queue_entry_id": string | null,"started_at": string | null,"status": Database["public"]['Enums']["encounter_status"],"updated_at": string,"version": number
+                    "appointment_id": string | null,"created_at": string,"created_by": string,"ended_at": string | null,"facility_id": string,"follow_up_of": string | null,"id": string,"identity_verified": boolean,"patient_id": string,"pause_reason": string | null,"paused_at": string | null,"practitioner_id": string,"queue_entry_id": string | null,"started_at": string | null,"status": Database["public"]['Enums']["encounter_status"],"updated_at": string,"version": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "appointment_id"?: string | null,"created_at"?: string,"created_by": string,"ended_at"?: string | null,"facility_id": string,"follow_up_of"?: string | null,"id"?: string,"identity_verified"?: boolean,"patient_id": string,"practitioner_id": string,"queue_entry_id"?: string | null,"started_at"?: string | null,"status"?: Database["public"]['Enums']["encounter_status"],"updated_at"?: string,"version"?: number
+                    "appointment_id"?: string | null,"created_at"?: string,"created_by": string,"ended_at"?: string | null,"facility_id": string,"follow_up_of"?: string | null,"id"?: string,"identity_verified"?: boolean,"patient_id": string,"pause_reason"?: string | null,"paused_at"?: string | null,"practitioner_id": string,"queue_entry_id"?: string | null,"started_at"?: string | null,"status"?: Database["public"]['Enums']["encounter_status"],"updated_at"?: string,"version"?: number
                   }
                   Update: {
-                    "appointment_id"?: string | null,"created_at"?: string,"created_by"?: string,"ended_at"?: string | null,"facility_id"?: string,"follow_up_of"?: string | null,"id"?: string,"identity_verified"?: boolean,"patient_id"?: string,"practitioner_id"?: string,"queue_entry_id"?: string | null,"started_at"?: string | null,"status"?: Database["public"]['Enums']["encounter_status"],"updated_at"?: string,"version"?: number
+                    "appointment_id"?: string | null,"created_at"?: string,"created_by"?: string,"ended_at"?: string | null,"facility_id"?: string,"follow_up_of"?: string | null,"id"?: string,"identity_verified"?: boolean,"patient_id"?: string,"pause_reason"?: string | null,"paused_at"?: string | null,"practitioner_id"?: string,"queue_entry_id"?: string | null,"started_at"?: string | null,"status"?: Database["public"]['Enums']["encounter_status"],"updated_at"?: string,"version"?: number
                   }
                   Relationships: [
                     {
@@ -2788,6 +2788,35 @@ isOneToOne: false
               "corrected": boolean,"encounter_id": string,"event_type": string,"facility_name": string,"occurred_at": string,"patient_id": string,"patient_name": string,"practitioner_name": string,"ref_id": string,"status": string,"title": string
             }[]
                            },
+"patient_medical_card":
+{ Args: { "p_patient_id": string }; Returns: Json
+                           },
+"pause_encounter":
+{ Args: { "p_encounter_id": string,"p_reason"?: string }; Returns: {
+              "appointment_id": string | null,
+"created_at": string,
+"created_by": string,
+"ended_at": string | null,
+"facility_id": string,
+"follow_up_of": string | null,
+"id": string,
+"identity_verified": boolean,
+"patient_id": string,
+"pause_reason": string | null,
+"paused_at": string | null,
+"practitioner_id": string,
+"queue_entry_id": string | null,
+"started_at": string | null,
+"status": Database["public"]['Enums']["encounter_status"],
+"updated_at": string,
+"version": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "encounters"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "pharmacy_choices":
 { Args: { "p_encounter_id": string }; Returns: {
               "branch": string,"is_default": boolean,"name": string,"pharmacy_id": string
@@ -2994,6 +3023,32 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"resume_encounter":
+{ Args: { "p_encounter_id": string }; Returns: {
+              "appointment_id": string | null,
+"created_at": string,
+"created_by": string,
+"ended_at": string | null,
+"facility_id": string,
+"follow_up_of": string | null,
+"id": string,
+"identity_verified": boolean,
+"patient_id": string,
+"pause_reason": string | null,
+"paused_at": string | null,
+"practitioner_id": string,
+"queue_entry_id": string | null,
+"started_at": string | null,
+"status": Database["public"]['Enums']["encounter_status"],
+"updated_at": string,
+"version": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "encounters"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "return_sale_line":
 { Args: { "p_quantity": number,"p_reason": string,"p_restock"?: boolean,"p_sale_line_id": string }; Returns: {
               "amount_minor": number,
@@ -3091,6 +3146,9 @@ isOneToOne: false
               "address": string,"area": string,"branch_name": string,"city_name": string,"currency": string,"display_name": string,"distance_km": number,"facility_id": string,"facility_name": string,"latitude": number,"license_verified": boolean,"longitude": number,"min_price_minor": number,"opening_hours_note": string,"organization_name": string,"photo_path": string,"practitioner_id": string,"specialty_name": string,"title": string
             }[]
                            },
+"send_prescription_to_pharmacy":
+{ Args: { "p_pharmacy_id": string,"p_prescription_id": string }; Returns: undefined
+                           },
 "set_booking_policy":
 { Args: { "p_booking_window_days": number,"p_cancellation_cutoff_minutes": number,"p_cancellation_policy_text"?: string,"p_confirmation_mode": string,"p_confirmation_timeout_minutes": number,"p_facility_id": string,"p_late_policy_text"?: string,"p_min_notice_minutes": number,"p_practitioner_id": string,"p_slot_step_minutes"?: number }; Returns: {
               "booking_window_days": number,
@@ -3125,6 +3183,8 @@ isOneToOne: false
 "id": string,
 "identity_verified": boolean,
 "patient_id": string,
+"pause_reason": string | null,
+"paused_at": string | null,
 "practitioner_id": string,
 "queue_entry_id": string | null,
 "started_at": string | null,
@@ -3193,6 +3253,8 @@ isOneToOne: false
 "id": string,
 "identity_verified": boolean,
 "patient_id": string,
+"pause_reason": string | null,
+"paused_at": string | null,
 "practitioner_id": string,
 "queue_entry_id": string | null,
 "started_at": string | null,

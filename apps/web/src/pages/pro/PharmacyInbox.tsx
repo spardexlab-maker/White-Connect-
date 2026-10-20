@@ -87,7 +87,7 @@ function PharmacyDetail({ dispatchId, pharmacyId, onClose, onChanged, toast }: {
   };
   const cancelled = d.data?.rx_status === 'cancelled';
   return (
-    <Sheet open onClose={onClose} title={d.data ? `وصفة ${d.data.rx_number}` : 'وصفة'}
+    <Sheet open size="lg" onClose={onClose} title={d.data ? `وصفة ${d.data.rx_number}` : 'وصفة'}
            footer={d.data && !cancelled ? <>
              {d.data.dispatch_status === 'sent' && <Button icon={<CheckCheck size={18} />} onClick={receive}>تسجيل الاستلام</Button>}
              <Link className="btn btn-secondary" to={`/print/rx/${d.data.prescription_id}?facility=${pharmacyId}`}><Printer size={18} aria-hidden />طباعة</Link>

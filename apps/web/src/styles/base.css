@@ -53,7 +53,7 @@ img { max-width: 100%; display: block; }
 @keyframes shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
 
 /* page transition: applied to the routed content wrapper (keyed by pathname) */
-.page { animation: page-in var(--dur-2) var(--ease-out) both; }
+.page { animation: page-in var(--dur-2) var(--ease-out) backwards; }
 /* calm staggered reveal for at most the first 6 direct children */
 .reveal > * { animation: rise var(--dur-3) var(--ease-out) both; }
 .reveal > :nth-child(2) { animation-delay: 40ms; }

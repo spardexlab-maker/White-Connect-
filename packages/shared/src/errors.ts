@@ -40,7 +40,7 @@ const messages: Record<string, string> = {
   cannot_change_self: 'لا يمكنك تغيير حالة حسابك.',
   invalid_timezone: 'المنطقة الزمنية غير صحيحة.',
   not_found: 'العنصر غير موجود.',
-  another_session_in_progress: 'لديك جلسة جارية؛ أنهِها أو حوّلها لانتظار النتائج أولاً.',
+  another_session_in_progress: 'لديك جلسة جارية؛ أوقفها مؤقتاً أو أنهِها أولاً.',
   no_draft: 'لا توجد مسودة قابلة للتعديل.',
   signed_record_locked: 'السجل معتمد ومقفل؛ استخدم التصحيح بإصدار جديد.',
   delete_not_allowed: 'لا يمكن حذف السجلات المعتمدة.',

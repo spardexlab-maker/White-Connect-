@@ -102,14 +102,14 @@ function OrderSheet({ orderId, isApprover, onClose, onChanged }: { orderId: stri
     if (error) { toast(errorMessage(error), 'danger'); return false; }
     toast(ok, 'success'); d.reload(); onChanged(); return true;
   };
-  if (!d.data) return <Sheet open onClose={onClose} title="طلب مختبر">{d.status === 'error' ? <ErrorState error={d.error} onRetry={d.reload} /> : <SkeletonList />}</Sheet>;
+  if (!d.data) return <Sheet open size="lg" onClose={onClose} title="طلب مختبر">{d.status === 'error' ? <ErrorState error={d.error} onRetry={d.reload} /> : <SkeletonList />}</Sheet>;
   const o = d.data;
   const collected = o.specimens?.find((s) => s.status === 'collected');
   const drafts = o.items.filter((i) => i.results.some((r) => r.status === 'draft'));
   const canCollect = ['ordered', 'scheduled', 'checked_in', 'sample_rejected'].includes(o.order.status);
 
   return (
-    <Sheet open onClose={onClose} title={`طلب ${o.order.order_number}`}>
+    <Sheet open size="lg" onClose={onClose} title={`طلب ${o.order.order_number}`}>
       <div className="stack">
         {/* identity of patient + specimen always visible when approving (§26-5) */}
         <div className="card stack-sm" style={{ background: 'var(--c-surface-sunken)' }}>
@@ -276,7 +276,7 @@ function DirectVisitSheet({ labId, onClose, onCreated }: { labId: string; onClos
   const ready = selected.length > 0 && (mode === 'new' ? name.trim().length > 0 : !!picked && (picked.known_here || verification.trim().length >= 3));
 
   return (
-    <Sheet open onClose={onClose} title="مراجع مباشر (بدون إحالة)" footer={<Button block icon={<FlaskConical size={18} />} disabled={!ready} loading={busy} onClick={submit}>تسجيل الطلب</Button>}>
+    <Sheet open size="lg" onClose={onClose} title="مراجع مباشر (بدون إحالة)" footer={<Button block icon={<FlaskConical size={18} />} disabled={!ready} loading={busy} onClick={submit}>تسجيل الطلب</Button>}>
       <div className="stack">
         <div className="segmented" role="group" aria-label="نوع المراجع">
           <button aria-pressed={mode === 'existing'} onClick={() => setMode('existing')}>مراجع موجود</button>

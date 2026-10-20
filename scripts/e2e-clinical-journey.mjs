@@ -51,6 +51,23 @@ await d.getByLabel('التقييم / التشخيص').fill('تقييم تجري�
 await d.getByText(/محفوظ/).first().waitFor({ timeout: 10000 });
 step('note autosaved with visible save status');
 
+await d.getByRole('tab', { name: 'البطاقة الطبية' }).click();
+await d.getByRole('tab', { name: /الفحوصات/ }).waitFor();
+await d.getByText('حساسية موثّقة').waitFor();
+step('medical card opens inside the session (visits / tests / prescriptions)');
+
+await d.getByRole('tab', { name: 'الجلسة الحالية' }).click();
+await d.getByRole('button', { name: 'إيقاف مؤقت واستقبال مريض آخر' }).click();
+await d.getByRole('alertdialog').getByRole('button', { name: 'إيقاف مؤقت' }).click();
+await d.waitForURL(/doctor$/);
+const pausedRow = d.locator('.list-item', { hasText: 'حسن علي' }).filter({ hasText: 'متوقفة مؤقتاً' });
+await pausedRow.waitFor();
+await pausedRow.getByRole('button', { name: 'استئناف' }).click();
+await d.waitForURL(/session/);
+await d.getByLabel('التقييم / التشخيص').waitFor();
+if ((await d.getByLabel('التقييم / التشخيص').inputValue()) !== 'تقييم تجريبي') throw new Error('note lost after pause/resume');
+step('session paused (patient sent out), listed as paused, resumed with the note intact');
+
 await d.getByRole('tab', { name: 'وصفة' }).click();
 await d.getByLabel('بحث بالمادة الفعالة أو الاسم التجاري').fill('Paracet');
 await d.locator('.combo-list button', { hasText: '500 mg' }).click();
@@ -59,13 +76,17 @@ await d.getByLabel('وحدة الجرعة').fill('قرص');
 await d.getByLabel('عدد المرات / الفاصل (كما تكتبه)').fill('ثلاث مرات يومياً');
 await d.getByLabel('المدة (أيام)').fill('5');
 await d.getByLabel('كمية الصرف').fill('15');
-const dest = await d.getByLabel('وجهة الوصفة').locator('option:checked').innerText();
-if (!dest.includes('صيدلية الرافدين')) throw new Error(`default pharmacy should be the visit location, got ${dest}`);
-await d.getByRole('button', { name: 'اعتماد وإرسال' }).click();
+await d.getByRole('button', { name: 'اعتماد الوصفة' }).click();
 await d.getByRole('alertdialog').getByText('حسن علي').waitFor();
-await d.getByRole('alertdialog').getByRole('button', { name: 'اعتماد وإرسال' }).click();
+await d.getByRole('alertdialog').getByRole('button', { name: 'اعتماد', exact: true }).click();
 await d.getByText(/معتمدة — إصدار 1/).waitFor();
-step('prescription approved and sent to the visit-location pharmacy (confirmation showed patient + pharmacy)');
+await d.getByRole('link', { name: 'طباعة للمريض' }).waitFor();
+step('prescription approved for printing (sending is optional)');
+const dest = await d.getByLabel('الصيدلية').locator('option:checked').innerText();
+if (!dest.includes('صيدلية الرافدين')) throw new Error(`default pharmacy should be the visit location, got ${dest}`);
+await d.getByRole('button', { name: 'إرسال', exact: true }).click();
+await d.getByText(/أُرسلت أيضاً إلى: صيدلية الرافدين/).waitFor();
+step('approved prescription then sent to the visit-location pharmacy');
 
 await d.getByRole('tab', { name: /تحاليل/ }).click();
 await d.locator('.radio-card', { hasText: 'سكر صائم' }).click();

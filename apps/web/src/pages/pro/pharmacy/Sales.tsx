@@ -102,7 +102,7 @@ function DirectSaleSheet({ pharmacyId, onClose, onDone }: { pharmacyId: string; 
     toast(`تمت العملية ${(data as { sale_number: string }).sale_number}`, 'success'); onDone();
   };
   return (
-    <Sheet open onClose={onClose} title="بيع مباشر" footer={<Button block loading={busy} disabled={!lines.some((l) => l.product_id) || (source === 'paper_prescription' && note.trim().length < 3)} onClick={submit}>إتمام البيع — {formatMoney(total)}</Button>}>
+    <Sheet open size="lg" onClose={onClose} title="بيع مباشر" footer={<Button block loading={busy} disabled={!lines.some((l) => l.product_id) || (source === 'paper_prescription' && note.trim().length < 3)} onClick={submit}>إتمام البيع — {formatMoney(total)}</Button>}>
       <div className="stack">
         <SelectField label="المصدر" value={source} onChange={(e) => setSource(e.target.value as typeof source)}>
           <option value="otc">بيع مباشر بدون وصفة</option><option value="paper_prescription">وصفة ورقية</option>

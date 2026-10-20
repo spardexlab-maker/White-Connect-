@@ -142,13 +142,18 @@ button.list-item:hover { background: var(--c-surface-raised); }
 
 /* ---------- Sheet (side panel) / dialog ---------- */
 .overlay { position: fixed; inset: 0; background: rgb(14 30 46 / .42); backdrop-filter: blur(2px); z-index: 80; animation: fade var(--dur-2) var(--ease-out); }
-.sheet { position: fixed; z-index: 81; inset-block: 0; inset-inline-end: 0; width: min(480px, 100vw); background: var(--c-surface); box-shadow: var(--shadow-4); display: flex; flex-direction: column; animation: sheet-in var(--dur-3) var(--ease-out); border-start-start-radius: var(--r-xl); border-end-start-radius: var(--r-xl); }
+.sheet { position: fixed; z-index: 81; inset-block: 0; inset-inline-end: 0; width: min(640px, 100vw); background: var(--c-surface); box-shadow: var(--shadow-4); display: flex; flex-direction: column; animation: sheet-in var(--dur-3) var(--ease-out); border-start-start-radius: var(--r-xl); border-end-start-radius: var(--r-xl); }
 .sheet-header { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); padding: var(--s-4) var(--s-5); border-block-end: 1px solid var(--c-border); }
 .sheet-body { flex: 1; overflow-y: auto; padding: var(--s-5); }
 .sheet-footer { padding: var(--s-4) var(--s-5); border-block-start: 1px solid var(--c-border); display: flex; gap: var(--s-2); flex-wrap: wrap; background: var(--c-surface-raised); }
 .dialog { position: fixed; z-index: 81; inset-inline: var(--s-4); inset-block-start: 50%; translate: 0 -50%; margin-inline: auto; max-width: 480px; background: var(--c-surface); border-radius: var(--r-xl); box-shadow: var(--shadow-4); padding: var(--s-6); display: flex; flex-direction: column; gap: var(--s-4); animation: pop var(--dur-2) var(--ease-out); }
+.sheet-lg { width: min(920px, 100vw); }
+/* expanded: a large centred window instead of a side panel */
+.sheet.is-expanded { inset-inline: 0; inset-block: 3vh; margin-inline: auto; width: min(1180px, calc(100vw - 2 * var(--s-6)));
+  border-radius: var(--r-xl); animation: pop var(--dur-2) var(--ease-out); }
 @media (max-width: 640px) {
-  .sheet { width: 100vw; border-radius: 0; }
+  .sheet, .sheet.is-expanded { width: 100vw; inset-block: 0; border-radius: 0; }
+  .sheet-expand { display: none; }
 }
 
 /* ---------- Toast ---------- */

@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AlertOctagon, BellRing, CalendarDays, ClipboardCheck, DoorOpen, Play, Stethoscope } from 'lucide-react';
+import { AlertOctagon, BellRing, CalendarDays, ClipboardCheck, DoorOpen, IdCard, Play, PlayCircle, Stethoscope } from 'lucide-react';
 import { encounterStatus, errorMessage, formatDate, formatDateTime, formatTime, localDateKey, type EncounterStatus } from '@app/shared';
 import { supabase } from '../../lib/supabase';
 import { unwrap, useAsync } from '../../lib/useAsync';
@@ -8,9 +8,10 @@ import { useAuth } from '../../lib/auth';
 import { useWorkspace } from '../../lib/workspace';
 import { Alert, AppointmentStatusBadge, Badge, Button, ConfirmDialog, EmptyState, ErrorState, Ltr, PageHead, QueueStatusBadge, SkeletonList, useToast } from '../../components/ui';
 import { laneOf, useFacilityRealtime, type BoardRow, type QueueRow } from './Reception';
+import { MedicalCardSheet } from '../../components/clinical/MedicalCard';
 
 interface Task { task_id: string; kind: string; created_at: string; patient_name: string; patient_code: string; lab_order_id: string | null; order_number: string | null; encounter_id: string | null; has_critical: boolean }
-interface OpenEnc { id: string; status: EncounterStatus; started_at: string; patients: { full_name: string; public_code: string } | null }
+interface OpenEnc { id: string; status: EncounterStatus; started_at: string; paused_at: string | null; pause_reason: string | null; patients: { full_name: string; public_code: string } | null }
 
 /**
  * Doctor's day at the CURRENT location: today's list, arrivals (the doctor
@@ -28,18 +29,21 @@ export function DoctorToday() {
   const today = useMemo(() => localDateKey(new Date(), tz), [tz]);
   const [busy, setBusy] = useState<string | null>(null);
   const [starting, setStarting] = useState<QueueRow | null>(null);
+  const [cardFor, setCardFor] = useState<string | null>(null);
 
   const board = useAsync(async () => (me ? ((await unwrap(supabase.rpc('facility_day_board', { p_facility_id: facilityId, p_date: today, p_practitioner_id: me }))) as BoardRow[]) : []), [facilityId, today, me]);
   const queue = useAsync(async () => (me ? ((await unwrap(supabase.rpc('facility_queue', { p_facility_id: facilityId, p_date: today, p_practitioner_id: me }))) as QueueRow[]) : []), [facilityId, today, me]);
   const tasks = useAsync(async () => (await unwrap(supabase.rpc('my_clinical_tasks'))) as Task[], []);
-  const openEnc = useAsync(async () => (me ? ((await unwrap(supabase.from('encounters').select('id, status, started_at, patients(full_name, public_code)')
+  const openEnc = useAsync(async () => (me ? ((await unwrap(supabase.from('encounters').select('id, status, started_at, paused_at, pause_reason, patients(full_name, public_code)')
     .eq('practitioner_id', me).eq('facility_id', facilityId).in('status', ['in_progress', 'awaiting_results', 'ready_for_review'])
     .order('started_at', { ascending: false }))) as unknown as OpenEnc[]) : []), [me, facilityId]);
   const reload = useCallback(() => { board.reload(); queue.reload(); openEnc.reload(); tasks.reload(); }, [board.reload, queue.reload, openEnc.reload, tasks.reload]); // eslint-disable-line react-hooks/exhaustive-deps
   useFacilityRealtime(facilityId, reload);
 
   const waiting = (queue.data ?? []).filter((q) => ['waiting', 'called'].includes(q.status));
-  const inProgress = openEnc.data?.find((e) => e.status === 'in_progress');
+  // one ACTIVE session at a time; paused ones stay open alongside it
+  const inProgress = openEnc.data?.find((e) => e.status === 'in_progress' && !e.paused_at);
+  const others = (openEnc.data ?? []).filter((e) => e.id !== inProgress?.id);
 
   const call = async (q: QueueRow) => {
     setBusy(q.queue_entry_id);
@@ -51,10 +55,21 @@ export function DoctorToday() {
   const start = async () => {
     if (!starting) return;
     setBusy(starting.queue_entry_id);
+    if (inProgress) {
+      const { error: pauseErr } = await supabase.rpc('pause_encounter', { p_encounter_id: inProgress.id, p_reason: 'تبديل إلى مريض آخر' });
+      if (pauseErr) { setBusy(null); setStarting(null); toast(errorMessage(pauseErr), 'danger'); return; }
+    }
     const { data, error } = await supabase.rpc('start_encounter', { p_queue_entry_id: starting.queue_entry_id, p_identity_verified: true });
     setBusy(null); setStarting(null);
     if (error) { toast(errorMessage(error), 'danger'); return; }
     navigate(`/workspace/doctor/session/${(data as { id: string }).id}`);
+  };
+  const resume = async (e: OpenEnc) => {
+    setBusy(e.id);
+    const { error } = await supabase.rpc('resume_encounter', { p_encounter_id: e.id });
+    setBusy(null);
+    if (error) { toast(errorMessage(error), 'danger'); return; }
+    navigate(`/workspace/doctor/session/${e.id}`);
   };
   const doneTask = async (t: Task) => {
     const { error } = await supabase.rpc('complete_clinical_task', { p_task_id: t.task_id });
@@ -67,7 +82,7 @@ export function DoctorToday() {
       {inProgress && (
         <Alert tone="info" title={`جلسة جارية: ${inProgress.patients?.full_name ?? ''}`}
                action={<Link className="btn btn-primary btn-sm" to={`/workspace/doctor/session/${inProgress.id}`}>متابعة الجلسة</Link>}>
-          بدأت {formatTime(inProgress.started_at, tz)}. أنهِها أو حوّلها لانتظار النتائج قبل بدء جلسة أخرى.
+          بدأت {formatTime(inProgress.started_at, tz)}. يمكنك بدء جلسة مريض آخر وستتوقف هذه مؤقتاً، ثم تعود إليها من «جلسات مفتوحة».
         </Alert>
       )}
 
@@ -103,16 +118,22 @@ export function DoctorToday() {
               <div className="actions"><AppointmentStatusBadge status={r.status} /></div>
             </div>
           ))}
-          {!!openEnc.data?.filter((e) => e.status !== 'in_progress').length && (
+          {others.length > 0 && (
             <>
-              <div className="card-header" style={{ borderBlockStart: '1px solid var(--c-border)' }}><h2>جلسات مفتوحة</h2></div>
-              {openEnc.data.filter((e) => e.status !== 'in_progress').map((e) => (
-                <div key={e.id} className="list-item">
-                  <div className="grow"><strong>{e.patients?.full_name}</strong> <span className="small muted">· {formatDateTime(e.started_at, tz)}</span></div>
-                  <Badge tone={encounterStatus[e.status].tone}>{encounterStatus[e.status].label}</Badge>
-                  <Link className="btn btn-ghost btn-sm" to={`/workspace/doctor/session/${e.id}`}>فتح</Link>
-                </div>
-              ))}
+              <div className="card-header" style={{ borderBlockStart: '1px solid var(--c-border)' }}><h2>جلسات مفتوحة</h2><span className="muted small num">{others.length}</span></div>
+              {others.map((e) => {
+                const isPaused = e.status === 'in_progress' && !!e.paused_at;
+                return (
+                  <div key={e.id} className="list-item">
+                    <div className="grow"><strong>{e.patients?.full_name}</strong> <span className="small muted">· {formatDateTime(e.started_at, tz)}</span>
+                      {isPaused && <div className="small muted">متوقفة منذ {formatTime(e.paused_at!, tz)}{e.pause_reason ? ` — ${e.pause_reason}` : ''}</div>}</div>
+                    {isPaused ? <Badge tone="warning">متوقفة مؤقتاً</Badge> : <Badge tone={encounterStatus[e.status].tone}>{encounterStatus[e.status].label}</Badge>}
+                    {isPaused
+                      ? <Button size="sm" icon={<PlayCircle size={16} />} loading={busy === e.id} onClick={() => void resume(e)}>استئناف</Button>
+                      : <Link className="btn btn-ghost btn-sm" to={`/workspace/doctor/session/${e.id}`}>فتح</Link>}
+                  </div>
+                );
+              })}
             </>
           )}
         </section>
@@ -129,7 +150,8 @@ export function DoctorToday() {
                 <span className="small muted">{q.kind === 'walk_in' ? 'عابر' : `موعد ${formatTime(q.appointment_start!, tz)}`} · وصل {formatTime(q.arrived_at, tz)}</span>
                 <div className="row" style={{ gap: 'var(--s-2)', marginBlockStart: 4 }}>
                   <Button size="sm" variant="secondary" icon={<BellRing size={16} />} loading={busy === q.queue_entry_id} onClick={() => call(q)} disabled={q.status === 'called'}>نداء</Button>
-                  <Button size="sm" icon={<Play size={16} />} disabled={!!inProgress} onClick={() => setStarting(q)}>بدء الجلسة</Button>
+                  <Button size="sm" icon={<Play size={16} />} onClick={() => setStarting(q)}>بدء الجلسة</Button>
+                  <Button size="sm" variant="ghost" icon={<IdCard size={16} />} onClick={() => setCardFor(q.patient_id)}>البطاقة الطبية</Button>
                 </div>
               </div>
             </div>
@@ -143,7 +165,9 @@ export function DoctorToday() {
                      onCancel={() => setStarting(null)} onConfirm={start}>
         <p>تأكد أن المريض أمامك هو: <strong>{starting?.patient_name}</strong> (<Ltr>{starting?.patient_code}</Ltr>).</p>
         <p className="small muted">سيُسجل وقت البدء الفعلي الآن.</p>
+        {inProgress && <p className="small">ستتوقف جلسة <strong>{inProgress.patients?.full_name}</strong> مؤقتاً وتعود إليها من «جلسات مفتوحة».</p>}
       </ConfirmDialog>
+      <MedicalCardSheet patientId={cardFor} onClose={() => setCardFor(null)} />
     </div>
   );
 }

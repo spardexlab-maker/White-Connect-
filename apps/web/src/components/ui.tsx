@@ -3,7 +3,8 @@ import {
   type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
 } from 'react';
-import { AlertCircle, AlertTriangle, CheckCircle2, Info, Lock, MoreHorizontal, RefreshCw, WifiOff, X } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { AlertCircle, AlertTriangle, CheckCircle2, Info, Lock, Maximize2, Minimize2, MoreHorizontal, RefreshCw, WifiOff, X } from 'lucide-react';
 import { appointmentStatus, errorMessage, queueStatus, type AppointmentStatus, type QueueStatus, type Tone } from '@app/shared';
 import { useOnline } from '../lib/useOnline';
 
@@ -256,21 +257,38 @@ function useFocusTrap(open: boolean, onClose: () => void) {
   return ref;
 }
 
-export function Sheet({ open, onClose, title, children, footer }: { open: boolean; onClose: () => void; title: string; children: ReactNode; footer?: ReactNode }) {
+const SHEET_PREF = 'wc.sheet.expanded';
+function readSheetPref(): boolean { try { return localStorage.getItem(SHEET_PREF) === '1'; } catch { return false; } }
+
+/**
+ * Side panel. `size="lg"` for work panels (pharmacy, lab, medical card).
+ * The expand button turns it into a large centred window; the choice is
+ * remembered on this device.
+ */
+export function Sheet({ open, onClose, title, children, footer, size = 'md' }: { open: boolean; onClose: () => void; title: string; children: ReactNode; footer?: ReactNode; size?: 'md' | 'lg' }) {
   const ref = useFocusTrap(open, onClose);
+  const [expanded, setExpanded] = useState(readSheetPref);
   if (!open) return null;
-  return (
+  const toggle = () => { const v = !expanded; setExpanded(v); try { localStorage.setItem(SHEET_PREF, v ? '1' : '0'); } catch { /* storage unavailable */ } };
+  // portalled to <body>: an animated (transformed) page would otherwise trap position:fixed and clip the panel
+  return createPortal(
     <>
       <div className="overlay" onClick={onClose} aria-hidden />
-      <div ref={ref} className="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+      <div ref={ref} className={`sheet sheet-${size}${expanded ? ' is-expanded' : ''}`} role="dialog" aria-modal="true" aria-labelledby="sheet-title">
         <div className="sheet-header">
           <h2 id="sheet-title" style={{ fontSize: 'var(--f-h3)' }}>{title}</h2>
-          <button className="icon-btn" onClick={onClose} aria-label="إغلاق"><X size={20} /></button>
+          <div className="row" style={{ gap: 'var(--s-1)' }}>
+            <button className="icon-btn sheet-expand" onClick={toggle} aria-pressed={expanded} aria-label={expanded ? 'تصغير اللوحة' : 'تكبير اللوحة'} title={expanded ? 'تصغير' : 'تكبير'}>
+              {expanded ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+            </button>
+            <button className="icon-btn" onClick={onClose} aria-label="إغلاق"><X size={20} /></button>
+          </div>
         </div>
         <div className="sheet-body">{children}</div>
         {footer && <div className="sheet-footer">{footer}</div>}
       </div>
-    </>
+    </>,
+    document.body,
   );
 }
 
@@ -280,7 +298,7 @@ export function ConfirmDialog({ open, title, children, confirmLabel, tone = 'pri
 }) {
   const ref = useFocusTrap(open, onCancel);
   if (!open) return null;
-  return (
+  return createPortal(
     <>
       <div className="overlay" onClick={onCancel} aria-hidden />
       <div ref={ref} className="dialog" role="alertdialog" aria-modal="true" aria-labelledby="dlg-title" aria-describedby="dlg-body">
@@ -291,7 +309,8 @@ export function ConfirmDialog({ open, title, children, confirmLabel, tone = 'pri
           <Button variant={tone === 'danger' ? 'danger' : 'primary'} loading={loading} onClick={onConfirm}>{confirmLabel}</Button>
         </div>
       </div>
-    </>
+    </>,
+    document.body,
   );
 }
 

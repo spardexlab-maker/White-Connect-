@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Activity, AlertTriangle, CheckCircle2, ClipboardList, CloudOff, FlaskConical, Hourglass, Loader2, LogOut, NotebookPen, Pill, Save, ShieldAlert, Stethoscope, Users } from 'lucide-react';
+import { Activity, AlertTriangle, CheckCircle2, ClipboardList, CloudOff, FlaskConical, Hourglass, Loader2, LogOut, NotebookPen, PauseCircle, Pill, PlayCircle, Save, ShieldAlert, Stethoscope, Users } from 'lucide-react';
 import { encounterStatus, errorCode, errorMessage, formatDateTime, formatMoney, formatTime, localDateKey, queueStatus, type EncounterStatus } from '@app/shared';
 import { supabase } from '../../lib/supabase';
 import { unwrap, useAsync } from '../../lib/useAsync';
 import { useWorkspace } from '../../lib/workspace';
 import { useAuth } from '../../lib/auth';
 import { newIdempotencyKey } from '../../lib/idempotency';
-import { Alert, Avatar, Badge, Button, ConfirmDialog, EmptyState, ErrorState, Ltr, Skeleton, SkeletonList, Tabs, TextField, TextareaField, useToast } from '../../components/ui';
+import { Alert, Avatar, Badge, Button, ConfirmDialog, EmptyState, ErrorState, Ltr, SelectField, Skeleton, SkeletonList, Tabs, TextField, TextareaField, useToast } from '../../components/ui';
 import { useFacilityRealtime, type QueueRow } from './Reception';
 import { RxBuilder, type EncounterOrders } from '../../components/clinical/RxBuilder';
+import { MedicalCard } from '../../components/clinical/MedicalCard';
 
 interface Note {
   id: string; version: number; version_no: number; status: 'draft' | 'signed'; reason_for_visit: string | null; history: string | null;
@@ -17,14 +18,15 @@ interface Note {
   vitals: Record<string, string>; signed_at: string | null;
 }
 interface Context {
-  encounter: { id: string; status: EncounterStatus; started_at: string; facility_id: string; patient_id: string; queue_entry_id: string | null };
+  encounter: { id: string; status: EncounterStatus; started_at: string; facility_id: string; patient_id: string; queue_entry_id: string | null; paused_at: string | null; pause_reason: string | null };
   patient: { id: string; public_code: string; full_name: string; sex: 'male' | 'female' | null; birth_year: number | null };
   allergies_recorded: boolean;
   allergies: { id: string; substance: string; reaction: string | null; severity: string | null; source: string }[];
   note: Note | null;
   history: { encounter_id: string; started_at: string; status: string; facility: string; assessment: string | null; plan: string | null }[];
 }
-type Tab = 'summary' | 'history' | 'session' | 'labs' | 'rx';
+type Tab = 'summary' | 'card' | 'session' | 'labs' | 'rx';
+export const PAUSE_REASONS = ['أُرسل لإجراء تحليل', 'أُرسل للأشعة / السونار', 'ينتظر خارج الغرفة', 'سبب آخر'];
 type SaveState = 'saved' | 'dirty' | 'saving' | 'error' | 'conflict';
 const FIELDS: [keyof Note, string][] = [
   ['reason_for_visit', 'سبب الزيارة'], ['history', 'التاريخ المرضي ذو الصلة'], ['examination', 'الفحص السريري'],
@@ -57,7 +59,8 @@ function SessionInner({ encounterId }: { encounterId: string }) {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const version = useRef<number | null>(null);
   const timer = useRef<number>();
-  const [confirm, setConfirm] = useState<null | 'sign' | 'await' | 'complete'>(null);
+  const [confirm, setConfirm] = useState<null | 'sign' | 'await' | 'complete' | 'pause'>(null);
+  const [pauseReason, setPauseReason] = useState(PAUSE_REASONS[0]);
   const [busy, setBusy] = useState(false);
   const { access } = useAuth();
   const me = useAsync(async () => (access?.practitioner_id
@@ -113,6 +116,24 @@ function SessionInner({ encounterId }: { encounterId: string }) {
     navigate('/workspace/doctor');
   };
 
+  const pause = async () => {
+    setBusy(true);
+    if (!(await save())) { setBusy(false); setConfirm(null); toast('تعذّر حفظ المسودة؛ لم تُوقف الجلسة.', 'danger'); return; }
+    const { error } = await supabase.rpc('pause_encounter', { p_encounter_id: encounterId, p_reason: pauseReason });
+    setBusy(false); setConfirm(null);
+    if (error) { toast(errorMessage(error), 'danger'); return; }
+    toast('أُوقفت الجلسة مؤقتاً — يمكنك استقبال مريض آخر والعودة إليها من «جلسات مفتوحة»', 'success');
+    navigate('/workspace/doctor');
+  };
+  const resume = async () => {
+    setBusy(true);
+    const { error } = await supabase.rpc('resume_encounter', { p_encounter_id: encounterId });
+    setBusy(false);
+    if (error) { toast(errorMessage(error), 'danger'); return; }
+    toast('استُؤنفت الجلسة', 'success');
+    ctx.reload();
+  };
+
   const previewBase = useMemo(() => ctx.data ? ({
     practitioner: { full_name: me.data?.full_name ?? '—', title: me.data?.title ?? null, license_number: me.data?.license_number ?? null },
     facility: { name: current?.facility_name ?? '', branch: current?.branch_name ?? '', address: null, phone: null },
@@ -124,6 +145,7 @@ function SessionInner({ encounterId }: { encounterId: string }) {
   const c = ctx.data!;
   const age = c.patient.birth_year ? new Date().getFullYear() - c.patient.birth_year : null;
   const active = ['in_progress', 'awaiting_results', 'ready_for_review'].includes(c.encounter.status);
+  const paused = c.encounter.status === 'in_progress' && !!c.encounter.paused_at;
 
   return (
     <div className="session-shell">
@@ -142,21 +164,27 @@ function SessionInner({ encounterId }: { encounterId: string }) {
             : <Badge tone="warning" icon={<AlertTriangle aria-hidden />}>{c.allergies_recorded ? 'لا حساسية نشطة مسجلة' : 'لم تُسجَّل حساسية — هذا لا يعني عدم وجودها'}</Badge>}
         </div>
         <div className="session-meta">
-          <Badge tone={encounterStatus[c.encounter.status].tone}>{encounterStatus[c.encounter.status].label}</Badge>
+          {paused ? <Badge tone="warning">متوقفة مؤقتاً</Badge> : <Badge tone={encounterStatus[c.encounter.status].tone}>{encounterStatus[c.encounter.status].label}</Badge>}
           <SaveIndicator state={locked ? 'saved' : saveState} lastSaved={lastSaved} locked={locked} onRetry={() => void save()} />
         </div>
       </div>
 
+      {paused && (
+        <Alert tone="warning" title={`الجلسة متوقفة مؤقتاً منذ ${formatTime(c.encounter.paused_at!)}`}
+               action={<Button size="sm" icon={<PlayCircle size={16} />} loading={busy} onClick={() => void resume()}>استئناف الجلسة</Button>}>
+          {c.encounter.pause_reason ?? ''}{c.encounter.pause_reason ? ' — ' : ''}عند عودة المريض اضغط «استئناف». إن كانت لديك جلسة أخرى جارية فستتوقف مؤقتاً تلقائياً.
+        </Alert>
+      )}
       {saveState === 'conflict' && <Alert tone="danger" title="تعارض في الحفظ">عُدّلت المسودة من نافذة أخرى. حدّث الصفحة قبل المتابعة حتى لا تُفقد تغييرات.</Alert>}
 
       <div className="card card-flush">
         <Tabs<Tab> label="ملف الجلسة" value={tab} onChange={setTab} tabs={[
-          { id: 'summary', label: 'ملخص' }, { id: 'history', label: `سجل سابق (${c.history.length})` }, { id: 'session', label: 'الجلسة الحالية' },
+          { id: 'summary', label: 'ملخص' }, { id: 'card', label: 'البطاقة الطبية' }, { id: 'session', label: 'الجلسة الحالية' },
           { id: 'labs', label: `تحاليل (${orders.data?.lab_orders.length ?? 0})` }, { id: 'rx', label: 'وصفة' },
         ]} />
         <div role="tabpanel" id={`panel-${tab}`} key={tab} aria-labelledby={`tab-${tab}`} style={{ padding: 'var(--s-5)' }}>
           {tab === 'summary' && <SummaryTab c={c} orders={orders.data ?? null} />}
-          {tab === 'history' && <HistoryList c={c} />}
+          {tab === 'card' && <MedicalCard patientId={c.patient.id} excludeEncounterId={encounterId} />}
           {tab === 'session' && (
             <div className="session-grid">
               <div className="stack">
@@ -189,6 +217,8 @@ function SessionInner({ encounterId }: { encounterId: string }) {
                 <div className="card stack-sm">
                   <h2 className="eyebrow">قرارات</h2>
                   {!locked && <Button variant="accent" icon={<CheckCircle2 size={18} />} onClick={() => setConfirm('sign')}>اعتماد الملاحظة</Button>}
+                  {c.encounter.status === 'in_progress' && !paused && <Button variant="secondary" icon={<PauseCircle size={18} />} onClick={() => setConfirm('pause')}>إيقاف مؤقت واستقبال مريض آخر</Button>}
+                  {paused && <Button icon={<PlayCircle size={18} />} loading={busy} onClick={() => void resume()}>استئناف الجلسة</Button>}
                   {c.encounter.status === 'in_progress' && <Button variant="soft" icon={<Hourglass size={18} />} onClick={() => setConfirm('await')}>انتظار النتائج واستقبال التالي</Button>}
                   {active && <Button icon={<LogOut size={18} />} onClick={() => setConfirm('complete')}>إنهاء الجلسة والتالي</Button>}
                   <p className="small muted">الحفظ التلقائي كل بضع ثوانٍ. «التالي» يفتح قائمة اليوم دون نقل أي نموذج للمريض التالي.</p>
@@ -210,6 +240,12 @@ function SessionInner({ encounterId }: { encounterId: string }) {
       <ConfirmDialog open={confirm === 'await'} title="تحويل الجلسة إلى «بانتظار النتائج»؟" confirmLabel="تأكيد" loading={busy} onCancel={() => setConfirm(null)} onConfirm={() => act('await')}>
         يتحرر وقتك لاستقبال المريض التالي، وعند اعتماد النتيجة تظهر لك مهمة مراجعة.
       </ConfirmDialog>
+      <ConfirmDialog open={confirm === 'pause'} title="إيقاف الجلسة مؤقتاً؟" confirmLabel="إيقاف مؤقت" loading={busy} onCancel={() => setConfirm(null)} onConfirm={() => void pause()}>
+        <p>تبقى جلسة <strong>{c.patient.full_name}</strong> مفتوحة بكل ما كتبته، وتعود إليها من «جلسات مفتوحة» متى رجع المريض.</p>
+        <SelectField label="السبب" value={pauseReason} onChange={(e) => setPauseReason(e.target.value)}>
+          {PAUSE_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
+        </SelectField>
+      </ConfirmDialog>
       <ConfirmDialog open={confirm === 'complete'} title="إنهاء الجلسة؟" confirmLabel="إنهاء" loading={busy} onCancel={() => setConfirm(null)} onConfirm={() => act('complete')}>
         {!locked ? 'الملاحظة لم تُعتمد بعد وستبقى مسودة. ' : ''}سيُسجل وقت الانتهاء الفعلي الآن.
       </ConfirmDialog>
@@ -225,9 +261,9 @@ function TodayRail({ facilityId, currentEncounterId }: { facilityId: string; cur
   const tz = current?.timezone ?? 'Asia/Baghdad';
   const today = useMemo(() => localDateKey(new Date(), tz), [tz]);
   const queue = useAsync(async () => (me ? ((await unwrap(supabase.rpc('facility_queue', { p_facility_id: facilityId, p_date: today, p_practitioner_id: me }))) as QueueRow[]) : []), [facilityId, today, me]);
-  const open = useAsync(async () => (me ? ((await unwrap(supabase.from('encounters').select('id, status, patients(full_name)')
+  const open = useAsync(async () => (me ? ((await unwrap(supabase.from('encounters').select('id, status, paused_at, patients(full_name)')
     .eq('practitioner_id', me).eq('facility_id', facilityId).in('status', ['in_progress', 'awaiting_results', 'ready_for_review'])
-    .order('started_at', { ascending: false }))) as unknown as { id: string; status: EncounterStatus; patients: { full_name: string } | null }[]) : []), [me, facilityId]);
+    .order('started_at', { ascending: false }))) as unknown as { id: string; status: EncounterStatus; paused_at: string | null; patients: { full_name: string } | null }[]) : []), [me, facilityId]);
   const reload = useCallback(() => { queue.reload(); open.reload(); }, [queue.reload, open.reload]); // eslint-disable-line react-hooks/exhaustive-deps
   useFacilityRealtime(facilityId, reload);
   const waiting = (queue.data ?? []).filter((q) => ['waiting', 'called'].includes(q.status));
@@ -240,7 +276,7 @@ function TodayRail({ facilityId, currentEncounterId }: { facilityId: string; cur
         {open.data?.map((e) => (
           <Link key={e.id} to={`/workspace/doctor/session/${e.id}`} className="rail-item" aria-current={e.id === currentEncounterId ? 'page' : undefined}>
             <Avatar name={e.patients?.full_name ?? '؟'} size="sm" />
-            <span className="grow" style={{ minWidth: 0 }}><strong className="truncate">{e.patients?.full_name}</strong><span className="truncate">{encounterStatus[e.status].label}</span></span>
+            <span className="grow" style={{ minWidth: 0 }}><strong className="truncate">{e.patients?.full_name}</strong><span className="truncate">{e.status === 'in_progress' && e.paused_at ? 'متوقفة مؤقتاً' : encounterStatus[e.status].label}</span></span>
           </Link>
         ))}
       </div>
@@ -286,24 +322,6 @@ function SummaryTab({ c, orders }: { c: Context; orders: EncounterOrders | null 
         {!orders?.prescriptions.length && !orders?.lab_orders.length && <p className="small muted">لا توجد طلبات بعد.</p>}
       </div>
     </div>
-  );
-}
-
-function HistoryList({ c }: { c: Context }) {
-  if (!c.history.length) return <EmptyState icon={<Stethoscope />} title="لا يوجد سجل سابق متاح لك">تظهر هنا زياراتك السابقة لهذا المريض أو ما شاركه معك.</EmptyState>;
-  return (
-    <ol className="timeline">
-      {c.history.map((h) => (
-        <li key={h.encounter_id}>
-          <span className="dot" aria-hidden />
-          <div className="label-text">{h.started_at ? formatDateTime(h.started_at) : '—'} · {h.facility}</div>
-          <div className="card" style={{ padding: 'var(--s-3)' }}>
-            <p className="small"><strong>التقييم:</strong> {h.assessment ?? 'لا توجد ملاحظة معتمدة'}</p>
-            {h.plan && <p className="small"><strong>الخطة:</strong> {h.plan}</p>}
-          </div>
-        </li>
-      ))}
-    </ol>
   );
 }
 

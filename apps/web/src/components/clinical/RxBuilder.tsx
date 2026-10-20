@@ -45,7 +45,8 @@ export function RxBuilder({ encounterId, facilityId, patientName, orders, onChan
   const current = orders?.prescriptions.find((p) => p.status !== 'cancelled') ?? null;
   const editing = !current || !!current.draft;
   const [rows, setRows] = useState<Row[]>(() => current?.draft?.items.map(toRow) ?? [emptyRow()]);
-  const [destination, setDestination] = useState<string>('');           // '' = print only
+  const [sendNow, setSendNow] = useState(false);                         // printing for the patient is always the default
+  const [destination, setDestination] = useState<string>('');
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState<'save' | 'approve' | null>(null);
   const [confirm, setConfirm] = useState(false);
@@ -59,6 +60,7 @@ export function RxBuilder({ encounterId, facilityId, patientName, orders, onChan
   const items = rows.filter((r) => r.display_name.trim());
   const isRevision = !!current && (current.current_version_no ?? 0) > 0;
   const dest = pharmacies.data?.find((p) => p.pharmacy_id === destination);
+  const sendTo = sendNow && destination ? destination : '';
 
   const payload = () => items.map((r) => ({
     medication_id: r.medication_id, display_name: r.display_name, dose: r.dose, dose_unit: r.dose_unit, route: r.route,
@@ -84,12 +86,12 @@ export function RxBuilder({ encounterId, facilityId, patientName, orders, onChan
     if (!id) return;
     setBusy('approve');
     const { error } = await supabase.rpc('approve_prescription', {
-      p_prescription_id: id, p_send_to_pharmacy_id: destination || undefined, p_revision_reason: isRevision ? reason : undefined,
+      p_prescription_id: id, p_send_to_pharmacy_id: sendTo || undefined, p_revision_reason: isRevision ? reason : undefined,
     });
     setBusy(null);
     setConfirm(false);
     if (error) { toast(errorMessage(error), 'danger'); return; }
-    toast(destination ? `اعتُمدت الوصفة وأُرسلت إلى ${dest?.name}` : 'اعتُمدت الوصفة للطباعة', 'success');
+    toast(sendTo ? `اعتُمدت الوصفة وأُرسلت إلى ${dest?.name}` : 'اعتُمدت الوصفة — اطبعها وسلّمها للمريض', 'success');
     onChanged();
   };
 
@@ -108,15 +110,37 @@ export function RxBuilder({ encounterId, facilityId, patientName, orders, onChan
   }), [preview, items, current, editing]);
 
   if (!editing && current) {
+    const sentNames = current.dispatches.map((d) => d.pharmacy);
+    const sendLater = async () => {
+      if (!destination) return;
+      setBusy('approve');
+      const { error } = await supabase.rpc('send_prescription_to_pharmacy', { p_prescription_id: current.id, p_pharmacy_id: destination });
+      setBusy(null);
+      if (error) { toast(errorMessage(error), 'danger'); return; }
+      toast(`أُرسلت الوصفة إلى ${dest?.name}`, 'success');
+      onChanged();
+    };
     return (
       <div className="stack">
         <Alert tone="success" title={`الوصفة ${current.rx_number} معتمدة — إصدار ${current.current_version_no}`}>
-          {current.dispatches.length ? `أُرسلت إلى: ${current.dispatches.map((d) => d.pharmacy).join('، ')}` : 'للطباعة فقط (لم تُرسل لصيدلية).'}
+          اطبع الوصفة واختمها وسلّمها للمريض. {sentNames.length ? `أُرسلت أيضاً إلى: ${sentNames.join('، ')}.` : 'لم تُرسل لأي صيدلية.'}
         </Alert>
         <div className="row">
-          <Link className="btn btn-primary" to={`/print/rx/${current.id}?facility=${facilityId}`}><Printer size={18} aria-hidden />طباعة PDF</Link>
+          <Link className="btn btn-primary btn-lg" to={`/print/rx/${current.id}?facility=${facilityId}`}><Printer size={18} aria-hidden />طباعة للمريض</Link>
           <Button variant="secondary" icon={<FilePen size={18} />} onClick={startRevision}>تعديل (إصدار جديد)</Button>
         </div>
+        <section className="card stack-sm" style={{ background: 'var(--c-surface-sunken)' }} aria-label="إرسال لصيدلية">
+          <strong>إرسال نسخة إلكترونية لصيدلية <span className="muted small">(اختياري)</span></strong>
+          <div className="row" style={{ alignItems: 'flex-end' }}>
+            <div style={{ flex: 1, minWidth: 220 }}>
+              <SelectField label="الصيدلية" value={destination} onChange={(e) => setDestination(e.target.value)}>
+                <option value="">— اختر صيدلية —</option>
+                {pharmacies.data?.map((p) => <option key={p.pharmacy_id} value={p.pharmacy_id}>{p.name} — {p.branch}{p.is_default ? ' (صيدلية هذا الموقع)' : ''}{sentNames.includes(p.name) ? ' ✓ أُرسلت' : ''}</option>)}
+              </SelectField>
+            </div>
+            <Button variant="secondary" icon={<Send size={18} />} disabled={!destination} loading={busy === 'approve'} onClick={() => void sendLater()}>إرسال</Button>
+          </div>
+        </section>
         <p className="small muted">الطباعة ليست إرسالاً والإرسال ليس صرفاً؛ إعادة الطباعة لا تغيّر أي عدّاد.</p>
       </div>
     );
@@ -129,23 +153,29 @@ export function RxBuilder({ encounterId, facilityId, patientName, orders, onChan
         <div className="stack" data-hidden-mobile={mobileTab !== 'edit'}>
           {isRevision && <Alert tone="warning" title="تعديل وصفة مرسلة">سيُنشأ إصدار جديد وتُبلَّغ الصيدلية ويُبطل الإصدار السابق للصرف.</Alert>}
           {rows.map((r, idx) => (
-            <RxRow key={r.key} row={r} index={idx} pharmacyId={destination}
+            <RxRow key={r.key} row={r} index={idx} pharmacyId={sendTo}
                    onChange={(nr) => { dirty.current = true; setRows(rows.map((x) => x.key === r.key ? nr : x)); }}
                    onRemove={rows.length > 1 ? () => setRows(rows.filter((x) => x.key !== r.key)) : undefined} />
           ))}
           <Button variant="ghost" icon={<Plus size={16} />} onClick={() => setRows([...rows, emptyRow()])}>إضافة دواء</Button>
 
           <div className="card stack" style={{ background: 'var(--c-surface-sunken)' }}>
-            <SelectField label="وجهة الوصفة" value={destination} onChange={(e) => setDestination(e.target.value)}
-                         hint="الافتراضي صيدلية موقع هذه الزيارة. يمكن أيضاً الطباعة فقط ليأخذها المريض لأي صيدلية.">
-              {pharmacies.data?.map((p) => <option key={p.pharmacy_id} value={p.pharmacy_id}>{p.name} — {p.branch}{p.is_default ? ' (صيدلية هذا الموقع)' : ''}</option>)}
-              <option value="">طباعة فقط — بدون إرسال إلكتروني</option>
-            </SelectField>
+            <p className="small" style={{ margin: 0 }}><Printer size={16} aria-hidden style={{ verticalAlign: 'middle' }} /> بعد الاعتماد تُطبع الوصفة وتُختم وتُسلَّم للمريض.</p>
+            <label className="row small" style={{ gap: 8 }}>
+              <input type="checkbox" checked={sendNow} onChange={(e) => setSendNow(e.target.checked)} />
+              إرسال نسخة إلكترونية لصيدلية أيضاً (اختياري)
+            </label>
+            {sendNow && (
+              <SelectField label="الصيدلية" value={destination} onChange={(e) => setDestination(e.target.value)}>
+                <option value="">— اختر صيدلية —</option>
+                {pharmacies.data?.map((p) => <option key={p.pharmacy_id} value={p.pharmacy_id}>{p.name} — {p.branch}{p.is_default ? ' (صيدلية هذا الموقع)' : ''}</option>)}
+              </SelectField>
+            )}
             {isRevision && <TextField label="سبب التعديل" required value={reason} onChange={(e) => setReason(e.target.value)} />}
             <div className="row">
               <Button variant="secondary" loading={busy === 'save'} onClick={() => void saveDraft().then((id) => id && toast('حُفظت المسودة', 'success'))}>حفظ مسودة</Button>
-              <Button icon={destination ? <Send size={18} /> : <CheckCircle2 size={18} />} disabled={!items.length || (isRevision && reason.trim().length < 5)}
-                      onClick={() => setConfirm(true)}>{destination ? 'اعتماد وإرسال' : 'اعتماد للطباعة'}</Button>
+              <Button icon={sendTo ? <Send size={18} /> : <CheckCircle2 size={18} />} disabled={!items.length || (isRevision && reason.trim().length < 5) || (sendNow && !destination)}
+                      onClick={() => setConfirm(true)}>{sendTo ? 'اعتماد وإرسال' : 'اعتماد الوصفة'}</Button>
             </div>
           </div>
         </div>
@@ -153,11 +183,11 @@ export function RxBuilder({ encounterId, facilityId, patientName, orders, onChan
           <RxDocument doc={previewDoc} draft />
         </div>
       </div>
-      <ConfirmDialog open={confirm} title="تأكيد اعتماد الوصفة" confirmLabel={destination ? 'اعتماد وإرسال' : 'اعتماد'} loading={busy === 'approve'}
+      <ConfirmDialog open={confirm} title="تأكيد اعتماد الوصفة" confirmLabel={sendTo ? 'اعتماد وإرسال' : 'اعتماد'} loading={busy === 'approve'}
                      onCancel={() => setConfirm(false)} onConfirm={approve}>
         <p>المريض: <strong>{patientName}</strong></p>
         <p>عدد الأدوية: {items.length}</p>
-        <p>{destination ? <>تُرسل إلكترونياً إلى: <strong>{dest?.name} — {dest?.branch}</strong></> : 'لن تُرسل لأي صيدلية؛ تُطبع فقط.'}</p>
+        <p>تُطبع وتُسلَّم للمريض.{sendTo ? <> وتُرسل إلكترونياً أيضاً إلى: <strong>{dest?.name} — {dest?.branch}</strong></> : ' لن تُرسل لأي صيدلية (يمكن إرسالها لاحقاً).'}</p>
         <p className="small muted">بعد الاعتماد تُقفل هذه النسخة؛ أي تعديل لاحق يُنشئ إصداراً جديداً.</p>
       </ConfirmDialog>
     </div>
