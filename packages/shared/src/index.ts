@@ -5,3 +5,4 @@ export * from './errors';
 export * from './format';
 export * from './validation';
 export type { Database, Json } from './database.types';
+export * from './labReport';

@@ -153,6 +153,20 @@ select pg_temp.rx('cb1a0000-0000-4000-d300-000000000005', 'cb1a0000-0000-4000-d1
 select pg_temp.lab('cb1a0000-0000-4000-d400-000000000005', 'cb1a0000-0000-4000-d100-000000000005',
   '[{"code":"CBC","text":"ضمن الحدود الطبيعية حسب تقرير المختبر"},{"code":"CRP","num":4}]');
 
+-- Karrar's own health profile (height, weight, blood type), conditions and a regular supplement
+insert into public.patient_health_profiles (patient_id, height_cm, weight_kg, blood_type, notes, updated_by)
+values ('cb1a0000-0000-4000-5000-000000000051', 176, 88, 'O+', 'أمشي نصف ساعة يومياً.', 'cb1a0000-0000-4000-a000-000000000051')
+on conflict (patient_id) do nothing;
+update public.patients set birth_date = '1985-03-14' where id = 'cb1a0000-0000-4000-5000-000000000051' and birth_date is null;
+insert into public.patient_conditions (patient_id, name, since_year, source, recorded_by)
+select 'cb1a0000-0000-4000-5000-000000000051', v.n, v.y, v.s, v.u::uuid
+  from (values ('السكري النوع الثاني', 2026, 'clinician', 'cb1a0000-0000-4000-a000-000000000011'),
+               ('ارتفاع ضغط الدم', 2026, 'clinician', 'cb1a0000-0000-4000-a000-000000000013')) v(n, y, s, u)
+ where not exists (select 1 from public.patient_conditions c where c.patient_id = 'cb1a0000-0000-4000-5000-000000000051' and c.name = v.n);
+insert into public.patient_reported_medications (patient_id, name, dose_text, created_by)
+select 'cb1a0000-0000-4000-5000-000000000051', 'Omega-3', 'كبسولة يومياً', 'cb1a0000-0000-4000-a000-000000000051'
+ where not exists (select 1 from public.patient_reported_medications where patient_id = 'cb1a0000-0000-4000-5000-000000000051');
+
 select 'history ready' as result,
        (select count(*) from public.encounters where id::text like 'cb1a0000-%') as visits,
        (select count(*) from public.prescriptions where id::text like 'cb1a0000-%') as prescriptions,

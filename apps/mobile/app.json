@@ -3,7 +3,7 @@
     "name": "منصة الرعاية",
     "slug": "white-connect",
     "scheme": "whiteconnect",
-    "version": "0.3.2",
+    "version": "0.3.3",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "icon": "./assets/icon.png",
@@ -36,7 +36,7 @@
         "RECORD_AUDIO",
         "READ_CONTACTS"
       ],
-      "versionCode": 5
+      "versionCode": 6
     },
     "web": {
       "output": "single",
@@ -74,7 +74,8 @@
         {
           "locationWhenInUsePermission": "يُستخدم الموقع اختيارياً لترتيب الأطباء والمختبرات حسب القرب. الحجز لا يحتاج الموقع."
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": false

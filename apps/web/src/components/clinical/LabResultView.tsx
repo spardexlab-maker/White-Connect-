@@ -1,4 +1,5 @@
-import { AlertOctagon, FlaskConical } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { AlertOctagon, FlaskConical, Printer } from 'lucide-react';
 import { formatDateTime, labFlag, labStatus, type LabStatus } from '@app/shared';
 import { Badge, Ltr } from '../ui';
 import { Attachments } from './Attachments';
@@ -27,7 +28,10 @@ export function LabResultView({ d }: { d: LabDetail }) {
           <h2 className="section-title"><FlaskConical size={18} aria-hidden style={{ verticalAlign: '-3px' }} /> {d.lab} — طلب <Ltr>{d.order.order_number}</Ltr></h2>
           <span className="small muted">{d.patient.full_name} · <Ltr>{d.patient.public_code}</Ltr>{d.ordering_doctor ? ` · الطبيب الطالب: ${d.ordering_doctor}` : ' · زيارة مباشرة للمختبر'}</span>
         </div>
-        <Badge tone={labStatus[d.order.status].tone}>{labStatus[d.order.status].label}</Badge>
+        <div className="row" style={{ gap: 'var(--s-2)' }}>
+          {released > 0 && <Link className="btn btn-secondary btn-sm" to={`/print/lab/${d.order.id}`}><Printer size={16} aria-hidden />تقرير PDF / طباعة</Link>}
+          <Badge tone={labStatus[d.order.status].tone}>{labStatus[d.order.status].label}</Badge>
+        </div>
       </div>
       {released < d.items.length && released > 0 && <p className="small" style={{ color: 'var(--c-warning)' }}>نتائج جزئية: {released} من {d.items.length} فحوصات معتمدة — البقية لم تجهز بعد.</p>}
       <div className="table-wrap" role="region" aria-label="النتائج" tabIndex={0}>

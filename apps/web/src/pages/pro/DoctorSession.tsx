@@ -11,6 +11,7 @@ import { Alert, Avatar, Badge, Button, ConfirmDialog, EmptyState, ErrorState, Lt
 import { useFacilityRealtime, type QueueRow } from './Reception';
 import { RxBuilder, type EncounterOrders } from '../../components/clinical/RxBuilder';
 import { MedicalCard } from '../../components/clinical/MedicalCard';
+import { HealthStrip, HealthSummary, type Health } from '../../components/clinical/HealthSummary';
 
 interface Note {
   id: string; version: number; version_no: number; status: 'draft' | 'signed'; reason_for_visit: string | null; history: string | null;
@@ -53,6 +54,8 @@ function SessionInner({ encounterId }: { encounterId: string }) {
   const toast = useToast();
   const ctx = useAsync(async () => (await unwrap(supabase.rpc('encounter_context', { p_encounter_id: encounterId }))) as unknown as Context, [encounterId]);
   const orders = useAsync(async () => (await unwrap(supabase.rpc('encounter_orders', { p_encounter_id: encounterId }))) as unknown as EncounterOrders, [encounterId]);
+  const patientId = ctx.data?.patient.id;
+  const health = useAsync(async () => (patientId ? (await unwrap(supabase.rpc('health_profile', { p_patient_id: patientId }))) as unknown as Health : null), [patientId]);
   const [tab, setTab] = useState<Tab>('session');
   const [form, setForm] = useState<Partial<Note>>({});
   const [saveState, setSaveState] = useState<SaveState>('saved');
@@ -169,6 +172,7 @@ function SessionInner({ encounterId }: { encounterId: string }) {
         </div>
       </div>
 
+      {health.data && <HealthStrip h={health.data} />}
       {paused && (
         <Alert tone="warning" title={`الجلسة متوقفة مؤقتاً منذ ${formatTime(c.encounter.paused_at!)}`}
                action={<Button size="sm" icon={<PlayCircle size={16} />} loading={busy} onClick={() => void resume()}>استئناف الجلسة</Button>}>
@@ -179,11 +183,15 @@ function SessionInner({ encounterId }: { encounterId: string }) {
 
       <div className="card card-flush">
         <Tabs<Tab> label="ملف الجلسة" value={tab} onChange={setTab} tabs={[
-          { id: 'summary', label: 'ملخص' }, { id: 'card', label: 'البطاقة الطبية' }, { id: 'session', label: 'الجلسة الحالية' },
+          { id: 'summary', label: 'ملخص المريض' }, { id: 'card', label: 'البطاقة الطبية' }, { id: 'session', label: 'الجلسة الحالية' },
           { id: 'labs', label: `تحاليل (${orders.data?.lab_orders.length ?? 0})` }, { id: 'rx', label: 'وصفة' },
         ]} />
         <div role="tabpanel" id={`panel-${tab}`} key={tab} aria-labelledby={`tab-${tab}`} style={{ padding: 'var(--s-5)' }}>
-          {tab === 'summary' && <SummaryTab c={c} orders={orders.data ?? null} />}
+          {tab === 'summary' && <div className="stack">
+            <SummaryTab c={c} orders={orders.data ?? null} />
+            <h3 className="section-title">الملف الصحي للمريض</h3>
+            {health.data ? <HealthSummary h={health.data} /> : <SkeletonList rows={3} />}
+          </div>}
           {tab === 'card' && <MedicalCard patientId={c.patient.id} excludeEncounterId={encounterId} />}
           {tab === 'session' && (
             <div className="session-grid">

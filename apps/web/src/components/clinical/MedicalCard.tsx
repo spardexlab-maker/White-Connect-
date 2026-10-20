@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { FlaskConical, Pill, Stethoscope } from 'lucide-react';
-import { formatDate, formatDateTime, labFlag } from '@app/shared';
+import { Pill, Stethoscope } from 'lucide-react';
+import { formatDate, formatDateTime } from '@app/shared';
 import { supabase } from '../../lib/supabase';
 import { unwrap, useAsync } from '../../lib/useAsync';
 import { Alert, Badge, EmptyState, ErrorState, Ltr, Sheet, SkeletonList, Tabs } from '../ui';
+import { HealthSummary, LabTrends, useHealth } from './HealthSummary';
 
 interface Visit {
   encounter_id: string; started_at: string; status: string; facility: string; doctor: string; specialty: string | null;
@@ -33,7 +34,8 @@ const vitalLabels: Record<string, string> = { bp_sys: 'ضغط انقباضي', b
  */
 export function MedicalCard({ patientId, excludeEncounterId }: { patientId: string; excludeEncounterId?: string }) {
   const card = useAsync(async () => (await unwrap(supabase.rpc('patient_medical_card', { p_patient_id: patientId }))) as unknown as MedicalCardData, [patientId]);
-  const [tab, setTab] = useState<'visits' | 'labs' | 'rx'>('visits');
+  const health = useHealth(patientId);
+  const [tab, setTab] = useState<'health' | 'visits' | 'labs' | 'rx'>('health');
   if (card.status === 'loading' && !card.data) return <SkeletonList rows={4} />;
   if (card.status === 'error') return <ErrorState error={card.error} onRetry={card.reload} />;
   const c = card.data!;
@@ -53,7 +55,9 @@ export function MedicalCard({ patientId, excludeEncounterId }: { patientId: stri
         ? <Alert tone="danger" title="حساسية موثّقة">{c.allergies.map((a) => `${a.substance}${a.reaction ? ` (${a.reaction})` : ''}`).join('، ')}</Alert>
         : <p className="small muted">{c.allergies_recorded ? 'لا توجد حساسية فعّالة موثّقة.' : 'لم تُسجَّل معلومات حساسية — هذا لا يعني عدم وجودها.'}</p>}
       <Tabs label="البطاقة الطبية" value={tab} onChange={setTab}
-            tabs={[{ id: 'visits', label: `الزيارات (${visits.length})` }, { id: 'labs', label: `الفحوصات (${c.labs.length})` }, { id: 'rx', label: `الوصفات (${c.prescriptions.length})` }]} />
+            tabs={[{ id: 'health', label: 'الملف الصحي' }, { id: 'visits', label: `الزيارات (${visits.length})` }, { id: 'labs', label: `الفحوصات (${c.labs.length})` }, { id: 'rx', label: `الوصفات (${c.prescriptions.length})` }]} />
+
+      {tab === 'health' && (health.data ? <HealthSummary h={health.data} /> : health.status === 'error' ? <ErrorState error={health.error} onRetry={health.reload} /> : <SkeletonList rows={3} />)}
 
       {tab === 'visits' && (visits.length === 0
         ? <EmptyState icon={<Stethoscope />} title="لا توجد زيارات سابقة" />
@@ -76,25 +80,7 @@ export function MedicalCard({ patientId, excludeEncounterId }: { patientId: stri
             ))}
           </ol>)}
 
-      {tab === 'labs' && (c.labs.length === 0
-        ? <EmptyState icon={<FlaskConical />} title="لا توجد نتائج فحوصات معتمدة" />
-        : <div className="table-wrap" role="region" aria-label="نتائج الفحوصات" tabIndex={0}>
-            <table className="table">
-              <thead><tr><th>الفحص</th><th>النتيجة</th><th>المرجع</th><th>التاريخ</th><th>المختبر</th></tr></thead>
-              <tbody>
-                {c.labs.map((l, i) => (
-                  <tr key={i}>
-                    <td><bdi dir="ltr">{l.test}</bdi></td>
-                    <td><Ltr>{l.value_numeric ?? l.value_text} {l.unit ?? ''}</Ltr>{l.lab_flag && <> <Badge tone={l.lab_flag === 'critical' ? 'danger' : 'warning'}>{labFlag[l.lab_flag] ?? l.lab_flag}</Badge></>}
-                      {l.notes && <div className="small muted">{l.notes}</div>}</td>
-                    <td className="small"><Ltr>{l.reference_range ?? '—'}</Ltr></td>
-                    <td className="small">{formatDate(l.released_at)}</td>
-                    <td className="small">{l.lab}{l.ordered_by ? <div className="muted">طلب: {l.ordered_by}</div> : null}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>)}
+      {tab === 'labs' && (health.data ? <LabTrends trends={health.data.lab_trends} linkBase="/workspace/doctor/lab/" /> : <SkeletonList rows={3} />)}
 
       {tab === 'rx' && (c.prescriptions.length === 0
         ? <EmptyState icon={<Pill />} title="لا توجد وصفات معتمدة" />

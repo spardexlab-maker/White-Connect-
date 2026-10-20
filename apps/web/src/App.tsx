@@ -16,6 +16,8 @@ import { Account } from './pages/patient/Account';
 import { PatientRx } from './pages/patient/PatientRx';
 import { Meds } from './pages/patient/Meds';
 import { LabOrderPage } from './pages/LabOrderPage';
+import { PrintLab } from './pages/PrintLab';
+import { MyHealth } from './pages/patient/Health';
 import { VerifyRx } from './pages/VerifyRx';
 
 // Professional and admin areas are code-split so patients on mobile do not download them.
@@ -88,6 +90,7 @@ export function App() {
                 <Route path="account" element={<Account />} />
                 <Route path="rx/:id" element={<PatientRx />} />
                 <Route path="meds" element={<Meds />} />
+                <Route path="health" element={<MyHealth />} />
                 <Route path="labs/:orderId" element={<LabOrderPage back="/patient/journey" />} />
               </Route>
 
@@ -120,6 +123,7 @@ export function App() {
               </Route>
 
               <Route path="/print/rx/:id" element={<RequireStaffOrPatient><PrintRx /></RequireStaffOrPatient>} />
+              <Route path="/print/lab/:orderId" element={<RequireStaffOrPatient><PrintLab /></RequireStaffOrPatient>} />
               <Route path="/print/receipt/:id" element={<RequireStaffOrPatient><PrintReceipt /></RequireStaffOrPatient>} />
               <Route path="/verify/rx" element={<VerifyRx />} />
               <Route path="/dev/components" element={<ComponentGallery />} />

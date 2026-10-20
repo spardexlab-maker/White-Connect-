@@ -1193,6 +1193,58 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"patient_conditions": {
+                  Row: {
+                    "created_at": string,"id": string,"name": string,"patient_id": string,"recorded_by": string,"since_year": number | null,"source": string,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"name": string,"patient_id": string,"recorded_by": string,"since_year"?: number | null,"source": string,"status"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"name"?: string,"patient_id"?: string,"recorded_by"?: string,"since_year"?: number | null,"source"?: string,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "patient_conditions_patient_id_fkey"
+      columns: ["patient_id"]
+isOneToOne: false
+      referencedRelation: "patients"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "patient_conditions_recorded_by_fkey"
+      columns: ["recorded_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"patient_health_profiles": {
+                  Row: {
+                    "blood_type": string | null,"height_cm": number | null,"notes": string | null,"patient_id": string,"updated_at": string,"updated_by": string | null,"weight_kg": number | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "blood_type"?: string | null,"height_cm"?: number | null,"notes"?: string | null,"patient_id": string,"updated_at"?: string,"updated_by"?: string | null,"weight_kg"?: number | null
+                  }
+                  Update: {
+                    "blood_type"?: string | null,"height_cm"?: number | null,"notes"?: string | null,"patient_id"?: string,"updated_at"?: string,"updated_by"?: string | null,"weight_kg"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "patient_health_profiles_patient_id_fkey"
+      columns: ["patient_id"]
+isOneToOne: true
+      referencedRelation: "patients"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "patient_health_profiles_updated_by_fkey"
+      columns: ["updated_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"patient_identifiers": {
                   Row: {
                     "created_at": string,"id": string,"kind": string,"patient_id": string,"value": string,"verified_by": string | null
@@ -2060,6 +2112,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"add_condition":
+{ Args: { "p_name": string,"p_patient_id": string,"p_since_year"?: number }; Returns: string
+                           },
 "add_expense":
 { Args: { "p_amount_minor": number,"p_category": string,"p_facility_id": string,"p_note"?: string,"p_spent_on"?: string }; Returns: {
               "amount_minor": number,
@@ -2077,6 +2132,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"add_reported_medication":
+{ Args: { "p_dose_text"?: string,"p_name": string,"p_patient_id": string,"p_started_on"?: string }; Returns: string
+                           },
 "add_schedule_exception":
 { Args: { "p_ends_at": string,"p_facility_id": string,"p_kind": string,"p_practitioner_id": string,"p_reason"?: string,"p_starts_at": string }; Returns: {
               "created_at": string,
@@ -2627,6 +2685,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"health_profile":
+{ Args: { "p_patient_id": string }; Returns: Json
+                           },
 "invoice_document":
 { Args: { "p_invoice_id": string }; Returns: Json
                            },
@@ -2689,6 +2750,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"lab_report":
+{ Args: { "p_order_id": string }; Returns: Json
+                           },
 "lab_worklist":
 { Args: { "p_lab_facility_id": string,"p_status"?: Database["public"]['Enums']["lab_status"] }; Returns: {
               "created_at": string,"item_count": number,"latest_barcode": string,"order_id": string,"order_number": string,"ordering_doctor": string,"ordering_facility": string,"patient_code": string,"patient_id": string,"patient_name": string,"released_count": number,"source": string,"status": Database["public"]['Enums']["lab_status"]
@@ -3131,6 +3195,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"save_health_profile":
+{ Args: { "p_birth_date"?: string,"p_blood_type"?: string,"p_height_cm"?: number,"p_notes"?: string,"p_patient_id": string,"p_weight_kg"?: number }; Returns: undefined
+                           },
 "save_lab_result_draft":
 { Args: { "p_lab_flag"?: string,"p_notes"?: string,"p_order_item_id": string,"p_reference_range"?: string,"p_unit"?: string,"p_value_numeric"?: number,"p_value_text"?: string }; Returns: {
               "correction_reason": string | null,
@@ -3196,6 +3263,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"set_condition_status":
+{ Args: { "p_condition_id": string,"p_status": string }; Returns: undefined
+                           },
 "set_encounter_status":
 { Args: { "p_encounter_id": string,"p_status": Database["public"]['Enums']["encounter_status"] }; Returns: {
               "appointment_id": string | null,
@@ -3292,6 +3362,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"stop_reported_medication":
+{ Args: { "p_medication_id": string }; Returns: undefined
+                           },
 "submit_attachment":
 { Args: { "p_id": string }; Returns: undefined
                            },

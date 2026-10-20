@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import { Linking, View } from 'react-native';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
 import { useLocalSearchParams } from 'expo-router';
-import { AlertOctagon, FileText, FlaskConical } from 'lucide-react-native';
-import { formatDateTime, labFlag, labStatus, type LabStatus } from '@app/shared';
+import { AlertOctagon, FileText, FlaskConical, Printer, Share2 } from 'lucide-react-native';
+import { errorMessage, formatDateTime, labFlag, labReportDocument, labStatus, type LabReport, type LabStatus } from '@app/shared';
 import { supabase } from '../../src/lib/supabase';
 import { unwrap, useAsync } from '../../src/lib/useAsync';
 import type { LabDetail } from '../../src/lib/clinical';
@@ -15,6 +18,22 @@ export default function LabScreen() {
   // result files (PDF/image) uploaded by the lab — readable once the results are released
   const files = useAsync(async () => ((await unwrap(supabase.rpc('list_attachments', { p_kind: 'lab_result', p_ref_id: orderId }))) ?? []) as
     { id: string; file_name: string; status: string }[], [orderId]);
+  const [pdfBusy, setPdfBusy] = useState<'print' | 'share' | null>(null);
+  const [pdfError, setPdfError] = useState<string | null>(null);
+  // the lab report as a PDF: print / save from the system dialog, or share the file
+  const pdf = async (mode: 'print' | 'share') => {
+    setPdfBusy(mode); setPdfError(null);
+    try {
+      const r = (await unwrap(supabase.rpc('lab_report', { p_order_id: orderId }))) as unknown as LabReport;
+      const html = labReportDocument(r);
+      if (mode === 'print') await Print.printAsync({ html });
+      else {
+        const { uri } = await Print.printToFileAsync({ html });
+        await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: `تقرير ${r.order_number}`, UTI: 'com.adobe.pdf' });
+      }
+    } catch (e) { setPdfError(errorMessage(e)); }
+    setPdfBusy(null);
+  };
   const openFile = async (id: string) => {
     const { data } = await supabase.storage.from('clinical-files').createSignedUrl(`files/${id}`, 60);
     if (data?.signedUrl) void Linking.openURL(data.signedUrl);
@@ -31,6 +50,13 @@ export default function LabScreen() {
           <Row gap={space[2]} style={{ flex: 1 }}><FlaskConical size={18} color={color.accent} /><Text variant="title" style={{ flex: 1 }}>{x.lab}</Text></Row>
           <Badge label={st.label} tone={st.tone as Tone} />
         </Row>
+        {x.items.some((i) => i.status === 'released') && (
+          <Row gap={space[2]} wrap style={{ marginVertical: space[2] }}>
+            <Button title="تقرير PDF / طباعة" small icon={<Printer size={14} color={color.surface} />} loading={pdfBusy === 'print'} onPress={() => void pdf('print')} />
+            <Button title="مشاركة PDF" small variant="secondary" icon={<Share2 size={14} color={color.primary} />} loading={pdfBusy === 'share'} onPress={() => void pdf('share')} />
+          </Row>
+        )}
+        {pdfError && <Alert tone="danger">{pdfError}</Alert>}
         <Text variant="small" muted>طلب <Ltr>{x.order.order_number}</Ltr> · {x.patient.full_name}{x.ordering_doctor ? ` · الطبيب الطالب: ${x.ordering_doctor}` : ' · زيارة مباشرة للمختبر'}</Text>
       </Card>
       {x.items.map((it) => {
