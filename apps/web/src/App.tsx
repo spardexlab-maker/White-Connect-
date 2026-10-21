@@ -26,6 +26,7 @@ const WorkspacePicker = lazy(() => import('./pages/pro/WorkspacePicker').then((m
 const AcceptInvite = lazy(() => import('./pages/pro/AcceptInvite').then((m) => ({ default: m.AcceptInvite })));
 const ReceptionDashboard = lazy(() => import('./pages/pro/Reception').then((m) => ({ default: m.ReceptionDashboard })));
 const DoctorToday = lazy(() => import('./pages/pro/DoctorToday').then((m) => ({ default: m.DoctorToday })));
+const DoctorProfile = lazy(() => import('./pages/pro/DoctorProfile').then((m) => ({ default: m.DoctorProfile })));
 const DoctorSchedule = lazy(() => import('./pages/pro/DoctorSchedule').then((m) => ({ default: m.DoctorSchedule })));
 const OrganizationAdmin = lazy(() => import('./pages/pro/OrganizationAdmin').then((m) => ({ default: m.OrganizationAdmin })));
 const AdminOverview = lazy(() => import('./pages/admin/Overview').then((m) => ({ default: m.AdminOverview })));
@@ -105,6 +106,7 @@ export function App() {
                 <Route path="/workspace/doctor/session/:encounterId" element={<RequireWorkspaceRole roles={['doctor']}><DoctorSession /></RequireWorkspaceRole>} />
                 <Route path="/workspace/doctor/lab/:orderId" element={<RequireWorkspaceRole roles={['doctor']}><LabOrderPage back="/workspace/doctor" /></RequireWorkspaceRole>} />
                 <Route path="/workspace/doctor/schedule" element={<RequireWorkspaceRole roles={['doctor']}><DoctorSchedule /></RequireWorkspaceRole>} />
+                <Route path="/workspace/doctor/profile" element={<RequireWorkspaceRole roles={['doctor']}><DoctorProfile /></RequireWorkspaceRole>} />
                 <Route path="/workspace/pharmacy" element={<RequireWorkspaceRole roles={['pharmacist', 'pharmacy_staff']}><PharmacyInbox /></RequireWorkspaceRole>} />
                 <Route path="/workspace/pharmacy/stock" element={<RequireWorkspaceRole roles={['pharmacist', 'pharmacy_staff']}><PharmacyStock /></RequireWorkspaceRole>} />
                 <Route path="/workspace/pharmacy/sales" element={<RequireWorkspaceRole roles={['pharmacist', 'pharmacy_staff']}><PharmacySales /></RequireWorkspaceRole>} />

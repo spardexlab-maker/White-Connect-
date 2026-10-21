@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
-  AccessibilityInfo, ActivityIndicator, Animated, Easing, Pressable, RefreshControl, ScrollView, StyleSheet, Text as RNText, TextInput, View,
+  AccessibilityInfo, ActivityIndicator, Animated, Easing, Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text as RNText, TextInput, View,
   type PressableProps, type StyleProp, type TextInputProps, type TextProps, type TextStyle, type ViewStyle,
 } from 'react-native';
 import { AlertTriangle, CheckCircle2, Info, OctagonAlert, RefreshCw } from 'lucide-react-native';
@@ -241,9 +241,10 @@ export function Summary({ rows }: { rows: [string, ReactNode][] }) {
   );
 }
 
-export function Avatar({ name, large }: { name: string; large?: boolean }) {
+export function Avatar({ name, large, src }: { name: string; large?: boolean; src?: string | null }) {
   const initials = name.replace(/^(د\.|دكتور|الدكتور|مختبر)\s*/u, '').trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join(' ');
   const d = large ? 64 : 48;
+  if (src) return <Image source={{ uri: src }} style={{ width: d, height: d, borderRadius: d / 2, backgroundColor: color.accentSoft }} accessibilityIgnoresInvertColors />;
   return (
     <View style={{ width: d, height: d, borderRadius: d / 2, backgroundColor: color.accentSoft, alignItems: 'center', justifyContent: 'center' }} accessibilityElementsHidden importantForAccessibility="no">
       <RNText style={{ fontFamily: family.bold, color: color.accent, fontSize: large ? 20 : 16 }}>{initials}</RNText>

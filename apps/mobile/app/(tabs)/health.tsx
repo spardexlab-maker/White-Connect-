@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
-import { ArrowDown, ArrowUp, ChevronLeft, FlaskConical, Minus, Pencil, Plus } from 'lucide-react-native';
-import { errorMessage, formatDate, labFlag } from '@app/shared';
+import { ArrowDown, ArrowUp, ChevronLeft, FileText, FlaskConical, Minus, Pencil, Plus, Share2 } from 'lucide-react-native';
+import { errorMessage, formatDate, labFlag, parseRange } from '@app/shared';
 import { supabase } from '../../src/lib/supabase';
 import { unwrap, useAsync } from '../../src/lib/useAsync';
 import { useAuth } from '../../src/lib/auth';
 import { SignInPrompt } from '../../src/components/SignInPrompt';
 import { Alert, Badge, Button, Card, Chip, EmptyState, ErrorState, Field, Loading, Ltr, Row, Screen, SectionTitle, Stack, Text } from '../../src/components/ui';
 import { color, radius, space } from '../../src/theme';
+import { RangeBar, TrendChart } from '../../src/components/LabCharts';
+import { labReportPdf } from '../../src/lib/labPdf';
+import { OwnReminder } from '../../src/components/OwnReminder';
 
 interface Point { value_numeric: number | null; value_text: string | null; flag: string | null; released_at: string; lab: string; order_id: string }
 interface Trend { key: string; name: string; unit: string | null; reference_range: string | null; points: Point[] }
@@ -50,6 +53,7 @@ export default function HealthTab() {
 
 function Body({ h, reload }: { h: Health; reload: () => void }) {
   const [msg, setMsg] = useState<{ tone: 'success' | 'danger'; text: string } | null>(null);
+  const [remind, setRemind] = useState<{ name: string; reportedId?: string } | null>(null);
   const run = async (p: PromiseLike<{ error: unknown }>, ok: string) => {
     const { error } = await p;
     setMsg(error ? { tone: 'danger', text: errorMessage(error) } : { tone: 'success', text: ok });
@@ -68,12 +72,17 @@ function Body({ h, reload }: { h: Health; reload: () => void }) {
           onAdd: (a, b) => run(supabase.rpc('add_condition', { p_patient_id: h.patient.id, p_name: a, p_since_year: b ? Number(b) : undefined }), 'أُضيف') }} />
       <ListCard title="الأدوية المستمرة" empty="لا أدوية مستمرة مسجلة."
         rows={[
-          ...h.prescribed.map((m, i) => ({ key: `p${i}`, title: m.name, sub: `من وصفة ${m.doctor}${m.until ? ` · حتى ${formatDate(m.until)}` : ''}`, ltr: true })),
+          ...h.prescribed.map((m, i) => ({ key: `p${i}`, title: m.name, sub: `من وصفة ${m.doctor}${m.until ? ` · حتى ${formatDate(m.until)}` : ''}`, ltr: true,
+            extra: { label: 'تذكير', onPress: () => setRemind({ name: m.name }) } })),
           ...h.medications.map((m) => ({ key: m.id, title: m.name, sub: m.dose_text ?? '',
+            extra: { label: 'تذكير', onPress: () => setRemind({ name: m.name, reportedId: m.id }) },
             action: { label: 'توقفت عنه', onPress: () => void run(supabase.rpc('stop_reported_medication', { p_medication_id: m.id }), 'حُدّث') } })),
         ]}
         add={{ a: 'دواء تأخذه باستمرار', b: 'الجرعة (مثال: قرص صباحاً)',
           onAdd: (a, b) => run(supabase.rpc('add_reported_medication', { p_patient_id: h.patient.id, p_name: a, p_dose_text: b || undefined }), 'أُضيف') }} />
+      {remind && <OwnReminder patientId={h.patient.id} name={remind.name} reportedMedicationId={remind.reportedId}
+                              onDone={() => { setRemind(null); setMsg({ tone: 'success', text: 'فُعّل التذكير' }); }} onCancel={() => setRemind(null)} />}
+      <Button title="أدويتي والتذكيرات" variant="secondary" onPress={() => router.push('/meds')} />
       <ListCard title="الحساسية" empty="لا شيء مسجل."
         rows={h.allergies.map((x) => ({ key: x.id, title: x.substance, sub: x.reaction ?? '', danger: true }))}
         add={{ a: 'مادة أو دواء', b: 'ماذا يحدث',
@@ -137,30 +146,45 @@ function Basics({ h, run }: { h: Health; run: (p: PromiseLike<{ error: unknown }
   );
 }
 
-/** Every test once with the current and previous value; tap for the full history. */
+/** Every test as a card: current value against the reference range, the trend chart, the previous value and the PDF report. */
 function Tests({ trends }: { trends: Trend[] }) {
   const [open, setOpen] = useState<string | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const pdf = async (orderId: string, mode: 'print' | 'share') => {
+    setBusy(orderId + mode); setErr(null);
+    try { await labReportPdf(orderId, mode); } catch (e) { setErr(errorMessage(e)); }
+    setBusy(null);
+  };
   return (
-    <Card>
+    <Stack gap={space[3]}>
       <SectionTitle>تحاليلي</SectionTitle>
-      {trends.length === 0 && <EmptyState icon={<FlaskConical size={28} color={color.mutedText} />} title="لا توجد نتائج بعد" />}
+      {err && <Alert tone="danger">{err}</Alert>}
+      {trends.length === 0 && <Card><EmptyState icon={<FlaskConical size={28} color={color.mutedText} />} title="لا توجد نتائج بعد" /></Card>}
       {trends.map((t) => {
         const [cur, prev] = t.points;
+        const range = parseRange(t.reference_range);
         const dir = cur.value_numeric != null && prev?.value_numeric != null ? Math.sign(Number(cur.value_numeric) - Number(prev.value_numeric)) : null;
         const Arrow = dir === 1 ? ArrowUp : dir === -1 ? ArrowDown : Minus;
         return (
-          <View key={t.key} style={{ borderTopWidth: 1, borderColor: color.border, paddingVertical: space[3], gap: space[2] }}>
-            <Pressable accessibilityRole="button" accessibilityLabel={`${t.name}: ${val(cur)}`} onPress={() => setOpen(open === t.key ? null : t.key)}>
-              <Row between>
-                <Text variant="title" style={{ flex: 1 }}>{t.name}</Text>
-                {cur.flag ? <Badge label={labFlag[cur.flag] ?? cur.flag} tone={cur.flag === 'critical' ? 'danger' : 'warning'} /> : null}
-              </Row>
-              <Row gap={space[3]} wrap style={{ marginTop: 4 }}>
-                <Text variant="h3"><Ltr>{val(cur)}{t.unit ? ` ${t.unit}` : ''}</Ltr></Text>
-                {prev && <Row gap={4}><Arrow size={16} color={color.mutedText} /><Text variant="small" muted>السابق <Ltr>{val(prev)}</Ltr> ({formatDate(prev.released_at)})</Text></Row>}
-              </Row>
-              <Text variant="small" muted>{formatDate(cur.released_at)} · {cur.lab}{t.reference_range ? ` · المرجع ${t.reference_range}` : ''}</Text>
-            </Pressable>
+          <Card key={t.key}>
+            <Row between>
+              <Text variant="title" style={{ flex: 1 }}>{t.name}</Text>
+              {cur.flag ? <Badge label={labFlag[cur.flag] ?? cur.flag} tone={cur.flag === 'critical' ? 'danger' : 'warning'} /> : null}
+            </Row>
+            <Row gap={space[3]} wrap>
+              <Text variant="h2"><Ltr>{val(cur)}{t.unit ? ` ${t.unit}` : ''}</Ltr></Text>
+              {prev && <Row gap={4}><Arrow size={16} color={color.mutedText} /><Text variant="small" muted>السابق <Ltr>{val(prev)}</Ltr> ({formatDate(prev.released_at)})</Text></Row>}
+            </Row>
+            {range && cur.value_numeric != null ? <RangeBar value={Number(cur.value_numeric)} range={range} />
+              : <Text variant="small" muted>المرجع: {t.reference_range ?? '—'}</Text>}
+            <TrendChart points={t.points} range={range} />
+            <Text variant="small" muted>{formatDate(cur.released_at)} · {cur.lab}</Text>
+            <Row gap={space[2]} wrap>
+              <Button title="تقرير PDF" small icon={<FileText size={14} color={color.surface} />} loading={busy === cur.order_id + 'print'} onPress={() => void pdf(cur.order_id, 'print')} />
+              <Button title="مشاركة" small variant="secondary" icon={<Share2 size={14} color={color.primary} />} loading={busy === cur.order_id + 'share'} onPress={() => void pdf(cur.order_id, 'share')} />
+              {t.points.length > 1 && <Button title={`كل النتائج (${t.points.length})`} small variant="ghost" onPress={() => setOpen(open === t.key ? null : t.key)} />}
+            </Row>
             {open === t.key && (
               <Stack gap={space[2]}>
                 {t.points.map((p, i) => (
@@ -173,17 +197,17 @@ function Tests({ trends }: { trends: Trend[] }) {
                 ))}
               </Stack>
             )}
-          </View>
+          </Card>
         );
       })}
-      {trends.length > 0 && <Text variant="small" muted>اضغط على التحليل لرؤية كل النتائج وفتح تقرير المختبر. السهم مقارنة رقمية فقط وليس تفسيراً طبياً.</Text>}
-    </Card>
+      {trends.length > 0 && <Text variant="small" muted>الشريط يبيّن موقع النتيجة من المجال المرجعي للمختبر، والرسم تطورها. مقارنة رقمية فقط وليست تفسيراً طبياً.</Text>}
+    </Stack>
   );
 }
 
 function ListCard({ title, empty, rows, add }: {
   title: string; empty: string;
-  rows: { key: string; title: string; sub?: string; ltr?: boolean; danger?: boolean; action?: { label: string; onPress: () => void } }[];
+  rows: { key: string; title: string; sub?: string; ltr?: boolean; danger?: boolean; action?: { label: string; onPress: () => void }; extra?: { label: string; onPress: () => void } }[];
   add: { a: string; b: string; bLtr?: boolean; onAdd: (a: string, b: string) => Promise<boolean> };
 }) {
   const [a, setA] = useState('');
@@ -199,6 +223,7 @@ function ListCard({ title, empty, rows, add }: {
             {r.danger ? <Badge label={r.title} tone="danger" /> : <Text variant="title" ltr={r.ltr}>{r.title}</Text>}
             {!!r.sub && <Text variant="small" muted>{r.sub}</Text>}
           </View>
+          {r.extra && <Button title={r.extra.label} small variant="secondary" onPress={r.extra.onPress} />}
           {r.action && <Button title={r.action.label} small variant="ghost" onPress={r.action.onPress} />}
         </Row>
       ))}

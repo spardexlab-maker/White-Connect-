@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { Linking, View } from 'react-native';
-import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
+import { labReportPdf } from '../../src/lib/labPdf';
 import { useLocalSearchParams } from 'expo-router';
 import { AlertOctagon, FileText, FlaskConical, Printer, Share2 } from 'lucide-react-native';
-import { errorMessage, formatDateTime, labFlag, labReportDocument, labStatus, type LabReport, type LabStatus } from '@app/shared';
+import { errorMessage, formatDateTime, labFlag, labStatus, type LabStatus } from '@app/shared';
 import { supabase } from '../../src/lib/supabase';
 import { unwrap, useAsync } from '../../src/lib/useAsync';
 import type { LabDetail } from '../../src/lib/clinical';
@@ -23,15 +22,7 @@ export default function LabScreen() {
   // the lab report as a PDF: print / save from the system dialog, or share the file
   const pdf = async (mode: 'print' | 'share') => {
     setPdfBusy(mode); setPdfError(null);
-    try {
-      const r = (await unwrap(supabase.rpc('lab_report', { p_order_id: orderId }))) as unknown as LabReport;
-      const html = labReportDocument(r);
-      if (mode === 'print') await Print.printAsync({ html });
-      else {
-        const { uri } = await Print.printToFileAsync({ html });
-        await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: `تقرير ${r.order_number}`, UTI: 'com.adobe.pdf' });
-      }
-    } catch (e) { setPdfError(errorMessage(e)); }
+    try { await labReportPdf(orderId, mode); } catch (e) { setPdfError(errorMessage(e)); }
     setPdfBusy(null);
   };
   const openFile = async (id: string) => {

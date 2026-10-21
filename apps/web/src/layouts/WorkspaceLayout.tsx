@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
-  Activity, BarChart3, Boxes, Receipt, Building2, CalendarClock, ChevronDown, ClipboardList, FlaskConical, HeartPulse, LayoutDashboard, LogOut, Menu,
+  Activity, Award, BarChart3, Boxes, Receipt, Building2, CalendarClock, ChevronDown, ClipboardList, FlaskConical, HeartPulse, LayoutDashboard, LogOut, Menu,
   LockKeyhole, Pill, ScrollText, Settings2, ShieldCheck, Stethoscope, Users,
 } from 'lucide-react';
 import { facilityTypeLabel, roleLabel, workspaceArea, formatDate } from '@app/shared';
@@ -32,6 +32,7 @@ function navFor(ws: Workspace | null, isPlatformAdmin: boolean, path: string): N
       return [
         { to: '/workspace/doctor', label: 'اليوم والطابور', icon: <Stethoscope size={20} />, end: true },
         { to: '/workspace/doctor/schedule', label: 'الجدول والخدمات', icon: <Settings2 size={20} /> },
+        { to: '/workspace/doctor/profile', label: 'ملفي المهني', icon: <Award size={20} /> },
       ];
     case 'pharmacy':
       return [

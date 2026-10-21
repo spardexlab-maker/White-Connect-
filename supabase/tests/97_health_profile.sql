@@ -29,6 +29,13 @@ select public.attach_patient_to_facility(:LAB_A, :P_MONA, 'هوية مطابقة
 insert into t (k, id) select 'o1', (public.lab_register_direct(:LAB_A, :P_MONA, array[(select id from t where k = 'vitd')], 'idem-trend-1')).id;
 select public.complete_lab_order((select id from t where k = 'o1'),
   jsonb_build_array(jsonb_build_object('item_id', (select id from public.lab_order_items where order_id = (select id from t where k = 'o1')), 'value', '10')));
+-- the first result is from yesterday
+select tests.logout();
+set local session_replication_role = replica;   -- test only: released results are otherwise locked
+update public.lab_results set released_at = now() - interval '1 day'
+ where order_item_id in (select id from public.lab_order_items where order_id = (select id from t where k = 'o1'));
+set local session_replication_role = origin;
+select tests.login(:U_LAB, 'lab.a@demo.test');
 insert into t (k, id) select 'o2', (public.lab_register_direct(:LAB_A, :P_MONA, array[(select id from t where k = 'vitd')], 'idem-trend-2')).id;
 select public.complete_lab_order((select id from t where k = 'o2'),
   jsonb_build_array(jsonb_build_object('item_id', (select id from public.lab_order_items where order_id = (select id from t where k = 'o2')), 'value', '20')));

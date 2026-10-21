@@ -8,6 +8,8 @@ import { addDays, formatDateShort, formatMoney, formatTime, localDateKey } from 
 import { supabase } from '../../lib/supabase';
 import { unwrap, useAsync } from '../../lib/useAsync';
 import { useAuth } from '../../lib/auth';
+import { mediaUrl } from '../../lib/media';
+import { AiAssist } from '../../components/AiAssist';
 import { Avatar, EmptyState, ErrorState, Skeleton } from '../../components/ui';
 
 type Kind = 'doctor' | 'laboratory';
@@ -15,7 +17,7 @@ interface Provider {
   practitioner_id: string | null; facility_id: string; display_name: string; title: string | null;
   specialty_name: string | null; facility_name: string; organization_name: string; branch_name: string;
   area: string | null; city_name: string | null; address: string | null; distance_km: number | null;
-  min_price_minor: number | null; currency: string; license_verified: boolean; opening_hours_note: string | null;
+  min_price_minor: number | null; currency: string; license_verified: boolean; opening_hours_note: string | null; photo_path?: string | null;
 }
 
 /** Icon per specialty name (falls back to a stethoscope). */
@@ -66,6 +68,17 @@ export function PatientHome() {
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 },
     );
   };
+  // nearest first: ask once per visit when the page opens (the button still toggles it)
+  useEffect(() => {
+    try { if (sessionStorage.getItem('geo.asked')) return; sessionStorage.setItem('geo.asked', '1'); } catch { /* storage unavailable */ }
+    askLocation();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const showNearest = (k: Kind, specialtyId: string | null) => {
+    setKind(k); setSpecialty(specialtyId); setQuery('');
+    if (geoState !== 'ok' && geoState !== 'asking') askLocation();
+    requestAnimationFrame(() => document.getElementById('results-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  };
 
   return (
     <div className="stack-lg">
@@ -104,6 +117,8 @@ export function PatientHome() {
         <span id="loc-hint" className="sr-only">الموقع اختياري ولا يلزم للحجز</span>
         {geoState === 'denied' && <span className="small" style={{ color: '#FDE7C2' }}>لم يُمنح إذن الموقع — اختر المدينة يدوياً، والحجز لا يحتاج GPS.</span>}
       </section>
+
+      <AiAssist signedIn={!!session} onDoctors={(id) => showNearest('doctor', id)} onLabs={() => showNearest('laboratory', null)} />
 
       {kind === 'doctor' && (
         <section aria-label="التخصصات" className="stack-sm">
@@ -157,7 +172,7 @@ function ProviderCard({ p, kind }: { p: Provider; kind: Kind }) {
   return (
     <article className="card provider-card card-interactive">
       <div className="row" style={{ flexWrap: 'nowrap', alignItems: 'flex-start' }}>
-        <Avatar name={p.display_name} />
+        <Avatar name={p.display_name} src={mediaUrl(p.photo_path)} />
         <div className="grow" style={{ minWidth: 0 }}>
           <h3 className="row" style={{ gap: 6, flexWrap: 'nowrap' }}>
             <Link to={href} className="stretched truncate">{p.display_name}</Link>

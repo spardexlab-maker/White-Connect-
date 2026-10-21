@@ -4,6 +4,8 @@ import { BadgeCheck, CalendarPlus, Clock, ExternalLink, MapPin, Phone, ShieldAle
 import { formatMoney, weekdayLabel } from '@app/shared';
 import { supabase } from '../../lib/supabase';
 import { unwrap, useAsync } from '../../lib/useAsync';
+import { fetchProviderMedia, mediaUrl } from '../../lib/media';
+import { MediaGallery } from '../../components/MediaGallery';
 import { Alert, Avatar, Badge, EmptyState, ErrorState, Ltr, SkeletonList, Tabs } from '../../components/ui';
 
 export interface ProviderProfile {
@@ -31,6 +33,7 @@ export function ProviderPage() {
   const { facilityId, practitionerId } = useParams();
   const profile = useProviderProfile(facilityId, practitionerId);
   const [tab, setTab] = useState<Tab>('about');
+  const media = useAsync(() => (facilityId ? fetchProviderMedia(facilityId, practitionerId) : Promise.resolve(null)), [facilityId, practitionerId]);
 
   if (profile.status === 'loading') return <div className="card"><SkeletonList rows={3} /></div>;
   if (profile.status === 'error') return <div className="card"><ErrorState error={profile.error} onRetry={profile.reload} /></div>;
@@ -46,7 +49,7 @@ export function ProviderPage() {
     <div className="stack" style={{ gap: 'var(--s-5)' }}>
       <section className="card stack">
         <div className="row" style={{ flexWrap: 'nowrap', alignItems: 'flex-start' }}>
-          <Avatar name={name} size="lg" />
+          <Avatar name={name} size="lg" src={mediaUrl(media.data?.photo)} />
           <div className="grow stack-sm" style={{ gap: 4 }}>
             <h1 style={{ fontSize: 'var(--f-h2)' }}>{name}</h1>
             {p.practitioner && <div className="muted">{p.practitioner.title}{p.practitioner.specialty ? ` · ${p.practitioner.specialty}` : ''}</div>}
@@ -60,6 +63,17 @@ export function ProviderPage() {
           </div>
         </div>
       </section>
+
+      {!!media.data?.clinic_photos.length && (
+        <section className="card stack-sm" aria-label="صور العيادة">
+          <h2 className="section-title">صور {p.practitioner ? 'العيادة' : 'المكان'}</h2>
+          <div className="media-strip">
+            {media.data.clinic_photos.map((m) => (
+              <a key={m.id} href={mediaUrl(m.path)!} target="_blank" rel="noreferrer noopener"><img src={mediaUrl(m.path)!} alt={m.caption ?? 'صورة العيادة'} loading="lazy" /></a>
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="card card-flush">
         <Tabs<Tab> label="معلومات مقدم الخدمة" value={tab} onChange={setTab}
@@ -76,6 +90,12 @@ export function ProviderPage() {
                   </dl>
                 ) : <span className="muted small">{p.facility.opening_hours_note ?? 'غير منشورة'}</span>}
               </div>
+              {!!media.data?.certificates.length && (
+                <div className="stack-sm">
+                  <h2 className="section-title">الشهادات</h2>
+                  <MediaGallery items={media.data.certificates} />
+                </div>
+              )}
               <Alert tone="info" title="سياسة الإلغاء">
                 {p.policy.cancellation_policy_text ?? `يمكن الإلغاء قبل ${Math.round(p.policy.cancellation_cutoff_minutes / 60)} ساعة من الموعد.`}
               </Alert>

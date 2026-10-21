@@ -30,6 +30,8 @@ const messages: Record<string, string> = {
   patient_not_found: 'السجل غير موجود.',
   query_too_short: 'اكتب 3 أحرف على الأقل.',
   rate_limited: 'عدد كبير من عمليات البحث. انتظر دقيقة ثم أعد المحاولة.',
+  ai_rate_limited: 'وصلت للحد المسموح من أسئلة المساعد الذكي. حاول بعد ساعة.',
+  ai_unavailable: 'المساعد الذكي غير متاح حالياً. استخدم البحث بالتخصص.',
   invalid_or_expired_code: 'الرمز غير صحيح أو منتهي الصلاحية.',
   verification_required: 'سجّل طريقة التحقق من الهوية.',
   self_record_exists: 'لديك ملف مريض بالفعل.',

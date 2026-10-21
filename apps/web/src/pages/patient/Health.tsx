@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Activity, Pencil, Plus } from 'lucide-react';
-import { errorMessage, formatDate } from '@app/shared';
+import { errorMessage, formatDate, reminderIntervals, timesEvery } from '@app/shared';
 import { supabase } from '../../lib/supabase';
 import { unwrap, useAsync } from '../../lib/useAsync';
 import { useAuth } from '../../lib/auth';
@@ -159,6 +159,7 @@ function Allergies({ h, onChanged }: { h: Health; onChanged: () => void }) {
 
 function Medications({ h, onChanged }: { h: Health; onChanged: () => void }) {
   const toast = useToast();
+  const [remind, setRemind] = useState<{ name: string; reportedId?: string } | null>(null);
   const [name, setName] = useState('');
   const [dose, setDose] = useState('');
   const add = async () => {
@@ -174,18 +175,53 @@ function Medications({ h, onChanged }: { h: Health; onChanged: () => void }) {
       <h2 id="med-title" className="section-title">الأدوية المستمرة</h2>
       {h.prescribed.map((m, i) => (
         <div key={`p${i}`} className="row-between small"><span><bdi dir="ltr" style={{ fontWeight: 600 }}>{m.name}</bdi>{m.frequency ? ` · ${m.frequency}` : ''}</span>
-          <span className="muted">من وصفة {m.doctor}{m.until ? ` · حتى ${formatDate(m.until)}` : ''}</span></div>
+          <span className="row" style={{ gap: 6 }}><span className="muted">من وصفة {m.doctor}{m.until ? ` · حتى ${formatDate(m.until)}` : ''}</span>
+            <Button size="sm" variant="secondary" onClick={() => setRemind({ name: m.name })}>تذكير</Button></span></div>
       ))}
       {h.medications.map((m) => (
         <div key={m.id} className="row-between small"><span><bdi dir="auto" style={{ fontWeight: 600 }}>{m.name}</bdi>{m.dose_text ? ` · ${m.dose_text}` : ''}</span>
-          <Button size="sm" variant="ghost" onClick={() => void stop(m.id)}>توقفت عنه</Button></div>
+          <span className="row" style={{ gap: 6 }}><Button size="sm" variant="secondary" onClick={() => setRemind({ name: m.name, reportedId: m.id })}>تذكير</Button>
+            <Button size="sm" variant="ghost" onClick={() => void stop(m.id)}>توقفت عنه</Button></span></div>
       ))}
       {h.prescribed.length + h.medications.length === 0 && <p className="small muted">لا أدوية مستمرة مسجلة.</p>}
+      {remind && <ReminderForm patientId={h.patient.id} name={remind.name} reportedId={remind.reportedId} onClose={() => setRemind(null)} />}
+      <Link className="btn btn-ghost btn-sm" to="/patient/meds" style={{ alignSelf: 'flex-start' }}>أدويتي والتذكيرات ←</Link>
       <div className="row" style={{ alignItems: 'flex-end' }}>
         <div className="grow"><TextField label="دواء تأخذه باستمرار" value={name} onChange={(e) => setName(e.target.value)} /></div>
         <div className="grow"><TextField label="الجرعة" optional placeholder="مثال: قرص صباحاً" value={dose} onChange={(e) => setDose(e.target.value)} /></div>
         <Button variant="secondary" icon={<Plus size={16} />} disabled={!name.trim()} onClick={() => void add()}>إضافة</Button>
       </div>
     </section>
+  );
+}
+
+function ReminderForm({ patientId, name, reportedId, onClose }: { patientId: string; name: string; reportedId?: string; onClose: () => void }) {
+  const toast = useToast();
+  const [every, setEvery] = useState(8);
+  const [first, setFirst] = useState('08:00');
+  const [days, setDays] = useState('');
+  const [busy, setBusy] = useState(false);
+  const times = timesEvery(first, every);
+  const save = async () => {
+    setBusy(true);
+    const { error } = await supabase.rpc('create_own_medication_plan', { p_patient_id: patientId, p_name: name, p_times: times,
+      p_days: days ? Number(days) : undefined, p_interval_hours: every, p_reported_medication_id: reportedId });
+    setBusy(false);
+    if (error) { toast(errorMessage(error), 'danger'); return; }
+    toast('فُعّل التذكير — يظهر في «أدويتي» وعلى تطبيق الهاتف', 'success'); onClose();
+  };
+  return (
+    <div className="card stack-sm" style={{ background: 'var(--c-surface-sunken)' }}>
+      <strong>تذكير: <bdi dir="auto">{name}</bdi></strong>
+      <div className="row" style={{ gap: 6, flexWrap: 'wrap' }} role="group" aria-label="كل كم ساعة">
+        {reminderIntervals.map((x) => <button key={x} type="button" className="chip" aria-pressed={every === x} onClick={() => setEvery(x)}>{x === 24 ? 'مرة يومياً' : `كل ${x} ساعات`}</button>)}
+      </div>
+      <div className="row" style={{ alignItems: 'flex-end' }}>
+        <div style={{ width: 150 }}><TextField label="أول جرعة" type="time" ltr value={first} onChange={(e) => setFirst(e.target.value)} /></div>
+        <div style={{ width: 150 }}><TextField label="عدد الأيام" optional ltr inputMode="numeric" value={days} onChange={(e) => setDays(e.target.value)} hint="فارغ = مستمر" /></div>
+      </div>
+      {times.length > 0 && <span className="small muted">الأوقات: {times.join('، ')}</span>}
+      <div className="row"><Button loading={busy} disabled={!times.length} onClick={() => void save()}>تفعيل التذكير</Button><Button variant="ghost" onClick={onClose}>إلغاء</Button></div>
+    </div>
   );
 }

@@ -243,3 +243,41 @@
 .health-strip { display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-4); align-items: center; padding: var(--s-3) var(--s-4);
   background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-lg); font-size: var(--f-small); }
 .health-strip > span { display: inline-flex; align-items: center; gap: 6px; }
+
+/* ---------- lab result cards: range bar + trend chart ---------- */
+.lab-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: var(--s-3); }
+.lab-card { display: flex; flex-direction: column; gap: var(--s-2); padding: var(--s-4); background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-lg); }
+.lab-value { font-size: var(--f-h3); font-weight: 700; }
+.range-bar { display: flex; flex-direction: column; gap: 4px; }
+.range-track { position: relative; height: 10px; border-radius: 999px; background: color-mix(in srgb, var(--c-warning) 22%, var(--c-surface-sunken)); }
+.range-band { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--c-success) 45%, transparent); border-radius: 999px; }
+.range-marker { position: absolute; top: -4px; width: 18px; height: 18px; margin-left: -9px; border-radius: 50%; border: 3px solid var(--c-surface); box-shadow: 0 1px 3px rgb(0 0 0 / .3); background: var(--c-success); }
+.range-marker.pos-above, .range-marker.pos-below { background: var(--c-warning); }
+.range-scale { display: flex; justify-content: space-between; font-size: 12px; color: var(--c-muted); font-variant-numeric: tabular-nums; }
+.range-pos { font-weight: 600; } .range-pos.pos-within { color: var(--c-success); } .range-pos.pos-above, .range-pos.pos-below { color: var(--c-warning); }
+.trend-chart { width: 100%; height: auto; }
+.trend-band { fill: color-mix(in srgb, var(--c-success) 16%, transparent); }
+.trend-line { fill: none; stroke: var(--c-primary); stroke-width: 2; }
+.trend-dot { fill: var(--c-success); stroke: var(--c-surface); stroke-width: 2; } .trend-dot.pos-above, .trend-dot.pos-below { fill: var(--c-warning); }
+.trend-axis { font-size: 10px; fill: var(--c-muted); } .trend-val { font-size: 11px; font-weight: 700; fill: var(--c-text); }
+
+.dose-strip { display: flex; flex-wrap: wrap; gap: 4px; }
+.dose-dot { width: 12px; height: 12px; border-radius: 3px; background: var(--c-surface-sunken); border: 1px solid var(--c-border); }
+.dose-taken { background: var(--c-success); border-color: var(--c-success); } .dose-skipped { background: var(--c-muted); border-color: var(--c-muted); }
+.dose-missed { background: var(--c-warning); border-color: var(--c-warning); }
+
+/* provider media (clinic photos, certificates) */
+.media-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--s-3); }
+.media-grid li { position: relative; display: flex; flex-direction: column; gap: 4px; }
+.media-grid img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--r-md, 10px); border: 1px solid var(--c-border); background: var(--c-surface-2, #f3f4f6); display: block; }
+.media-remove { position: absolute; top: 6px; inset-inline-end: 6px; width: 30px; height: 30px; border-radius: 999px; border: 0; display: grid; place-items: center;
+  background: rgba(0, 0, 0, .55); color: #fff; cursor: pointer; }
+.media-remove:hover { background: var(--c-danger, #b42318); }
+.media-strip { display: flex; gap: var(--s-2); overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 4px; }
+.media-strip img { height: 150px; width: auto; max-width: 240px; object-fit: cover; border-radius: var(--r-md, 10px); scroll-snap-align: start; flex: none; }
+
+/* AI assistant on the patient home */
+.ai-box { border: 1px solid color-mix(in srgb, var(--c-accent, #0F766E) 30%, transparent); background: linear-gradient(180deg, color-mix(in srgb, var(--c-accent, #0F766E) 6%, var(--c-surface, #fff)), var(--c-surface, #fff)); }
+.ai-ico { width: 36px; height: 36px; border-radius: 12px; display: grid; place-items: center; color: #fff; background: linear-gradient(135deg, #0F766E, #123B5D); flex: none; }
+.ai-box textarea { resize: vertical; min-height: 64px; }
+.ai-result { border-top: 1px dashed var(--c-border); padding-top: var(--s-3); }

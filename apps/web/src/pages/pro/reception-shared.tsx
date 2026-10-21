@@ -182,7 +182,7 @@ export function QuickBookSheet({ open, onClose, facilityId, timezone, practition
                 <div className="input-icon grow">
                   <ScanLine size={18} aria-hidden />
                   <input id="lookup" className="input" value={query} onChange={(e) => setQuery(e.target.value)} data-autofocus
-                         onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void search(); } }} placeholder="0780… أو P… أو امسح البطاقة" />
+                         onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void search(); } }} placeholder="0780… أو ID-W… أو امسح البطاقة" />
                 </div>
                 <Button variant="secondary" icon={<Search size={16} />} onClick={() => void search()} disabled={query.trim().length < 3}>بحث</Button>
               </div>

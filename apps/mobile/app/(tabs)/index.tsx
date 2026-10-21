@@ -10,6 +10,8 @@ import { addDays, formatDateShort, formatMoney, formatTime, localDateKey } from 
 import { supabase } from '../../src/lib/supabase';
 import { unwrap, useAsync } from '../../src/lib/useAsync';
 import { useAuth } from '../../src/lib/auth';
+import { mediaUrl } from '../../src/lib/media';
+import { AiAssist } from '../../src/components/AiAssist';
 import { providerHref } from '../../src/lib/routes';
 import { Avatar, Card, Chip, EmptyState, ErrorState, FadeIn, PressScale, Row, Screen, SkeletonBox, Stack, Text } from '../../src/components/ui';
 import { color, family, radius, shadow, size, space, startAlign } from '../../src/theme';
@@ -28,7 +30,7 @@ interface Provider {
   practitioner_id: string | null; facility_id: string; display_name: string; title: string | null;
   specialty_name: string | null; facility_name: string; organization_name: string; branch_name: string;
   area: string | null; city_name: string | null; distance_km: number | null;
-  min_price_minor: number | null; currency: string; license_verified: boolean;
+  min_price_minor: number | null; currency: string; license_verified: boolean; photo_path?: string | null;
 }
 
 export default function Home() {
@@ -68,6 +70,12 @@ export default function Home() {
       setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setGeo('ok');
     } catch { setGeo('denied'); }
   };
+  const showNearest = (k: Kind, specialtyId: string | null) => {
+    setKind(k); setSpecialty(specialtyId); setQuery('');
+    if (geo !== 'ok' && geo !== 'asking') void askLocation();
+  };
+  // nearest first: ask for the location as soon as the home screen opens (once)
+  useEffect(() => { void askLocation(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Screen refreshing={results.status === 'loading' && !!results.data} onRefresh={results.reload}>
@@ -104,6 +112,8 @@ export default function Home() {
           </View>
         </View>
       </FadeIn>
+
+      {session && <AiAssist onDoctors={(id) => showNearest('doctor', id)} onLabs={() => showNearest('laboratory', null)} />}
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space[2] }}>
         <Chip label={geo === 'ok' ? 'الأقرب إليك' : geo === 'asking' ? 'جارٍ التحديد…' : 'استخدم موقعي'} selected={geo === 'ok'}
@@ -167,7 +177,7 @@ function ProviderCard({ p, kind }: { p: Provider; kind: Kind }) {
     <PressScale onPress={() => router.push(href)} accessibilityRole="link" accessibilityLabel={`${p.display_name} — ${kind === 'doctor' ? 'عرض المواعيد والحجز' : 'عرض الفحوصات والحجز'}`}>
       <Card>
         <Row gap={space[3]} style={{ alignItems: 'flex-start' }}>
-          <Avatar name={p.display_name} />
+          <Avatar name={p.display_name} src={mediaUrl(p.photo_path)} />
           <View style={{ flex: 1, gap: 2 }}>
             <Row gap={6}><Text variant="title" numberOfLines={1} style={{ flexShrink: 1 }}>{p.display_name}</Text>{p.license_verified && kind === 'doctor' && <BadgeCheck size={18} color={color.accent} />}</Row>
             <Text variant="small" muted>{kind === 'doctor' ? (p.specialty_name ?? p.title ?? '') : p.organization_name}</Text>

@@ -1,7 +1,7 @@
-import { Fragment, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowDown, ArrowUp, Droplet, FlaskConical, HeartPulse, Minus, Pill, Ruler, ShieldAlert, Weight } from 'lucide-react';
-import { formatDate, labFlag } from '@app/shared';
+import { ArrowDown, ArrowUp, Droplet, FileText, FlaskConical, HeartPulse, History, Minus, Pill, Ruler, ShieldAlert, Weight } from 'lucide-react';
+import { chartDomain, formatDate, formatDateShort, labFlag, parseRange, rangePosition, rangePositionLabel, type NumRange } from '@app/shared';
 import { supabase } from '../../lib/supabase';
 import { unwrap, useAsync } from '../../lib/useAsync';
 import { Badge, EmptyState, Ltr } from '../ui';
@@ -97,6 +97,8 @@ export function HealthSummary({ h }: { h: Health }) {
 
       {h.profile.notes && <section className="stack-sm"><h3 className="section-title">ملاحظات المريض</h3><p className="small">{h.profile.notes}</p></section>}
 
+      <Adherence patientId={h.patient.id} />
+
       <section className="stack-sm">
         <h3 className="section-title">التحاليل: السابق والحالي</h3>
         <LabTrends trends={h.lab_trends} />
@@ -105,51 +107,141 @@ export function HealthSummary({ h }: { h: Health }) {
   );
 }
 
-/** Every test once: latest value, the previous one, and the full history on demand. */
+/** Where a value sits against the lab's reference range: low zone · reference band · high zone. */
+export function RangeBar({ value, range }: { value: number; range: NumRange }) {
+  const [lo, hi] = chartDomain([value], range);
+  const pct = (v: number) => `${Math.min(100, Math.max(0, ((v - lo) / (hi - lo)) * 100))}%`;
+  const pos = rangePosition(value, range);
+  const bandStart = range.low != null ? pct(range.low) : '0%';
+  const bandEnd = range.high != null ? pct(range.high) : '100%';
+  return (
+    <div className="range-bar" role="img" aria-label={`${value}: ${rangePositionLabel[pos]}`}>
+      <div className="range-track" dir="ltr">
+        <span className="range-band" style={{ left: bandStart, right: `calc(100% - ${bandEnd})` }} />
+        <span className={`range-marker pos-${pos}`} style={{ left: pct(value) }} />
+      </div>
+      <div className="range-scale" dir="ltr">
+        <span>{range.low ?? ''}</span><span className={`range-pos pos-${pos}`}>{rangePositionLabel[pos]}</span><span>{range.high ?? ''}</span>
+      </div>
+    </div>
+  );
+}
+
+/** Values over time with the reference band shaded (oldest → newest, left to right). */
+export function TrendChart({ points, range, unit }: { points: TrendPoint[]; range: NumRange | null; unit: string | null }) {
+  const pts = points.filter((p) => p.value_numeric != null).slice().reverse();
+  if (pts.length < 2) return null;
+  const W = 320, H = 120, P = { l: 34, r: 12, t: 10, b: 22 };
+  const vals = pts.map((p) => Number(p.value_numeric));
+  const [lo, hi] = chartDomain(vals, range);
+  const x = (i: number) => P.l + (i * (W - P.l - P.r)) / (pts.length - 1);
+  const y = (v: number) => P.t + (1 - (v - lo) / (hi - lo)) * (H - P.t - P.b);
+  const bandTop = y(range?.high ?? hi), bandBottom = y(range?.low ?? lo);
+  return (
+    <svg className="trend-chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`تطور النتيجة: ${vals.join('، ')} ${unit ?? ''}`} style={{ direction: 'ltr' }}>
+      {range && <rect x={P.l} y={bandTop} width={W - P.l - P.r} height={Math.max(0, bandBottom - bandTop)} className="trend-band" />}
+      {[lo, hi].map((v, i) => <text key={i} x={P.l - 6} y={y(v) + 4} className="trend-axis" textAnchor="end">{Math.round(v * 10) / 10}</text>)}
+      <polyline points={pts.map((p, i) => `${x(i)},${y(Number(p.value_numeric))}`).join(' ')} className="trend-line" />
+      {pts.map((p, i) => {
+        const pos = range ? rangePosition(Number(p.value_numeric), range) : 'within';
+        return (
+          <g key={i}>
+            <circle cx={x(i)} cy={y(Number(p.value_numeric))} r={4.5} className={`trend-dot pos-${pos}`} />
+            <text x={x(i)} y={y(Number(p.value_numeric)) - 8} className="trend-val" textAnchor="middle">{Number(p.value_numeric)}</text>
+            <text x={x(i)} y={H - 6} className="trend-axis" textAnchor="middle">{formatDateShort(p.released_at)}</text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+/** Every test once as a card: current value against its reference range, the trend, the previous value and the report. */
 export function LabTrends({ trends, linkBase }: { trends: Trend[]; linkBase?: string }) {
   const [open, setOpen] = useState<string | null>(null);
   if (!trends.length) return <EmptyState icon={<FlaskConical />} title="لا توجد نتائج تحاليل منشورة بعد" />;
   return (
-    <div className="table-wrap" role="region" aria-label="التحاليل" tabIndex={0}>
-      <table className="table">
-        <thead><tr><th>التحليل</th><th>الحالي</th><th>السابق</th><th>التغيّر</th><th>المرجع</th><th><span className="sr-only">السجل</span></th></tr></thead>
-        <tbody>
-          {trends.map((t) => {
-            const [cur, prev] = t.points;
-            const dir = cur?.value_numeric != null && prev?.value_numeric != null ? Math.sign(Number(cur.value_numeric) - Number(prev.value_numeric)) : null;
-            return (
-              <Fragment key={t.key}>
-                <tr>
-                  <td><strong>{t.name}</strong></td>
-                  <td><span className="num" style={{ fontWeight: 700 }}><Ltr>{fmtVal(cur)} {t.unit ?? ''}</Ltr></span>
-                    {cur.flag && <> <Badge tone={cur.flag === 'critical' ? 'danger' : 'warning'}>{labFlag[cur.flag] ?? cur.flag}</Badge></>}
-                    <div className="small muted">{formatDate(cur.released_at)}</div></td>
-                  <td>{prev ? <><span className="num"><Ltr>{fmtVal(prev)}</Ltr></span><div className="small muted">{formatDate(prev.released_at)}</div></> : <span className="small muted">—</span>}</td>
-                  <td aria-label={dir === 1 ? 'ارتفع' : dir === -1 ? 'انخفض' : 'بدون تغيّر'}>
-                    {dir === 1 ? <span className="row small" style={{ gap: 4 }}><ArrowUp size={16} aria-hidden />ارتفع</span>
-                      : dir === -1 ? <span className="row small" style={{ gap: 4 }}><ArrowDown size={16} aria-hidden />انخفض</span>
-                      : dir === 0 ? <span className="row small" style={{ gap: 4 }}><Minus size={16} aria-hidden />ثابت</span> : <span className="small muted">—</span>}</td>
-                  <td className="small"><Ltr>{t.reference_range ?? '—'}</Ltr></td>
-                  <td>{t.points.length > 1 && <button className="btn btn-ghost btn-sm" aria-expanded={open === t.key} onClick={() => setOpen(open === t.key ? null : t.key)}>السجل ({t.points.length})</button>}</td>
-                </tr>
-                {open === t.key && (
-                  <tr><td colSpan={6} style={{ background: 'var(--c-surface-sunken)' }}>
-                    <div className="stack-sm">
-                      {t.points.map((p, i) => (
-                        <div key={i} className="row-between small">
-                          <span><span className="num" style={{ fontWeight: 600 }}><Ltr>{fmtVal(p)} {t.unit ?? ''}</Ltr></span>{p.flag ? ` · ${labFlag[p.flag] ?? p.flag}` : ''}</span>
-                          <span className="muted">{formatDate(p.released_at)} · {p.lab}{linkBase && <> · <Link to={`${linkBase}${p.order_id}`}>التقرير</Link></>}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </td></tr>
+    <div className="stack-sm">
+      <div className="lab-cards">
+        {trends.map((t) => {
+          const [cur, prev] = t.points;
+          const range = parseRange(t.reference_range);
+          const dir = cur?.value_numeric != null && prev?.value_numeric != null ? Math.sign(Number(cur.value_numeric) - Number(prev.value_numeric)) : null;
+          return (
+            <article key={t.key} className="lab-card">
+              <header className="row-between">
+                <strong>{t.name}</strong>
+                {cur.flag && <Badge tone={cur.flag === 'critical' ? 'danger' : 'warning'}>{labFlag[cur.flag] ?? cur.flag}</Badge>}
+              </header>
+              <div className="row-between" style={{ alignItems: 'baseline' }}>
+                <span className="lab-value"><Ltr>{fmtVal(cur)}</Ltr> <span className="small muted"><Ltr>{t.unit ?? ''}</Ltr></span></span>
+                {prev && (
+                  <span className="small muted row" style={{ gap: 4 }}>
+                    {dir === 1 ? <ArrowUp size={14} aria-label="ارتفع" /> : dir === -1 ? <ArrowDown size={14} aria-label="انخفض" /> : <Minus size={14} aria-label="ثابت" />}
+                    السابق <Ltr>{fmtVal(prev)}</Ltr> ({formatDateShort(prev.released_at)})
+                  </span>
                 )}
-              </Fragment>
-            );
-          })}
-        </tbody>
-      </table>
-      <p className="small muted">«ارتفع/انخفض» مقارنة رقمية بين آخر نتيجتين فقط، وليست تفسيراً طبياً.</p>
+              </div>
+              {range && cur.value_numeric != null ? <RangeBar value={Number(cur.value_numeric)} range={range} />
+                : <span className="small muted">المرجع: <Ltr>{t.reference_range ?? '—'}</Ltr></span>}
+              <TrendChart points={t.points} range={range} unit={t.unit} />
+              <span className="small muted">{formatDate(cur.released_at)} · {cur.lab}</span>
+              <div className="row" style={{ gap: 'var(--s-2)' }}>
+                <Link className="btn btn-secondary btn-sm" to={`/print/lab/${cur.order_id}`}><FileText size={14} aria-hidden />تقرير PDF</Link>
+                {t.points.length > 1 && <button className="btn btn-ghost btn-sm" aria-expanded={open === t.key} onClick={() => setOpen(open === t.key ? null : t.key)}><History size={14} aria-hidden />كل النتائج ({t.points.length})</button>}
+              </div>
+              {open === t.key && (
+                <div className="stack-sm">
+                  {t.points.map((p, i) => (
+                    <div key={i} className="row-between small">
+                      <span><span className="num" style={{ fontWeight: 600 }}><Ltr>{fmtVal(p)} {t.unit ?? ''}</Ltr></span>{p.flag ? ` · ${labFlag[p.flag] ?? p.flag}` : ''}</span>
+                      <span className="muted">{formatDate(p.released_at)} · <Link to={`/print/lab/${p.order_id}`}>PDF</Link>{linkBase && <> · <Link to={`${linkBase}${p.order_id}`}>التفاصيل</Link></>}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </article>
+          );
+        })}
+      </div>
+      <p className="small muted">الشريط يبيّن موقع النتيجة من المجال المرجعي الذي أصدره المختبر، والرسم يبيّن تطورها. هذه مقارنة رقمية وليست تفسيراً طبياً.</p>
     </div>
+  );
+}
+
+interface PlanAdherence { id: string; display_name: string; status: string; source: string; interval_hours: number | null; times: string[] | null;
+  due: number; taken: number; skipped: number; missed: number; last_taken_at: string | null; recent: { at: string; state: 'taken' | 'skipped' | 'missed' | 'pending' }[] }
+
+/** Taken / skipped / missed doses over the last 14 days, as the patient recorded them on the phone. */
+export function Adherence({ patientId }: { patientId: string }) {
+  const a = useAsync(async () => (await unwrap(supabase.rpc('medication_adherence', { p_patient_id: patientId }))) as unknown as PlanAdherence[], [patientId]);
+  if (!a.data?.length) return null;
+  return (
+    <section className="stack-sm">
+      <h3 className="section-title">الالتزام بالأدوية (آخر 14 يوماً)</h3>
+      {a.data.map((p) => {
+        const pct = p.due ? Math.round((p.taken / p.due) * 100) : null;
+        return (
+          <div key={p.id} className="card stack-sm" style={{ padding: 'var(--s-3)' }}>
+            <div className="row-between small">
+              <span><bdi dir="auto" style={{ fontWeight: 700 }}>{p.display_name}</bdi>{p.interval_hours ? ` · كل ${p.interval_hours} ساعات` : ''}{p.times?.length ? ` · ${p.times.join('، ')}` : ''}</span>
+              {p.status !== 'active' ? <Badge tone="neutral">{p.status === 'paused' ? 'موقوف مؤقتاً' : 'منتهٍ'}</Badge> : null}
+            </div>
+            <div className="row small" style={{ gap: 'var(--s-3)', flexWrap: 'wrap' }}>
+              <span>أخذ: <strong>{p.taken}</strong> من {p.due}{pct != null ? ` (${pct}٪)` : ''}</span>
+              <span>تخطى: <strong>{p.skipped}</strong></span>
+              <span style={{ color: p.missed ? 'var(--c-warning)' : undefined }}>لم يسجّل: <strong>{p.missed}</strong></span>
+              {p.last_taken_at && <span className="muted">آخر جرعة: {formatDate(p.last_taken_at)}</span>}
+            </div>
+            {p.recent.length > 0 && (
+              <div className="dose-strip" aria-label="آخر 7 أيام">
+                {p.recent.map((d, i) => <span key={i} className={`dose-dot dose-${d.state}`} title={`${formatDate(d.at)} — ${d.state === 'taken' ? 'أخذها' : d.state === 'skipped' ? 'تخطاها' : d.state === 'missed' ? 'لم يسجّل' : 'قادمة'}`} />)}
+              </div>
+            )}
+          </div>
+        );
+      })}
+      <p className="small muted">كما سجّلها المريض على هاتفه («أخذت» / «تخطي»)؛ ليست تأكيداً طبياً على تناول الدواء.</p>
+    </section>
   );
 }

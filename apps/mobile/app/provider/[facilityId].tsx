@@ -1,15 +1,17 @@
-import { Linking, View } from 'react-native';
+import { Image, Linking, Pressable, ScrollView, View } from 'react-native';
 import { Stack as RouterStack, router, useLocalSearchParams } from 'expo-router';
 import { BadgeCheck, CalendarPlus, Clock, ExternalLink, MapPin, Phone, ShieldAlert, Wallet } from 'lucide-react-native';
 import { formatMoney, weekdayLabel } from '@app/shared';
 import { groupHours, useProviderProfile } from '../../src/lib/provider';
 import { bookHref } from '../../src/lib/routes';
+import { mediaUrl, useProviderMedia, type MediaItem } from '../../src/lib/media';
 import { Alert, Avatar, Badge, Button, Card, Divider, EmptyState, ErrorState, Loading, Ltr, Row, Screen, SectionTitle, Stack, Summary, Text } from '../../src/components/ui';
 import { color, space } from '../../src/theme';
 
 export default function ProviderScreen() {
   const { facilityId, practitioner } = useLocalSearchParams<{ facilityId: string; practitioner?: string }>();
   const profile = useProviderProfile(facilityId, practitioner);
+  const media = useProviderMedia(facilityId, practitioner);
 
   if (profile.status === 'loading' && !profile.data) return <Screen><Loading /></Screen>;
   if (profile.status === 'error') return <Screen><Card><ErrorState error={profile.error} onRetry={profile.reload} /></Card></Screen>;
@@ -33,7 +35,7 @@ export default function ProviderScreen() {
       <RouterStack.Screen options={{ title: name }} />
       <Card>
         <Row gap={space[3]} style={{ alignItems: 'flex-start' }}>
-          <Avatar name={name} large />
+          <Avatar name={name} large src={mediaUrl(media.data?.photo)} />
           <Stack gap={4} style={{ flex: 1 }}>
             <Text variant="h3">{name}</Text>
             {p.practitioner && <Text variant="small" muted>{[p.practitioner.title, p.practitioner.specialty].filter(Boolean).join(' · ')}</Text>}
@@ -46,6 +48,19 @@ export default function ProviderScreen() {
         </Row>
         <Text variant="body">{p.practitioner?.bio ?? p.facility.description ?? 'لا توجد نبذة منشورة.'}</Text>
       </Card>
+
+      {!!media.data?.clinic_photos.length && (
+        <Card>
+          <SectionTitle>{p.practitioner ? 'صور العيادة' : 'صور المكان'}</SectionTitle>
+          <PhotoStrip items={media.data.clinic_photos} height={150} />
+        </Card>
+      )}
+      {!!media.data?.certificates.length && (
+        <Card>
+          <SectionTitle>الشهادات</SectionTitle>
+          <PhotoStrip items={media.data.certificates} height={190} captions />
+        </Card>
+      )}
 
       <Card>
         <SectionTitle>الخدمات</SectionTitle>
@@ -90,5 +105,20 @@ export default function ProviderScreen() {
         )}
       </Card>
     </Screen>
+  );
+}
+
+/** Horizontal strip of public images; tapping opens the full image. */
+function PhotoStrip({ items, height, captions }: { items: MediaItem[]; height: number; captions?: boolean }) {
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space[2] }}>
+      {items.map((m) => (
+        <Pressable key={m.id} onPress={() => Linking.openURL(mediaUrl(m.path)!)} accessibilityRole="imagebutton" accessibilityLabel={m.caption ?? 'فتح الصورة'}
+                   style={{ width: height * 1.3, gap: 4 }}>
+          <Image source={{ uri: mediaUrl(m.path)! }} style={{ width: '100%', height, borderRadius: 10, backgroundColor: color.canvas }} resizeMode="cover" />
+          {captions && m.caption ? <Text variant="small" numberOfLines={2}>{m.caption}</Text> : null}
+        </Pressable>
+      ))}
+    </ScrollView>
   );
 }

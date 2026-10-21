@@ -37,6 +37,20 @@ export type Database = {
                   Relationships: [
                     
                   ]
+                },"ai_usage": {
+                  Row: {
+                    "created_at": string,"feature": string,"id": number,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"feature"?: string,"id"?: never,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"feature"?: string,"id"?: never,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"allergies": {
                   Row: {
                     "created_at": string,"facility_id": string | null,"id": string,"patient_id": string,"reaction": string | null,"recorded_by": string,"recorded_by_practitioner_id": string | null,"severity": string | null,"source": string,"status": string,"substance": string,"updated_at": string,"version": number
@@ -1015,14 +1029,14 @@ isOneToOne: false
                   ]
                 },"medication_plans": {
                   Row: {
-                    "as_needed": boolean,"consent_at": string,"created_at": string,"created_by": string,"display_name": string,"end_date": string | null,"id": string,"instructions": string | null,"line_no": number,"patient_id": string,"prescription_id": string,"source": string,"start_date": string,"status": string,"status_reason": string | null,"times_local": (string)[],"timezone": string,"updated_at": string,"version": number,"version_id": string
+                    "as_needed": boolean,"consent_at": string,"created_at": string,"created_by": string,"display_name": string,"end_date": string | null,"id": string,"instructions": string | null,"interval_hours": number | null,"line_no": number | null,"patient_id": string,"prescription_id": string | null,"reported_medication_id": string | null,"source": string,"start_date": string,"status": string,"status_reason": string | null,"times_local": (string)[],"timezone": string,"updated_at": string,"version": number,"version_id": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "as_needed"?: boolean,"consent_at": string,"created_at"?: string,"created_by": string,"display_name": string,"end_date"?: string | null,"id"?: string,"instructions"?: string | null,"line_no": number,"patient_id": string,"prescription_id": string,"source": string,"start_date": string,"status"?: string,"status_reason"?: string | null,"times_local"?: (string)[],"timezone"?: string,"updated_at"?: string,"version"?: number,"version_id": string
+                    "as_needed"?: boolean,"consent_at": string,"created_at"?: string,"created_by": string,"display_name": string,"end_date"?: string | null,"id"?: string,"instructions"?: string | null,"interval_hours"?: number | null,"line_no"?: number | null,"patient_id": string,"prescription_id"?: string | null,"reported_medication_id"?: string | null,"source": string,"start_date": string,"status"?: string,"status_reason"?: string | null,"times_local"?: (string)[],"timezone"?: string,"updated_at"?: string,"version"?: number,"version_id"?: string | null
                   }
                   Update: {
-                    "as_needed"?: boolean,"consent_at"?: string,"created_at"?: string,"created_by"?: string,"display_name"?: string,"end_date"?: string | null,"id"?: string,"instructions"?: string | null,"line_no"?: number,"patient_id"?: string,"prescription_id"?: string,"source"?: string,"start_date"?: string,"status"?: string,"status_reason"?: string | null,"times_local"?: (string)[],"timezone"?: string,"updated_at"?: string,"version"?: number,"version_id"?: string
+                    "as_needed"?: boolean,"consent_at"?: string,"created_at"?: string,"created_by"?: string,"display_name"?: string,"end_date"?: string | null,"id"?: string,"instructions"?: string | null,"interval_hours"?: number | null,"line_no"?: number | null,"patient_id"?: string,"prescription_id"?: string | null,"reported_medication_id"?: string | null,"source"?: string,"start_date"?: string,"status"?: string,"status_reason"?: string | null,"times_local"?: (string)[],"timezone"?: string,"updated_at"?: string,"version"?: number,"version_id"?: string | null
                   }
                   Relationships: [
                     {
@@ -1042,6 +1056,12 @@ isOneToOne: false
       columns: ["prescription_id"]
 isOneToOne: false
       referencedRelation: "prescriptions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "medication_plans_reported_medication_id_fkey"
+      columns: ["reported_medication_id"]
+isOneToOne: false
+      referencedRelation: "patient_reported_medications"
       referencedColumns: ["id"]
     },{
       foreignKeyName: "medication_plans_version_id_fkey"
@@ -1665,6 +1685,38 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"provider_media": {
+                  Row: {
+                    "caption": string | null,"created_at": string,"facility_id": string | null,"id": string,"kind": string,"practitioner_id": string | null,"removed_at": string | null,"storage_path": string,"uploaded_by": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "caption"?: string | null,"created_at"?: string,"facility_id"?: string | null,"id"?: string,"kind": string,"practitioner_id"?: string | null,"removed_at"?: string | null,"storage_path": string,"uploaded_by": string
+                  }
+                  Update: {
+                    "caption"?: string | null,"created_at"?: string,"facility_id"?: string | null,"id"?: string,"kind"?: string,"practitioner_id"?: string | null,"removed_at"?: string | null,"storage_path"?: string,"uploaded_by"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "provider_media_facility_id_fkey"
+      columns: ["facility_id"]
+isOneToOne: false
+      referencedRelation: "facilities"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "provider_media_practitioner_id_fkey"
+      columns: ["practitioner_id"]
+isOneToOne: false
+      referencedRelation: "practitioner_profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "provider_media_uploaded_by_fkey"
+      columns: ["uploaded_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"queue_entries": {
                   Row: {
                     "appointment_id": string | null,"arrived_at": string,"called_at": string | null,"created_at": string,"created_by": string | null,"facility_id": string,"finished_at": string | null,"id": string,"idempotency_key": string | null,"kind": string,"patient_id": string,"practitioner_id": string | null,"priority": number,"priority_reason": string | null,"priority_set_by": string | null,"service_date": string,"started_at": string | null,"status": Database["public"]['Enums']["queue_status"],"updated_at": string,"version": number
@@ -2132,6 +2184,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"add_provider_media":
+{ Args: { "p_caption"?: string,"p_kind": string,"p_storage_path": string,"p_target_id": string }; Returns: string
+                           },
 "add_reported_medication":
 { Args: { "p_dose_text"?: string,"p_name": string,"p_patient_id": string,"p_started_on"?: string }; Returns: string
                            },
@@ -2298,6 +2353,12 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"ai_provider_key":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
+"ai_triage_begin":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
 "amend_clinical_note":
 { Args: { "p_fields": Json,"p_note_id": string,"p_reason": string }; Returns: {
               "assessment": string | null,
@@ -2570,9 +2631,11 @@ isOneToOne: false
 "end_date": string | null,
 "id": string,
 "instructions": string | null,
-"line_no": number,
+"interval_hours": number | null,
+"line_no": number | null,
 "patient_id": string,
-"prescription_id": string,
+"prescription_id": string | null,
+"reported_medication_id": string | null,
 "source": string,
 "start_date": string,
 "status": string,
@@ -2581,7 +2644,38 @@ isOneToOne: false
 "timezone": string,
 "updated_at": string,
 "version": number,
-"version_id": string
+"version_id": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "medication_plans"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"create_own_medication_plan":
+{ Args: { "p_days"?: number,"p_instructions"?: string,"p_interval_hours"?: number,"p_name": string,"p_patient_id": string,"p_reported_medication_id"?: string,"p_start_date"?: string,"p_times": (string)[] }; Returns: {
+              "as_needed": boolean,
+"consent_at": string,
+"created_at": string,
+"created_by": string,
+"display_name": string,
+"end_date": string | null,
+"id": string,
+"instructions": string | null,
+"interval_hours": number | null,
+"line_no": number | null,
+"patient_id": string,
+"prescription_id": string | null,
+"reported_medication_id": string | null,
+"source": string,
+"start_date": string,
+"status": string,
+"status_reason": string | null,
+"times_local": (string)[],
+"timezone": string,
+"updated_at": string,
+"version": number,
+"version_id": string | null
             }
                           SetofOptions: {
         from: "*"
@@ -2771,6 +2865,9 @@ isOneToOne: false
               "birth_year": number,"full_name": string,"has_account": boolean,"is_provisional": boolean,"known_here": boolean,"patient_id": string,"phone_masked": string,"public_code": string,"sex": Database["public"]['Enums']["patient_sex"]
             }[]
                            },
+"medication_adherence":
+{ Args: { "p_days"?: number,"p_patient_id": string }; Returns: Json
+                           },
 "merge_patients":
 { Args: { "p_facility_id": string,"p_reason": string,"p_source": string,"p_target": string }; Returns: undefined
                            },
@@ -2955,6 +3052,9 @@ isOneToOne: false
 "prescription_document":
 { Args: { "p_prescription_id": string }; Returns: Json
                            },
+"provider_media":
+{ Args: { "p_facility_id": string,"p_practitioner_id"?: string }; Returns: Json
+                           },
 "receive_stock":
 { Args: { "p_batch_no": string,"p_expiry_date": string,"p_idempotency_key": string,"p_packs": number,"p_product_id": string,"p_supplier_name"?: string,"p_unit_cost_minor": number }; Returns: {
               "batch_no": string,
@@ -3070,6 +3170,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"remove_provider_media":
+{ Args: { "p_media_id": string }; Returns: undefined
+                           },
 "request_attachment_upload":
 { Args: { "p_file_name": string,"p_kind": string,"p_mime": string,"p_ref_id": string,"p_size": number }; Returns: Json
                            },
