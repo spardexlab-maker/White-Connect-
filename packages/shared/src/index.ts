@@ -10,3 +10,4 @@ export * from './labRange';
 export * from './medTimes';
 export * from './aiTriage';
 export * from './dateParts';
+export * from './aiChat';

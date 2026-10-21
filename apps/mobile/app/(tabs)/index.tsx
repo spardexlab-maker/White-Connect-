@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import * as Location from 'expo-location';
 import {
   Baby, BadgeCheck, Bone, Brain, CalendarClock, Clock, Droplets, Ear, Eye, FlaskConical, Flower2, HeartHandshake, HeartPulse, LocateFixed, MapPin,
@@ -74,6 +74,11 @@ export default function Home() {
     setKind(k); setSpecialty(specialtyId); setQuery('');
     if (geo !== 'ok' && geo !== 'asking') void askLocation();
   };
+  // the assistant's «أقرب أطباء …» / «أقرب المختبرات» buttons land here with filters
+  const params = useLocalSearchParams<{ kind?: string; specialty?: string }>();
+  useEffect(() => {
+    if (params.kind === 'doctor' || params.kind === 'laboratory') showNearest(params.kind, params.specialty ?? null);
+  }, [params.kind, params.specialty]); // eslint-disable-line react-hooks/exhaustive-deps
   // nearest first: ask for the location as soon as the home screen opens (once)
   useEffect(() => { void askLocation(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -113,7 +118,7 @@ export default function Home() {
         </View>
       </FadeIn>
 
-      {session && <AiAssist onDoctors={(id) => showNearest('doctor', id)} onLabs={() => showNearest('laboratory', null)} />}
+      <AiAssist />
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space[2] }}>
         <Chip label={geo === 'ok' ? 'الأقرب إليك' : geo === 'asking' ? 'جارٍ التحديد…' : 'استخدم موقعي'} selected={geo === 'ok'}

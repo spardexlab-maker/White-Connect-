@@ -3,8 +3,8 @@
     "name": "منصة الرعاية",
     "slug": "white-connect",
     "scheme": "whiteconnect",
-    "version": "0.5.0",
-    "runtimeVersion": "1",
+    "version": "0.6.0",
+    "runtimeVersion": "2",
     "updates": {
       "url": "https://utuwjykgubsqqescpiwz.supabase.co/functions/v1/app-update",
       "enabled": true,
@@ -23,7 +23,8 @@
       "bundleIdentifier": "com.whiteconnect.patient",
       "supportsTablet": false,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "يُستخدم الموقع اختيارياً لترتيب الأطباء والمختبرات حسب القرب. الحجز لا يحتاج الموقع."
+        "NSLocationWhenInUseUsageDescription": "يُستخدم الموقع اختيارياً لترتيب الأطباء والمختبرات حسب القرب. الحجز لا يحتاج الموقع.",
+        "NSMicrophoneUsageDescription": "يُستخدم المايكروفون فقط عندما تضغط زر المايك للتحدث مع المساعد الذكي، ولا يُحفظ التسجيل."
       }
     },
     "android": {
@@ -35,15 +36,15 @@
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "POST_NOTIFICATIONS",
-        "REQUEST_INSTALL_PACKAGES"
+        "REQUEST_INSTALL_PACKAGES",
+        "RECORD_AUDIO"
       ],
       "blockedPermissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_BACKGROUND_LOCATION",
-        "RECORD_AUDIO",
         "READ_CONTACTS"
       ],
-      "versionCode": 8
+      "versionCode": 9
     },
     "web": {
       "output": "single",
@@ -83,7 +84,13 @@
         }
       ],
       "expo-sharing",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "يُستخدم المايكروفون فقط عندما تضغط زر المايك للتحدث مع المساعد الذكي، ولا يُحفظ التسجيل."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": false

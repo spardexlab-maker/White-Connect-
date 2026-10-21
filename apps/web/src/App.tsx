@@ -18,6 +18,7 @@ import { Meds } from './pages/patient/Meds';
 import { LabOrderPage } from './pages/LabOrderPage';
 import { PrintLab } from './pages/PrintLab';
 import { MyHealth } from './pages/patient/Health';
+import { AssistantPage } from './pages/patient/Assistant';
 import { VerifyRx } from './pages/VerifyRx';
 
 // Professional and admin areas are code-split so patients on mobile do not download them.
@@ -92,6 +93,7 @@ export function App() {
                 <Route path="rx/:id" element={<PatientRx />} />
                 <Route path="meds" element={<Meds />} />
                 <Route path="health" element={<MyHealth />} />
+                <Route path="assistant" element={<AssistantPage />} />
                 <Route path="labs/:orderId" element={<LabOrderPage back="/patient/journey" />} />
               </Route>
 

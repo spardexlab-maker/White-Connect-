@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   Baby, BadgeCheck, Bone, Brain, CalendarClock, Clock, Ear, Eye, FlaskConical, HeartHandshake, HeartPulse, LocateFixed, MapPin,
   QrCode, Search, SearchX, Smile, Sparkles, Stethoscope, Syringe, Users, Droplets, Flower2,
@@ -80,6 +80,13 @@ export function PatientHome() {
     requestAnimationFrame(() => document.getElementById('results-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   };
 
+  // the assistant's «أقرب أطباء …» / «أقرب المختبرات» buttons land here with filters
+  const [params] = useSearchParams();
+  useEffect(() => {
+    const k = params.get('kind');
+    if (k === 'doctor' || k === 'laboratory') showNearest(k, params.get('specialty'));
+  }, [params]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <div className="stack-lg">
       <section className="hero stack reveal" aria-labelledby="home-title">
@@ -118,7 +125,7 @@ export function PatientHome() {
         {geoState === 'denied' && <span className="small" style={{ color: '#FDE7C2' }}>لم يُمنح إذن الموقع — اختر المدينة يدوياً، والحجز لا يحتاج GPS.</span>}
       </section>
 
-      <AiAssist signedIn={!!session} onDoctors={(id) => showNearest('doctor', id)} onLabs={() => showNearest('laboratory', null)} />
+      <AiAssist />
 
       {kind === 'doctor' && (
         <section aria-label="التخصصات" className="stack-sm">
