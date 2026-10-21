@@ -1,0 +1,72 @@
+# Builds an UNSIGNED iPhone app (.ipa) for personal testing on one device.
+# It is not published anywhere: download it from the run's artifacts, then
+# sign + install it with a free Apple ID using Sideloadly or AltStore on a
+# Windows/Mac computer (the app then runs for 7 days and can be re-signed).
+# Runs when this file changes, or by hand from the Actions tab.
+name: iOS test build (unsigned)
+
+on:
+  push:
+    branches: [claude/friendly-lamport-sjzzos]
+    paths: ['.github/workflows/ios-unsigned.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: ios-unsigned
+  cancel-in-progress: true
+
+jobs:
+  ipa:
+    runs-on: macos-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --filter @app/mobile...
+
+      - name: Generate native project
+        working-directory: apps/mobile
+        run: |
+          cp .env.example .env
+          npx expo prebuild -p ios --no-install
+          # a free Apple ID cannot sign push-notification entitlements;
+          # medicine reminders are local notifications and do not need them
+          for f in ios/*/*.entitlements; do
+            /usr/libexec/PlistBuddy -c 'Delete :aps-environment' "$f" 2>/dev/null || true
+          done
+
+      - name: Install pods
+        working-directory: apps/mobile/ios
+        run: pod install
+
+      - name: Build (no code signing)
+        working-directory: apps/mobile/ios
+        env:
+          NODE_ENV: production
+        run: |
+          WS=$(ls -d *.xcworkspace | head -1)
+          SCHEME=$(basename "$WS" .xcworkspace)
+          xcodebuild -workspace "$WS" -scheme "$SCHEME" -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" | tail -40
+
+      - name: Package .ipa
+        working-directory: apps/mobile/ios
+        run: |
+          VERSION=$(node -p "require('../app.json').expo.version")
+          mkdir -p Payload
+          cp -R build/Build/Products/Release-iphoneos/*.app Payload/
+          zip -qry "WhiteConnect-$VERSION-unsigned.ipa" Payload
+          ls -lh *.ipa
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WhiteConnect-ios-unsigned
+          path: apps/mobile/ios/*.ipa
+          retention-days: 30
