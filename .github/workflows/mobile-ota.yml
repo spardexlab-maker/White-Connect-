@@ -1,0 +1,71 @@
+# Publishes an over-the-air update (iOS + Android) on every push that changes
+# the mobile app or shared code. Installed apps with the same runtimeVersion
+# pick it up on their next launch — no reinstall. Files go to the public
+# prerelease `ota-<runtimeVersion>`; the edge function `app-update` serves the
+# manifests. Native changes need a new runtimeVersion + APK/IPA instead.
+name: Mobile OTA update
+
+on:
+  push:
+    branches: [claude/friendly-lamport-sjzzos]
+    paths: ['apps/mobile/**', 'packages/shared/**', 'scripts/ota-manifest.mjs', '.github/workflows/mobile-ota.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mobile-ota
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --filter @app/mobile...
+
+      - name: Export bundles
+        working-directory: apps/mobile
+        env:
+          NODE_ENV: production
+        run: |
+          cp .env.example .env
+          npx expo export -p ios -p android --output-dir dist-ota
+          npx expo config --type public --json > expo-config.json
+
+      - name: Build manifests
+        id: m
+        run: |
+          RT=$(node -p "require('./apps/mobile/app.json').expo.runtimeVersion")
+          echo "rt=$RT" >> "$GITHUB_OUTPUT"
+          node scripts/ota-manifest.mjs apps/mobile/dist-ota ota-out "$RT" \
+            "https://github.com/${{ github.repository }}/releases/download/ota-$RT" apps/mobile/expo-config.json
+
+      - name: Upload to release ota-${{ steps.m.outputs.rt }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ota-${{ steps.m.outputs.rt }}
+        run: |
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --prerelease --target "$GITHUB_SHA" \
+            --title "تحديثات التطبيق التلقائية (runtime ${{ steps.m.outputs.rt }})" \
+            --notes "ملفات التحديث التلقائي لتطبيق الموبايل — لا تحذف هذا الإصدار."
+          existing=$(gh release view "$TAG" --json assets -q '.assets[].name')
+          new=()
+          for f in ota-out/*; do
+            n=$(basename "$f")
+            case "$n" in manifest-*) continue ;; esac
+            grep -qxF "$n" <<< "$existing" || new+=("$f")
+          done
+          if [ ${#new[@]} -gt 0 ]; then gh release upload "$TAG" "${new[@]}"; fi
+          # manifests last, so every file they point to is already there
+          gh release upload "$TAG" ota-out/manifest-ios.json ota-out/manifest-android.json --clobber
+          echo "uploaded ${#new[@]} new files"; cat ota-out/manifest-*.json | head -c 300; echo

@@ -1,15 +1,18 @@
-# Builds an UNSIGNED iPhone app (.ipa) for personal testing on one device.
-# It is not published anywhere: download it from the run's artifacts, then
-# sign + install it with a free Apple ID using Sideloadly or AltStore on a
-# Windows/Mac computer (the app then runs for 7 days and can be re-signed).
-# Runs when this file changes, or by hand from the Actions tab.
+# Builds an UNSIGNED iPhone app (.ipa) for personal testing on one device and
+# attaches it to the prerelease `ios-v<version>`. Sign + install it with a
+# free Apple ID using Sideloadly (Windows/Mac); it runs for 7 days and can be
+# re-signed. Later JS changes arrive over the air (mobile-ota.yml), so a new
+# IPA is only needed when the app version / runtimeVersion changes.
 name: iOS test build (unsigned)
 
 on:
   push:
     branches: [claude/friendly-lamport-sjzzos]
-    paths: ['.github/workflows/ios-unsigned.yml']
+    paths: ['apps/mobile/app.json', '.github/workflows/ios-unsigned.yml']
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 concurrency:
   group: ios-unsigned
@@ -21,6 +24,16 @@ jobs:
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
+
+      - name: Read app version
+        id: v
+        run: |
+          VERSION=$(node -p "require('./apps/mobile/app.json').expo.version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if gh release view "ios-v$VERSION" >/dev/null 2>&1; then echo "exists=true" >> "$GITHUB_OUTPUT"; else echo "exists=false" >> "$GITHUB_OUTPUT"; fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -70,3 +83,12 @@ jobs:
           name: WhiteConnect-ios-unsigned
           path: apps/mobile/ios/*.ipa
           retention-days: 30
+
+      - name: Publish ios-v${{ steps.v.outputs.version }}
+        if: steps.v.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "ios-v${{ steps.v.outputs.version }}" apps/mobile/ios/*.ipa --prerelease --target "$GITHUB_SHA" \
+            --title "iPhone ${{ steps.v.outputs.version }} (تجريبي، غير موقّع)" \
+            --notes "للتجربة على آيفون واحد: ثبّته عبر Sideloadly بحساب Apple ID مجاني. التحديثات اللاحقة تصل تلقائياً داخل التطبيق."

@@ -281,3 +281,11 @@
 .ai-ico { width: 36px; height: 36px; border-radius: 12px; display: grid; place-items: center; color: #fff; background: linear-gradient(135deg, #0F766E, #123B5D); flex: none; }
 .ai-box textarea { resize: vertical; min-height: 64px; }
 .ai-result { border-top: 1px dashed var(--c-border); padding-top: var(--s-3); }
+
+/* Google sign-in (Google's neutral white button) */
+.btn-google { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; border-radius: 12px; border: 1px solid #DADCE0;
+  background: #fff; color: #1F1F1F; font-weight: 600; font-size: 15px; cursor: pointer; width: 100%; }
+.btn-google:hover { background: #F8F9FA; }
+.btn-google:disabled { opacity: .7; cursor: progress; }
+.or-sep { display: flex; align-items: center; gap: 10px; color: var(--c-muted, #64748B); font-size: 13px; }
+.or-sep::before, .or-sep::after { content: ''; flex: 1; height: 1px; background: var(--c-border); }

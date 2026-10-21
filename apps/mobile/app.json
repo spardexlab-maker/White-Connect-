@@ -3,7 +3,14 @@
     "name": "منصة الرعاية",
     "slug": "white-connect",
     "scheme": "whiteconnect",
-    "version": "0.4.0",
+    "version": "0.5.0",
+    "runtimeVersion": "1",
+    "updates": {
+      "url": "https://utuwjykgubsqqescpiwz.supabase.co/functions/v1/app-update",
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
+    },
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "icon": "./assets/icon.png",
@@ -36,7 +43,7 @@
         "RECORD_AUDIO",
         "READ_CONTACTS"
       ],
-      "versionCode": 7
+      "versionCode": 8
     },
     "web": {
       "output": "single",
@@ -75,7 +82,8 @@
           "locationWhenInUsePermission": "يُستخدم الموقع اختيارياً لترتيب الأطباء والمختبرات حسب القرب. الحجز لا يحتاج الموقع."
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": false
