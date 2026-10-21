@@ -7,6 +7,7 @@ import { supabase } from '../../src/lib/supabase';
 import { unwrap, useAsync } from '../../src/lib/useAsync';
 import { useAuth } from '../../src/lib/auth';
 import { SignInPrompt } from '../../src/components/SignInPrompt';
+import { BirthDateField } from '../../src/components/BirthDateField';
 import { Alert, Badge, Button, Card, Chip, EmptyState, ErrorState, Field, Loading, Ltr, Row, Screen, SectionTitle, Stack, Text } from '../../src/components/ui';
 import { color, radius, space } from '../../src/theme';
 import { RangeBar, TrendChart } from '../../src/components/LabCharts';
@@ -129,8 +130,7 @@ function Basics({ h, run }: { h: Health; run: (p: PromiseLike<{ error: unknown }
         </>
       ) : (
         <Stack gap={space[3]}>
-          <Field label="تاريخ الميلاد (سنة-شهر-يوم)" ltr placeholder="1985-05-01" value={f.birth} onChangeText={(v) => setF({ ...f, birth: v })}
-                 error={f.birth && !/^\d{4}-\d{2}-\d{2}$/.test(f.birth) ? 'اكتب التاريخ بهذا الشكل: 1985-05-01' : undefined} />
+          <BirthDateField value={f.birth} onChange={(v) => setF({ ...f, birth: v })} />
           <Row gap={space[3]}>
             <View style={{ flex: 1 }}><Field label="الطول (سم)" ltr keyboardType="decimal-pad" value={f.height} onChangeText={(v) => setF({ ...f, height: v })} /></View>
             <View style={{ flex: 1 }}><Field label="الوزن (كغ)" ltr keyboardType="decimal-pad" value={f.weight} onChangeText={(v) => setF({ ...f, weight: v })} /></View>

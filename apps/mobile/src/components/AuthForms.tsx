@@ -5,6 +5,7 @@ import { LogIn, UserPlus } from 'lucide-react-native';
 import { errorMessage, fieldErrors, patientRegistrationSchema } from '@app/shared';
 import { supabase } from '../lib/supabase';
 import { signInWithGoogle } from '../lib/googleAuth';
+import { BirthDateField } from './BirthDateField';
 import { Alert, Button, Chip, Field, Row, Segmented, Stack, Text } from './ui';
 import { color } from '../theme';
 
@@ -115,8 +116,8 @@ export function RegisterSelf({ onDone }: { onDone: () => void }) {
           <Chip label="ذكر" selected={form.sex === 'male'} onPress={() => setForm({ ...form, sex: form.sex === 'male' ? '' : 'male' })} />
         </Row>
       </Stack>
-      <Field label="تاريخ الميلاد" optional ltr placeholder="YYYY-MM-DD" value={form.birthDate} error={errors.birthDate} keyboardType="numbers-and-punctuation"
-             onChangeText={(v) => setForm({ ...form, birthDate: v })} />
+      <BirthDateField optional value={form.birthDate} onChange={(v) => setForm({ ...form, birthDate: v })} />
+      {errors.birthDate ? <Text variant="small" style={{ color: color.danger }}>{errors.birthDate}</Text> : null}
       <Field label="رقم الهاتف" optional ltr keyboardType="phone-pad" value={form.phone} error={errors.phone} autoComplete="tel"
              onChangeText={(v) => setForm({ ...form, phone: v })} hint="لا يُستخدم الهاتف لدمج الملفات تلقائياً." />
       {serverError && <Alert tone="danger">{serverError}</Alert>}

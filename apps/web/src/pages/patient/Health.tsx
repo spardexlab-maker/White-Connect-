@@ -5,6 +5,7 @@ import { errorMessage, formatDate, reminderIntervals, timesEvery } from '@app/sh
 import { supabase } from '../../lib/supabase';
 import { unwrap, useAsync } from '../../lib/useAsync';
 import { useAuth } from '../../lib/auth';
+import { BirthDateSelect } from '../../components/BirthDateSelect';
 import { Alert, Badge, Button, EmptyState, ErrorState, Ltr, PageHead, SelectField, SkeletonList, TextField, TextareaField, useToast } from '../../components/ui';
 import { LabTrends, ageOf, useHealth, type Health } from '../../components/clinical/HealthSummary';
 
@@ -91,7 +92,7 @@ function Basics({ h, onSaved }: { h: Health; onSaved: () => void }) {
       ) : (
         <div className="stack-sm">
           <div className="rx-grid">
-            <TextField label="تاريخ الميلاد" type="date" ltr value={f.birth} onChange={(e) => setF({ ...f, birth: e.target.value })} />
+            <BirthDateSelect value={f.birth} onChange={(v) => setF({ ...f, birth: v })} />
             <TextField label="الطول (سم)" inputMode="decimal" ltr value={f.height} onChange={(e) => setF({ ...f, height: e.target.value })} />
             <TextField label="الوزن (كغ)" inputMode="decimal" ltr value={f.weight} onChange={(e) => setF({ ...f, weight: e.target.value })} />
             <SelectField label="فصيلة الدم" value={f.blood} onChange={(e) => setF({ ...f, blood: e.target.value })}>

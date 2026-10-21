@@ -7,6 +7,7 @@ import { supabase } from '../../lib/supabase';
 import { unwrap, useAsync } from '../../lib/useAsync';
 import { useAuth } from '../../lib/auth';
 import { useWorkspace } from '../../lib/workspace';
+import { BirthDateSelect } from '../../components/BirthDateSelect';
 import { Alert, Button, ConfirmDialog, EmptyState, ErrorState, Ltr, SelectField, SkeletonList, Tabs, TextField, useToast } from '../../components/ui';
 
 /* ------------------------------------------------------------------ */
@@ -115,7 +116,7 @@ function RegisterSelf({ onDone }: { onDone: () => void }) {
       <SelectField label="الجنس" optional value={form.sex} onChange={(e) => setForm({ ...form, sex: e.target.value })}>
         <option value="">—</option><option value="female">أنثى</option><option value="male">ذكر</option>
       </SelectField>
-      <TextField label="تاريخ الميلاد" optional type="date" ltr value={form.birthDate} error={errors.birthDate} onChange={(e) => setForm({ ...form, birthDate: e.target.value })} />
+      <BirthDateSelect optional value={form.birthDate} error={errors.birthDate} onChange={(v) => setForm({ ...form, birthDate: v })} />
       <TextField label="رقم الهاتف" optional type="tel" ltr inputMode="tel" value={form.phone} error={errors.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
                  hint="لا يُستخدم الهاتف لدمج الملفات تلقائياً." />
       {serverError && <Alert tone="danger">{serverError}</Alert>}
