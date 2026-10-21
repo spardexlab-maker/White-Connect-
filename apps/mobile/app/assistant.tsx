@@ -34,6 +34,8 @@ export default function AssistantScreen() {
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const rec = useAudioRecorderState(recorder, 250);
 
+  const msgsRef = useRef<Bubble[]>([]);
+  useEffect(() => { msgsRef.current = msgs; }, [msgs]);
   const patch = (id: number, f: (b: Bubble) => Bubble) => setMsgs((all) => all.map((b) => (b.id === id ? f(b) : b)));
 
   const send = useCallback(async (raw: string) => {
@@ -42,11 +44,10 @@ export default function AssistantScreen() {
     setNotice(null); setText(''); setBusy(true);
     const user: Bubble = { id: nextId.current++, role: 'user', text: said };
     const answer: Bubble = { id: nextId.current++, role: 'model', text: '', streaming: true };
-    let history: { role: 'user' | 'model'; text: string }[] = [];
-    setMsgs((all) => {
-      history = [...all, user].filter((b) => !b.error && b.text).map((b) => ({ role: b.role, text: b.role === 'model' ? visibleAnswer(b.text) : b.text }));
-      return [...all, user, answer];
-    });
+    // built from the ref, not inside the state updater: React may run that updater later
+    const history = [...msgsRef.current, user].filter((b) => !b.error && b.text)
+      .map((b) => ({ role: b.role, text: b.role === 'model' ? visibleAnswer(b.text) : b.text }));
+    setMsgs((all) => [...all, user, answer]);
     try {
       await streamChat(history, (e) => {
         if ('t' in e) patch(answer.id, (b) => ({ ...b, text: b.text + e.t }));
