@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import { I18nManager, Platform, View } from 'react-native';
-import { Stack, router } from 'expo-router';
+import { AppState, I18nManager, Platform, View } from 'react-native';
+import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Notifications from 'expo-notifications';
@@ -10,6 +10,7 @@ import {
 } from '@expo-google-fonts/ibm-plex-sans-arabic';
 import { AuthProvider } from '../src/lib/auth';
 import { UpdateProvider } from '../src/components/UpdatePrompt';
+import { handleDoseResponse, resyncDoses } from '../src/lib/doseActions';
 import { configMissing } from '../src/lib/supabase';
 import { Alert, Screen } from '../src/components/ui';
 import { color, family } from '../src/theme';
@@ -30,14 +31,15 @@ export default function RootLayout() {
 
   useEffect(() => { if (loaded) void SplashScreen.hideAsync().catch(() => undefined); }, [loaded]);
 
-  // Tapping a reminder opens the medication plan.
+  // Medication reminders: «أخذتها ✓» / «ذكرني بعد 15 د» on the notification log the dose;
+  // a plain tap opens the plan. Doses are re-synced from the server whenever the app opens.
   useEffect(() => {
     if (Platform.OS === 'web') return;
-    const sub = Notifications.addNotificationResponseReceivedListener((r) => {
-      const url = r.notification.request.content.data?.url;
-      if (url === '/meds') router.push('/meds');
-    });
-    return () => sub.remove();
+    const sub = Notifications.addNotificationResponseReceivedListener((r) => void handleDoseResponse(r));
+    void Notifications.getLastNotificationResponseAsync().then((r) => { if (r) void handleDoseResponse(r); });
+    void resyncDoses();
+    const app = AppState.addEventListener('change', (st) => { if (st === 'active') void resyncDoses(); });
+    return () => { sub.remove(); app.remove(); };
   }, []);
 
   if (!loaded) return <View style={{ flex: 1, backgroundColor: color.primary }} />;

@@ -1029,14 +1029,14 @@ isOneToOne: false
                   ]
                 },"medication_plans": {
                   Row: {
-                    "as_needed": boolean,"consent_at": string,"created_at": string,"created_by": string,"display_name": string,"end_date": string | null,"id": string,"instructions": string | null,"interval_hours": number | null,"line_no": number | null,"patient_id": string,"prescription_id": string | null,"reported_medication_id": string | null,"source": string,"start_date": string,"status": string,"status_reason": string | null,"times_local": (string)[],"timezone": string,"updated_at": string,"version": number,"version_id": string | null
+                    "as_needed": boolean,"consent_at": string,"created_at": string,"created_by": string,"display_name": string,"dose": number | null,"dose_unit": string | null,"end_date": string | null,"id": string,"instructions": string | null,"interval_hours": number | null,"line_no": number | null,"patient_id": string,"prescription_id": string | null,"reported_medication_id": string | null,"source": string,"start_date": string,"status": string,"status_reason": string | null,"times_local": (string)[],"timezone": string,"updated_at": string,"version": number,"version_id": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "as_needed"?: boolean,"consent_at": string,"created_at"?: string,"created_by": string,"display_name": string,"end_date"?: string | null,"id"?: string,"instructions"?: string | null,"interval_hours"?: number | null,"line_no"?: number | null,"patient_id": string,"prescription_id"?: string | null,"reported_medication_id"?: string | null,"source": string,"start_date": string,"status"?: string,"status_reason"?: string | null,"times_local"?: (string)[],"timezone"?: string,"updated_at"?: string,"version"?: number,"version_id"?: string | null
+                    "as_needed"?: boolean,"consent_at": string,"created_at"?: string,"created_by": string,"display_name": string,"dose"?: number | null,"dose_unit"?: string | null,"end_date"?: string | null,"id"?: string,"instructions"?: string | null,"interval_hours"?: number | null,"line_no"?: number | null,"patient_id": string,"prescription_id"?: string | null,"reported_medication_id"?: string | null,"source": string,"start_date": string,"status"?: string,"status_reason"?: string | null,"times_local"?: (string)[],"timezone"?: string,"updated_at"?: string,"version"?: number,"version_id"?: string | null
                   }
                   Update: {
-                    "as_needed"?: boolean,"consent_at"?: string,"created_at"?: string,"created_by"?: string,"display_name"?: string,"end_date"?: string | null,"id"?: string,"instructions"?: string | null,"interval_hours"?: number | null,"line_no"?: number | null,"patient_id"?: string,"prescription_id"?: string | null,"reported_medication_id"?: string | null,"source"?: string,"start_date"?: string,"status"?: string,"status_reason"?: string | null,"times_local"?: (string)[],"timezone"?: string,"updated_at"?: string,"version"?: number,"version_id"?: string | null
+                    "as_needed"?: boolean,"consent_at"?: string,"created_at"?: string,"created_by"?: string,"display_name"?: string,"dose"?: number | null,"dose_unit"?: string | null,"end_date"?: string | null,"id"?: string,"instructions"?: string | null,"interval_hours"?: number | null,"line_no"?: number | null,"patient_id"?: string,"prescription_id"?: string | null,"reported_medication_id"?: string | null,"source"?: string,"start_date"?: string,"status"?: string,"status_reason"?: string | null,"times_local"?: (string)[],"timezone"?: string,"updated_at"?: string,"version"?: number,"version_id"?: string | null
                   }
                   Relationships: [
                     {
@@ -1827,14 +1827,14 @@ isOneToOne: false
                   ]
                 },"reminder_jobs": {
                   Row: {
-                    "dose_recorded_at": string | null,"dose_status": string | null,"id": string,"plan_id": string,"queued_at": string | null,"scheduled_at": string,"snooze_count": number,"status": string
+                    "dose_amount": number | null,"dose_recorded_at": string | null,"dose_status": string | null,"id": string,"plan_id": string,"queued_at": string | null,"scheduled_at": string,"snooze_count": number,"status": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "dose_recorded_at"?: string | null,"dose_status"?: string | null,"id"?: string,"plan_id": string,"queued_at"?: string | null,"scheduled_at": string,"snooze_count"?: number,"status"?: string
+                    "dose_amount"?: number | null,"dose_recorded_at"?: string | null,"dose_status"?: string | null,"id"?: string,"plan_id": string,"queued_at"?: string | null,"scheduled_at": string,"snooze_count"?: number,"status"?: string
                   }
                   Update: {
-                    "dose_recorded_at"?: string | null,"dose_status"?: string | null,"id"?: string,"plan_id"?: string,"queued_at"?: string | null,"scheduled_at"?: string,"snooze_count"?: number,"status"?: string
+                    "dose_amount"?: number | null,"dose_recorded_at"?: string | null,"dose_status"?: string | null,"id"?: string,"plan_id"?: string,"queued_at"?: string | null,"scheduled_at"?: string,"snooze_count"?: number,"status"?: string
                   }
                   Relationships: [
                     {
@@ -2628,6 +2628,8 @@ isOneToOne: false
 "created_at": string,
 "created_by": string,
 "display_name": string,
+"dose": number | null,
+"dose_unit": string | null,
 "end_date": string | null,
 "id": string,
 "instructions": string | null,
@@ -2659,6 +2661,8 @@ isOneToOne: false
 "created_at": string,
 "created_by": string,
 "display_name": string,
+"dose": number | null,
+"dose_unit": string | null,
 "end_date": string | null,
 "id": string,
 "instructions": string | null,
@@ -2860,6 +2864,9 @@ isOneToOne: false
               "created_at": string,"file_name": string,"id": string,"mime": string,"rejection_reason": string,"size": number,"status": string,"storage_path": string
             }[]
                            },
+"log_dose":
+{ Args: { "p_amount"?: number,"p_job_id": string,"p_status": string }; Returns: Json
+                           },
 "lookup_patients":
 { Args: { "p_facility_id": string,"p_kind"?: string,"p_query": string }; Returns: {
               "birth_year": number,"full_name": string,"has_account": boolean,"is_provisional": boolean,"known_here": boolean,"patient_id": string,"phone_masked": string,"public_code": string,"sex": Database["public"]['Enums']["patient_sex"]
@@ -2902,6 +2909,9 @@ isOneToOne: false
                            },
 "my_queue_status":
 { Args: { "p_appointment_id": string }; Returns: Json
+                           },
+"my_upcoming_doses":
+{ Args: { "p_hours"?: number }; Returns: Json
                            },
 "my_workspaces":
 { Args: Record<PropertyKey, never>; Returns: {
@@ -3268,6 +3278,9 @@ isOneToOne: false
                            },
 "rotate_patient_qr":
 { Args: { "p_patient_id": string }; Returns: string
+                           },
+"rx_pending_reminders":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "save_clinical_note_draft":
 { Args: { "p_encounter_id": string,"p_expected_version"?: number,"p_fields": Json }; Returns: {

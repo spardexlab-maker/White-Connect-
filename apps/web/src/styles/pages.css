@@ -320,3 +320,7 @@
 .chat-composer textarea { resize: none; min-height: 48px; max-height: 140px; }
 .rec-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--c-danger, #B42318); align-self: center; animation: blink 1s steps(2) infinite; }
 .chat-composer > .grow { align-self: center; }
+.dose-log { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 4px; max-height: 220px; overflow: auto; }
+.dose-log li { display: flex; justify-content: space-between; gap: 12px; padding: 4px 8px; border-radius: 8px; background: var(--c-surface-2, #f5f7fa); }
+.dose-log-taken span:last-child { color: var(--c-success, #15803d); font-weight: 600; }
+.dose-log-missed span:last-child { color: var(--c-warning, #b45309); }

@@ -42,9 +42,9 @@ export function Meds() {
                   <span className="grow num">{formatDate(d.scheduled_at)} — {formatTime(d.scheduled_at)}</span>
                   {d.dose_status === 'taken' ? <Badge tone="success">أخذتها</Badge> : d.dose_status === 'skipped' ? <Badge tone="neutral">تخطيت</Badge> : p.status === 'active' && (
                     <span className="row" style={{ gap: 4 }}>
-                      <Button size="sm" variant="accent" icon={<Check size={14} />} onClick={() => act(supabase.rpc('record_dose', { p_job_id: d.id, p_status: 'taken' }), 'سُجلت')}>أخذت</Button>
-                      <Button size="sm" variant="ghost" icon={<SkipForward size={14} />} onClick={() => act(supabase.rpc('record_dose', { p_job_id: d.id, p_status: 'skipped' }), 'سُجل التخطي')}>تخطي</Button>
-                      {d.snooze_count < 3 && <Button size="sm" variant="ghost" onClick={() => act(supabase.rpc('record_dose', { p_job_id: d.id, p_status: 'snoozed' }), 'سيُذكّرك بعد 15 دقيقة')}>تأجيل</Button>}
+                      <Button size="sm" variant="accent" icon={<Check size={14} />} onClick={() => act(supabase.rpc('log_dose', { p_job_id: d.id, p_status: 'taken' }), 'سُجلت — يظهر لطبيبك')}>أخذت</Button>
+                      <Button size="sm" variant="ghost" icon={<SkipForward size={14} />} onClick={() => act(supabase.rpc('log_dose', { p_job_id: d.id, p_status: 'skipped' }), 'سُجل التخطي')}>تخطي</Button>
+                      {d.snooze_count < 3 && <Button size="sm" variant="ghost" onClick={() => act(supabase.rpc('log_dose', { p_job_id: d.id, p_status: 'snoozed' }), 'سيُذكّرك بعد 15 دقيقة')}>تأجيل</Button>}
                     </span>
                   )}
                 </li>

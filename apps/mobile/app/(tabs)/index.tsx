@@ -12,6 +12,7 @@ import { unwrap, useAsync } from '../../src/lib/useAsync';
 import { useAuth } from '../../src/lib/auth';
 import { mediaUrl } from '../../src/lib/media';
 import { AiAssist } from '../../src/components/AiAssist';
+import { PendingRx } from '../../src/components/PendingRx';
 import { providerHref } from '../../src/lib/routes';
 import { Avatar, Card, Chip, EmptyState, ErrorState, FadeIn, PressScale, Row, Screen, SkeletonBox, Stack, Text } from '../../src/components/ui';
 import { color, family, radius, shadow, size, space, startAlign } from '../../src/theme';
@@ -118,6 +119,7 @@ export default function Home() {
         </View>
       </FadeIn>
 
+      {session && <PendingRx compact />}
       <AiAssist />
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space[2] }}>

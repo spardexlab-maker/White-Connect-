@@ -1,18 +1,20 @@
 import { useEffect, useState } from 'react';
 import { Platform, View } from 'react-native';
-import { Check, Clock, Pause, Pill, Play, SkipForward, Square } from 'lucide-react-native';
+import { Check, Clock, Minus, Pause, Pill, Play, Plus, SkipForward, Square } from 'lucide-react-native';
 import { errorMessage, formatDate, formatTime } from '@app/shared';
 import { supabase } from '../src/lib/supabase';
 import { unwrap, useAsync } from '../src/lib/useAsync';
 import { useAuth } from '../src/lib/auth';
-import { remindersEnabled, syncReminders } from '../src/lib/reminders';
+import { doseLabel, remindersEnabled } from '../src/lib/reminders';
+import { resyncDoses } from '../src/lib/doseActions';
+import { PendingRx } from '../src/components/PendingRx';
 import { SignInPrompt } from '../src/components/SignInPrompt';
 import { Alert, Badge, Button, Card, Divider, EmptyState, ErrorState, Loading, Row, Screen, Stack, Text, type Tone } from '../src/components/ui';
 import { color, space } from '../src/theme';
 
-interface Dose { id: string; scheduled_at: string; status: string; dose_status: string | null; snooze_count: number }
+interface Dose { id: string; scheduled_at: string; status: string; dose_status: string | null; snooze_count: number; dose_amount: number | null; recorded_at: string | null }
 interface Plan { id: string; display_name: string; instructions: string | null; start_date: string; end_date: string | null; times: string[]; as_needed: boolean;
-  status: string; patient_name: string; doses: Dose[] }
+  status: string; patient_name: string; doses: Dose[]; dose: number | null; dose_unit: string | null; interval_hours: number | null; prescribed_by: string | null }
 const statusLabel: Record<string, { l: string; t: Tone }> = {
   active: { l: 'فعّالة', t: 'success' }, paused: { l: 'متوقفة مؤقتاً', t: 'warning' }, stopped: { l: 'أوقفتها', t: 'neutral' },
   cancelled: { l: 'أُلغيت (تغيّرت الوصفة)', t: 'danger' }, completed: { l: 'انتهت مدة العلاج', t: 'neutral' },
@@ -29,8 +31,9 @@ export default function Meds() {
   useEffect(() => {
     if (!plans.data) return;
     void remindersEnabled().then(setLocalOn);
-    void syncReminders(plans.data.filter((p) => p.status === 'active' && !p.as_needed).flatMap((p) => p.doses));
+    void resyncDoses();
   }, [plans.data]);
+  const [amounts, setAmounts] = useState<Record<string, number>>({});
 
   if (!session) return <SignInPrompt />;
   const act = async (p: PromiseLike<{ error: unknown }>, ok: string) => {
@@ -45,6 +48,7 @@ export default function Meds() {
       {msg && <Alert tone={msg.tone}>{msg.text}</Alert>}
       {plans.status === 'loading' && !plans.data && <Card><Loading /></Card>}
       {plans.status === 'error' && <Card><ErrorState error={plans.error} onRetry={plans.reload} /></Card>}
+      <PendingRx onActivated={plans.reload} />
       {plans.data?.length === 0 && (
         <Card><EmptyState icon={<Pill size={28} color={color.mutedText} />} title="لا توجد خطط دواء">تُفعّل التذكيرات من الصيدلية عند الصرف، أو من صفحة الوصفة إذا حصلت على الدواء من مكان آخر.</EmptyState></Card>
       )}
@@ -55,21 +59,36 @@ export default function Meds() {
             <Row between><Text variant="title" ltr style={{ flex: 1 }}>{p.display_name}</Text><Badge label={st.l} tone={st.t} /></Row>
             <Text variant="small" muted>{p.patient_name} · من {formatDate(p.start_date + 'T12:00:00Z')}{p.end_date ? ` حتى ${formatDate(p.end_date + 'T12:00:00Z')}` : ''}</Text>
             {p.instructions && <Text variant="small">التعليمات المعتمدة: {p.instructions}</Text>}
+            {(p.prescribed_by || p.dose) && <Text variant="small">{[p.prescribed_by ? `من ${p.prescribed_by}` : null, doseLabel(p.dose, p.dose_unit) ? `كل جرعة: ${doseLabel(p.dose, p.dose_unit)}` : null, p.interval_hours ? `كل ${p.interval_hours} ساعات` : null].filter(Boolean).join(' · ')}</Text>}
             <Text variant="small">{p.as_needed ? 'عند اللزوم — بدون جدول ثابت.' : `الأوقات: ${p.times.map((t) => t.slice(0, 5)).join('، ')}`}</Text>
             {p.doses.length > 0 && <Divider />}
             {p.doses.map((d) => (
               <View key={d.id} style={{ gap: space[2] }}>
                 <Row gap={space[2]}><Clock size={16} color={color.mutedText} /><Text variant="small" weight="medium" style={{ flex: 1 }}>{formatDate(d.scheduled_at)} — {formatTime(d.scheduled_at)}</Text>
-                  {d.dose_status === 'taken' && <Badge label="أخذتها" tone="success" />}
+                  {d.dose_status === 'taken' && <Badge label={`أخذتها${d.recorded_at ? ` ${formatTime(d.recorded_at)}` : ''}${d.dose_amount ? ` · ${doseLabel(d.dose_amount, p.dose_unit)}` : ''}`} tone="success" />}
                   {d.dose_status === 'skipped' && <Badge label="تخطيت" tone="neutral" />}
                 </Row>
-                {!d.dose_status && p.status === 'active' && (
-                  <Row wrap>
-                    <Button title="أخذت" small variant="accent" icon={<Check size={14} color={color.surface} />} onPress={() => act(supabase.rpc('record_dose', { p_job_id: d.id, p_status: 'taken' }), 'سُجلت الجرعة')} />
-                    <Button title="تخطي" small variant="ghost" icon={<SkipForward size={14} color={color.primary} />} onPress={() => act(supabase.rpc('record_dose', { p_job_id: d.id, p_status: 'skipped' }), 'سُجل التخطي')} />
-                    {d.snooze_count < 3 && <Button title="تأجيل 15 د" small variant="ghost" onPress={() => act(supabase.rpc('record_dose', { p_job_id: d.id, p_status: 'snoozed' }), 'سيُذكّرك بعد 15 دقيقة')} />}
-                  </Row>
-                )}
+                {!d.dose_status && p.status === 'active' && (() => {
+                  const amount = amounts[d.id] ?? (p.dose ? Number(p.dose) : 1);
+                  const step = amount % 1 ? 0.5 : 1;
+                  return (
+                    <Stack gap={space[2]}>
+                      <Row gap={space[2]} style={{ alignItems: 'center' }}>
+                        <Text variant="small" muted>الكمية:</Text>
+                        <Button title="" small variant="ghost" accessibilityLabel="أقل" icon={<Minus size={14} color={color.primary} />} disabled={amount <= 0.5}
+                                onPress={() => setAmounts({ ...amounts, [d.id]: Math.max(0.5, amount - step) })} />
+                        <Text weight="semibold">{doseLabel(amount, p.dose_unit) || amount}</Text>
+                        <Button title="" small variant="ghost" accessibilityLabel="أكثر" icon={<Plus size={14} color={color.primary} />}
+                                onPress={() => setAmounts({ ...amounts, [d.id]: amount + step })} />
+                      </Row>
+                      <Row wrap>
+                        <Button title="أخذت" small variant="accent" icon={<Check size={14} color={color.surface} />} onPress={() => act(supabase.rpc('log_dose', { p_job_id: d.id, p_status: 'taken', p_amount: amount }), 'سُجلت الجرعة — يظهر لطبيبك')} />
+                        <Button title="تخطي" small variant="ghost" icon={<SkipForward size={14} color={color.primary} />} onPress={() => act(supabase.rpc('log_dose', { p_job_id: d.id, p_status: 'skipped' }), 'سُجل التخطي')} />
+                        {d.snooze_count < 3 && <Button title="تأجيل 15 د" small variant="ghost" onPress={() => act(supabase.rpc('log_dose', { p_job_id: d.id, p_status: 'snoozed' }), 'سيُذكّرك بعد 15 دقيقة')} />}
+                      </Row>
+                    </Stack>
+                  );
+                })()}
               </View>
             ))}
             {['active', 'paused'].includes(p.status) && (

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowDown, ArrowUp, Droplet, FileText, FlaskConical, HeartPulse, History, Minus, Pill, Ruler, ShieldAlert, Weight } from 'lucide-react';
-import { chartDomain, formatDate, formatDateShort, labFlag, parseRange, rangePosition, rangePositionLabel, type NumRange } from '@app/shared';
+import { chartDomain, formatDate, formatDateShort, formatDateTime, formatTime, labFlag, parseRange, rangePosition, rangePositionLabel, type NumRange } from '@app/shared';
 import { supabase } from '../../lib/supabase';
 import { unwrap, useAsync } from '../../lib/useAsync';
 import { Badge, EmptyState, Ltr } from '../ui';
@@ -210,7 +210,11 @@ export function LabTrends({ trends, linkBase }: { trends: Trend[]; linkBase?: st
 }
 
 interface PlanAdherence { id: string; display_name: string; status: string; source: string; interval_hours: number | null; times: string[] | null;
-  due: number; taken: number; skipped: number; missed: number; last_taken_at: string | null; recent: { at: string; state: 'taken' | 'skipped' | 'missed' | 'pending' }[] }
+  dose: number | null; dose_unit: string | null; prescribed: boolean; prescribed_by: string | null; taken_amount: number;
+  due: number; taken: number; skipped: number; missed: number; last_taken_at: string | null;
+  recent: { at: string; recorded_at: string | null; amount: number | null; state: 'taken' | 'skipped' | 'missed' | 'pending' }[] }
+const amountLabel = (n: number | null | undefined, unit: string | null) => (n ? `${Number(n)} ${unit ?? ''}`.trim() : '');
+const stateLabel = { taken: 'أخذها', skipped: 'تخطاها', missed: 'لم يسجّل', pending: 'قادمة' } as const;
 
 /** Taken / skipped / missed doses over the last 14 days, as the patient recorded them on the phone. */
 export function Adherence({ patientId }: { patientId: string }) {
@@ -224,19 +228,35 @@ export function Adherence({ patientId }: { patientId: string }) {
         return (
           <div key={p.id} className="card stack-sm" style={{ padding: 'var(--s-3)' }}>
             <div className="row-between small">
-              <span><bdi dir="auto" style={{ fontWeight: 700 }}>{p.display_name}</bdi>{p.interval_hours ? ` · كل ${p.interval_hours} ساعات` : ''}{p.times?.length ? ` · ${p.times.join('، ')}` : ''}</span>
-              {p.status !== 'active' ? <Badge tone="neutral">{p.status === 'paused' ? 'موقوف مؤقتاً' : 'منتهٍ'}</Badge> : null}
+              <span><bdi dir="auto" style={{ fontWeight: 700 }}>{p.display_name}</bdi>{p.dose ? ` · ${amountLabel(p.dose, p.dose_unit)}` : ''}{p.interval_hours ? ` · كل ${p.interval_hours} ساعات` : ''}{p.times?.length ? ` · ${p.times.join('، ')}` : ''}</span>
+              <span className="row" style={{ gap: 6 }}>
+                <Badge tone={p.prescribed ? 'info' : 'neutral'}>{p.prescribed ? `وصفة${p.prescribed_by ? ` ${p.prescribed_by}` : ''}` : 'أضافه المريض'}</Badge>
+                {p.status !== 'active' ? <Badge tone="neutral">{p.status === 'paused' ? 'موقوف مؤقتاً' : 'منتهٍ'}</Badge> : null}
+              </span>
             </div>
             <div className="row small" style={{ gap: 'var(--s-3)', flexWrap: 'wrap' }}>
-              <span>أخذ: <strong>{p.taken}</strong> من {p.due}{pct != null ? ` (${pct}٪)` : ''}</span>
+              <span>أخذ: <strong>{p.taken}</strong> من {p.due}{pct != null ? ` (${pct}٪)` : ''}{p.taken_amount ? ` — ${amountLabel(p.taken_amount, p.dose_unit)}` : ''}</span>
               <span>تخطى: <strong>{p.skipped}</strong></span>
               <span style={{ color: p.missed ? 'var(--c-warning)' : undefined }}>لم يسجّل: <strong>{p.missed}</strong></span>
-              {p.last_taken_at && <span className="muted">آخر جرعة: {formatDate(p.last_taken_at)}</span>}
+              {p.last_taken_at && <span className="muted">آخر جرعة: {formatDateTime(p.last_taken_at)}</span>}
             </div>
             {p.recent.length > 0 && (
               <div className="dose-strip" aria-label="آخر 7 أيام">
-                {p.recent.map((d, i) => <span key={i} className={`dose-dot dose-${d.state}`} title={`${formatDate(d.at)} — ${d.state === 'taken' ? 'أخذها' : d.state === 'skipped' ? 'تخطاها' : d.state === 'missed' ? 'لم يسجّل' : 'قادمة'}`} />)}
+                {p.recent.map((d, i) => <span key={i} className={`dose-dot dose-${d.state}`} title={`${formatDateTime(d.at)} — ${stateLabel[d.state]}`} />)}
               </div>
+            )}
+            {p.recent.length > 0 && (
+              <details className="small">
+                <summary>سجل الجرعات بالأوقات</summary>
+                <ul className="dose-log">
+                  {[...p.recent].reverse().map((d, i) => (
+                    <li key={i} className={`dose-log-${d.state}`}>
+                      <span className="num">{formatDateTime(d.at)}</span>
+                      <span>{stateLabel[d.state]}{d.state === 'taken' && d.recorded_at ? ` الساعة ${formatTime(d.recorded_at)}` : ''}{d.amount ? ` · ${amountLabel(d.amount, p.dose_unit)}` : ''}</span>
+                    </li>
+                  ))}
+                </ul>
+              </details>
             )}
           </div>
         );

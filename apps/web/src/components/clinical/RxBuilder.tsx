@@ -11,7 +11,7 @@ import { RxDocument, type RxDoc, type RxItem } from './RxDocument';
 interface Med { medication_id: string; active_ingredient: string; brand_name: string | null; strength: string; dosage_form: string; availability: string; availability_updated_at: string | null }
 interface Row {
   key: string; medication_id: string | null; display_name: string; dose: string; dose_unit: string; route: string;
-  frequency_text: string; duration_days: string; quantity: string; quantity_unit: string; instructions: string; as_needed: boolean; max_daily: string;
+  frequency_text: string; interval_hours: string; duration_days: string; quantity: string; quantity_unit: string; instructions: string; as_needed: boolean; max_daily: string;
 }
 interface Pharmacy { pharmacy_id: string; name: string; branch: string; is_default: boolean }
 export interface EncounterOrders {
@@ -22,11 +22,11 @@ export interface EncounterOrders {
 }
 
 const emptyRow = (): Row => ({ key: crypto.randomUUID(), medication_id: null, display_name: '', dose: '', dose_unit: '', route: 'فموي',
-  frequency_text: '', duration_days: '', quantity: '', quantity_unit: '', instructions: '', as_needed: false, max_daily: '' });
+  frequency_text: '', interval_hours: '', duration_days: '', quantity: '', quantity_unit: '', instructions: '', as_needed: false, max_daily: '' });
 
 function toRow(i: RxItem & { medication_id?: string | null }): Row {
   return { key: crypto.randomUUID(), medication_id: i.medication_id ?? null, display_name: i.display_name, dose: i.dose != null ? String(Number(i.dose)) : '',
-    dose_unit: i.dose_unit ?? '', route: i.route ?? '', frequency_text: i.frequency_text ?? '', duration_days: i.duration_days ? String(i.duration_days) : '',
+    dose_unit: i.dose_unit ?? '', route: i.route ?? '', frequency_text: i.frequency_text ?? '', interval_hours: i.interval_hours ? String(i.interval_hours) : '', duration_days: i.duration_days ? String(i.duration_days) : '',
     quantity: i.quantity != null ? String(Number(i.quantity)) : '', quantity_unit: i.quantity_unit ?? '', instructions: i.instructions ?? '',
     as_needed: i.as_needed, max_daily: i.max_daily ?? '' };
 }
@@ -64,7 +64,7 @@ export function RxBuilder({ encounterId, facilityId, patientName, orders, onChan
 
   const payload = () => items.map((r) => ({
     medication_id: r.medication_id, display_name: r.display_name, dose: r.dose, dose_unit: r.dose_unit, route: r.route,
-    frequency_text: r.frequency_text, duration_days: r.duration_days, quantity: r.quantity, quantity_unit: r.quantity_unit,
+    frequency_text: r.frequency_text, interval_hours: r.interval_hours, duration_days: r.duration_days, quantity: r.quantity, quantity_unit: r.quantity_unit,
     instructions: r.instructions, as_needed: r.as_needed, max_daily: r.max_daily,
   }));
 
@@ -104,7 +104,7 @@ export function RxBuilder({ encounterId, facilityId, patientName, orders, onChan
   const previewDoc: RxDoc = useMemo(() => ({
     ...preview, rx_number: current?.rx_number ?? '—', version_no: (current?.current_version_no ?? 0) + (editing ? 1 : 0),
     items: items.map((r, i) => ({ line_no: i + 1, display_name: r.display_name, dose: r.dose ? Number(r.dose) : null, dose_unit: r.dose_unit || null,
-      route: r.route || null, frequency_text: r.frequency_text || null, interval_hours: null, duration_days: r.duration_days ? Number(r.duration_days) : null,
+      route: r.route || null, frequency_text: r.frequency_text || null, interval_hours: r.interval_hours ? Number(r.interval_hours) : null, duration_days: r.duration_days ? Number(r.duration_days) : null,
       start_date: null, quantity: r.quantity ? Number(r.quantity) : null, quantity_unit: r.quantity_unit || null, instructions: r.instructions || null,
       as_needed: r.as_needed, max_daily: r.max_daily || null })),
   }), [preview, items, current, editing]);
@@ -253,6 +253,16 @@ function RxRow({ row, index, onChange, onRemove, pharmacyId }: { row: Row; index
         <TextField label="الجرعة" inputMode="decimal" ltr value={row.dose} onChange={(e) => set('dose', e.target.value)} />
         <TextField label="وحدة الجرعة" value={row.dose_unit} onChange={(e) => set('dose_unit', e.target.value)} placeholder="قرص / مل" />
         <TextField label="الطريق" value={row.route} onChange={(e) => set('route', e.target.value)} />
+        <SelectField label="كل كم ساعة (لتذكير المريض)" value={row.interval_hours} disabled={row.as_needed}
+                     onChange={(e) => {
+                       const h = e.target.value;
+                       // fill the printed wording too, unless the doctor already wrote their own
+                       const auto = !row.frequency_text || /^كل \d+ ساعات$|^مرة يومياً$/.test(row.frequency_text);
+                       onChange({ ...row, interval_hours: h, frequency_text: auto ? (h ? (h === '24' ? 'مرة يومياً' : `كل ${h} ساعات`) : '') : row.frequency_text });
+                     }}>
+          <option value="">— بدون تذكير ثابت —</option>
+          {[4, 6, 8, 12, 24].map((h) => <option key={h} value={h}>{h === 24 ? 'مرة يومياً (كل 24 ساعة)' : `كل ${h} ساعات`}</option>)}
+        </SelectField>
         <TextField label="عدد المرات / الفاصل (كما تكتبه)" value={row.frequency_text} onChange={(e) => set('frequency_text', e.target.value)} placeholder="مثال: ثلاث مرات يومياً" />
         <TextField label="المدة (أيام)" inputMode="numeric" ltr value={row.duration_days} onChange={(e) => set('duration_days', e.target.value)} />
         <TextField label="كمية الصرف" inputMode="decimal" ltr value={row.quantity} onChange={(e) => set('quantity', e.target.value)} />
