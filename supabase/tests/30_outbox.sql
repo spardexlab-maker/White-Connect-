@@ -1,7 +1,7 @@
 -- Transactional outbox: dedupe, idempotent completion, retry/backoff,
 -- dead-letter, and worker-only access (§11, §15, §18-k partial).
 begin;
-select plan(12);
+select plan(13);
 
 \set P_HASAN '''00000000-0000-4000-5000-000000000050'''
 \set U_HASAN '''00000000-0000-4000-a000-000000000050'''
@@ -42,6 +42,9 @@ update public.queue_entries set patient_id = :P_HASAN, status = 'waiting' where 
 update public.queue_entries set status = 'called' where id = (select id from qe);
 select is((select count(*)::int from public.notification_outbox where template = 'queue.called' and channel = 'push'), 1,
           'calling the patient in sends «حان دورك» to the phone');
+update public.queue_entries set called_at = now() + interval '1 minute' where id = (select id from qe);
+select is((select count(*)::int from public.notification_outbox where template = 'queue.called' and channel = 'push'), 2,
+          'calling again sends «حان دورك» again');
 select is((select count(*)::int from public.notification_outbox where template = 'queue.called' and channel = 'in_app'),
           (select count(*)::int from public.notification_outbox where template = 'queue.called' and channel = 'push'), 'one push per call');
 

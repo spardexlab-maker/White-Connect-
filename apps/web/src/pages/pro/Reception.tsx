@@ -134,6 +134,7 @@ export function ReceptionDashboard() {
     const { error } = await supabase.rpc('update_queue_entry', { p_queue_entry_id: entry.queue_entry_id, p_status: status });
     setBusyId(null);
     if (error) toast(errorMessage(error), 'danger');
+    else if (status === 'called') toast(`نُودي ${entry.patient_name} — وصله إشعار على هاتفه`, 'success');
     reloadAll();
   };
 
@@ -253,7 +254,7 @@ export function ReceptionDashboard() {
                   {e.kind === 'walk_in' && !e.appointment_id && e.status === 'waiting' && (
                     <Button size="sm" variant="secondary" onClick={() => setAssigning(e)}>تخصيص وقت</Button>
                   )}
-                  {e.status === 'waiting' && <Button size="sm" variant="soft" icon={<PhoneCall size={14} />} loading={busyId === e.queue_entry_id} onClick={() => queueAction(e, 'called')}>نداء</Button>}
+                  {['waiting', 'called'].includes(e.status) && <Button size="sm" variant="soft" icon={<PhoneCall size={14} />} loading={busyId === e.queue_entry_id} onClick={() => queueAction(e, 'called')}>{e.status === 'called' ? 'نداء مرة ثانية' : 'نداء'}</Button>}
                   {['waiting', 'called'].includes(e.status) && <Button size="sm" variant="ghost" onClick={() => queueAction(e, 'left')}>غادر</Button>}
                 </div>
               </div>

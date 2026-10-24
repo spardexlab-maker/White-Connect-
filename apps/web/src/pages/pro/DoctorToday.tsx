@@ -151,7 +151,7 @@ export function DoctorToday() {
                 <div className="row-between"><strong>{q.patient_name}</strong><QueueStatusBadge status={q.status} /></div>
                 <span className="small muted">{q.kind === 'walk_in' ? 'عابر' : `موعد ${formatTime(q.appointment_start!, tz)}`} · وصل {formatTime(q.arrived_at, tz)}</span>
                 <div className="row" style={{ gap: 'var(--s-2)', marginBlockStart: 4 }}>
-                  <Button size="sm" variant="secondary" icon={<BellRing size={16} />} loading={busy === q.queue_entry_id} onClick={() => call(q)} disabled={q.status === 'called'}>نداء</Button>
+                  <Button size="sm" variant="secondary" icon={<BellRing size={16} />} loading={busy === q.queue_entry_id} onClick={() => call(q)}>{q.status === 'called' ? 'نداء مرة ثانية' : 'نداء'}</Button>
                   <Button size="sm" icon={<Play size={16} />} onClick={() => setStarting(q)}>بدء الجلسة</Button>
                   <Button size="sm" variant="ghost" icon={<IdCard size={16} />} onClick={() => setCardFor(q.patient_id)}>البطاقة الطبية</Button>
                 </div>
