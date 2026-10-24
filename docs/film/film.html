@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>الفيلم</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+:root {
+  --ink: #0B1E33; --ink2: #12304F; --care: #14B8A6; --care-d: #0E8F80; --pulse: #FF6B4A; --mist: #EEF3F6;
+  --paper: #FFFFFF; --line: #DCE5EC; --muted: #5B6F82; --fg: #12263A; --normal: #1D5FD1; --high: #C62828; --gold: #F5C04A;
+  --fd: "Alexandria", "IBM Plex Sans Arabic", sans-serif; --fb: "IBM Plex Sans Arabic", sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--ink); font-family: var(--fb); color: #fff; }
+#stage { position: absolute; inset: 0; overflow: hidden; }
+.bg { position: absolute; inset: 0; background:
+  radial-gradient(900px 700px at 15% 85%, rgba(20,184,166,.20), transparent 60%),
+  radial-gradient(800px 600px at 90% 10%, rgba(29,95,209,.22), transparent 60%), var(--ink); }
+#bigring { position: absolute; width: 1500px; height: 1500px; left: -380px; top: -210px; border-radius: 50%; border: 2px solid rgba(20,184,166,.10); }
+#bigring::after { content: ""; position: absolute; inset: 120px; border-radius: 50%; border: 1px dashed rgba(255,255,255,.06); }
+.grain { position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,.035) 1px, transparent 1px); background-size: 6px 6px; }
+
+.scene { position: absolute; inset: 0; display: none; }
+.a { will-change: transform, opacity; }
+.copy { position: absolute; right: 150px; top: 230px; width: 720px; display: flex; flex-direction: column; gap: 26px; }
+.kicker { font-family: var(--fd); font-weight: 500; font-size: 28px; color: var(--care); display: flex; align-items: center; gap: 14px; }
+.kicker i { width: 54px; height: 4px; border-radius: 4px; background: var(--care); display: inline-block; }
+h1 { font-family: var(--fd); font-weight: 800; font-size: 92px; line-height: 1.18; letter-spacing: -0.01em; }
+h1 em { font-style: normal; color: var(--care); }
+.sub { font-size: 36px; line-height: 1.6; color: rgba(255,255,255,.78); font-weight: 500; }
+.pts { display: flex; flex-direction: column; gap: 16px; margin-top: 8px; }
+.pt { display: flex; align-items: center; gap: 16px; font-size: 32px; font-weight: 600; }
+.pt b { width: 46px; height: 46px; border-radius: 14px; background: rgba(20,184,166,.16); color: var(--care); display: grid; place-items: center; font-size: 24px; flex: none; }
+
+/* captions */
+#cap { position: absolute; left: 50%; bottom: 54px; transform: translateX(-50%); max-width: 1500px; text-align: center;
+  font-size: 40px; font-weight: 600; line-height: 1.5; padding: 12px 34px; border-radius: 18px; background: rgba(6,16,28,.72); color: #fff; }
+#cap:empty { display: none; }
+
+/* phone */
+.phone { position: absolute; width: 400px; height: 820px; border-radius: 58px; background: #050C14; padding: 14px; box-shadow: 0 50px 120px rgba(0,0,0,.55), 0 0 0 2px rgba(255,255,255,.08); }
+.screen { width: 100%; height: 100%; border-radius: 46px; background: var(--mist); overflow: hidden; position: relative; color: var(--fg); }
+.notch { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: 120px; height: 32px; border-radius: 20px; background: #050C14; z-index: 5; }
+.sbar { height: 58px; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 30px 6px; font-size: 16px; font-weight: 600; color: var(--fg); direction: ltr; }
+.appbar { padding: 10px 22px; display: flex; align-items: center; justify-content: space-between; }
+.appbar strong { font-family: var(--fd); font-size: 22px; color: var(--ink); }
+.logo-s { width: 34px; height: 34px; border-radius: 50%; border: 5px solid var(--care-d); position: relative; }
+.pbody { padding: 6px 18px; display: flex; flex-direction: column; gap: 12px; }
+.search { background: #fff; border-radius: 16px; padding: 14px 16px; font-size: 18px; color: var(--muted); box-shadow: 0 2px 10px rgba(18,38,58,.06); min-height: 52px; }
+.search span { color: var(--fg); font-weight: 600; }
+.card { background: #fff; border-radius: 18px; padding: 14px 16px; box-shadow: 0 2px 12px rgba(18,38,58,.07); display: flex; flex-direction: column; gap: 6px; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.av { width: 52px; height: 52px; border-radius: 16px; background: linear-gradient(135deg, #CFE7F5, #9FD6CF); flex: none; display: grid; place-items: center; font-family: var(--fd); font-weight: 700; color: var(--ink); font-size: 20px; }
+.nm { font-weight: 700; font-size: 18px; }
+.mu { color: var(--muted); font-size: 15px; }
+.chip { font-size: 14px; font-weight: 600; padding: 4px 12px; border-radius: 99px; background: #E6F4F1; color: var(--care-d); white-space: nowrap; }
+.chip.red { background: #FCE4E4; color: var(--high); }
+.chip.blue { background: #E3ECFB; color: var(--normal); }
+.chip.gray { background: #EDF1F4; color: var(--muted); }
+.slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.slot { text-align: center; padding: 10px 0; border-radius: 12px; background: #fff; border: 1.5px solid var(--line); font-weight: 600; font-size: 17px; direction: ltr; }
+.slot.on { background: var(--care-d); border-color: var(--care-d); color: #fff; }
+.btn { text-align: center; padding: 15px; border-radius: 16px; background: var(--ink); color: #fff; font-weight: 700; font-size: 19px; }
+.btn.care { background: var(--care-d); }
+.notif { position: absolute; top: 56px; left: 12px; right: 12px; background: rgba(255,255,255,.97); border-radius: 22px; padding: 14px 16px; display: flex; gap: 12px; align-items: center; box-shadow: 0 16px 40px rgba(0,0,0,.25); z-index: 6; }
+.notif .ic { width: 46px; height: 46px; border-radius: 14px; background: var(--ink); display: grid; place-items: center; flex: none; }
+.notif .ic .logo-s { width: 26px; height: 26px; border-width: 4px; border-color: var(--care); }
+.notif strong { font-size: 17px; display: block; }
+.notif span { font-size: 15px; color: var(--muted); }
+
+/* desktop */
+.desk { position: absolute; width: 960px; height: 620px; border-radius: 22px; background: var(--mist); overflow: hidden; color: var(--fg); box-shadow: 0 50px 120px rgba(0,0,0,.5), 0 0 0 2px rgba(255,255,255,.08); }
+.dtop { height: 46px; background: #fff; display: flex; align-items: center; gap: 8px; padding: 0 18px; border-bottom: 1px solid var(--line); direction: ltr; }
+.dtop i { width: 13px; height: 13px; border-radius: 50%; background: #E2E8EE; display: inline-block; }
+.dtop span { margin-left: 18px; font-size: 14px; color: var(--muted); }
+.dwrap { display: flex; height: calc(100% - 46px); }
+.dside { width: 200px; background: #fff; border-left: 1px solid var(--line); padding: 18px 14px; display: flex; flex-direction: column; gap: 8px; }
+.dside .it { padding: 10px 12px; border-radius: 10px; font-size: 16px; font-weight: 600; color: var(--muted); }
+.dside .it.on { background: #E6F4F1; color: var(--care-d); }
+.dmain { flex: 1; padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+.dh { font-family: var(--fd); font-weight: 700; font-size: 26px; color: var(--ink); }
+.lane { background: #fff; border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; border-right: 6px solid var(--line); }
+.lane .nm { flex: 1; }
+.lane.wait { border-right-color: #F0B429; }
+.lane.in { border-right-color: var(--care-d); }
+.lane.done { border-right-color: #9AA9B7; }
+.callbtn { padding: 9px 18px; border-radius: 12px; background: var(--pulse); color: #fff; font-weight: 700; font-size: 16px; }
+
+/* misc */
+.paper { position: absolute; width: 250px; height: 320px; background: #F7F4EC; border-radius: 10px; box-shadow: 0 30px 60px rgba(0,0,0,.4); color: #4A4A4A; padding: 24px; display: flex; flex-direction: column; gap: 14px; }
+.paper b { font-family: var(--fd); font-size: 24px; color: #2C2C2C; }
+.paper i { display: block; height: 10px; border-radius: 6px; background: #DDD6C6; }
+.loopsvg { position: absolute; }
+.node-t { font-family: var(--fd); font-weight: 700; font-size: 34px; fill: #fff; }
+.ring-glow { filter: drop-shadow(0 0 18px rgba(20,184,166,.55)); }
+.big-badge { position: absolute; font-family: var(--fd); font-weight: 800; color: #fff; }
+.qr { width: 230px; height: 230px; background: #fff; border-radius: 18px; padding: 16px; position: relative; overflow: hidden; }
+.qr canvas { width: 100%; height: 100%; image-rendering: pixelated; }
+.scanline { position: absolute; left: 10px; right: 10px; height: 4px; border-radius: 4px; background: var(--care); box-shadow: 0 0 18px var(--care); }
+.code { font-family: var(--fd); font-weight: 800; font-size: 34px; letter-spacing: 4px; direction: ltr; color: var(--ink); text-align: center; }
+.res { display: flex; align-items: center; justify-content: space-between; background: #fff; border-radius: 14px; padding: 12px 16px; }
+.res .v { font-family: var(--fd); font-weight: 800; font-size: 30px; direction: ltr; }
+.bubble { position: absolute; max-width: 470px; padding: 18px 22px; border-radius: 22px; font-size: 25px; line-height: 1.55; font-weight: 500; box-shadow: 0 20px 50px rgba(0,0,0,.3); }
+.bubble small { display: block; font-size: 17px; font-weight: 700; margin-bottom: 4px; opacity: .8; }
+.b1 { background: #fff; color: var(--fg); border-bottom-right-radius: 6px; }
+.b2 { background: var(--care-d); color: #fff; border-bottom-left-radius: 6px; }
+.ring-pulse { position: absolute; border-radius: 50%; border: 4px solid var(--pulse); }
+.benefit { position: absolute; width: 470px; height: 300px; border-radius: 30px; background: rgba(255,255,255,.06); border: 1.5px solid rgba(255,255,255,.12); padding: 34px; display: flex; flex-direction: column; gap: 14px; }
+.benefit .who { font-family: var(--fd); font-weight: 800; font-size: 40px; color: var(--care); }
+.benefit p { font-size: 30px; line-height: 1.55; color: rgba(255,255,255,.88); font-weight: 500; }
+.steps4 { display: flex; flex-direction: column; gap: 14px; }
+.step { display: flex; align-items: center; gap: 14px; font-size: 19px; font-weight: 600; color: var(--muted); }
+.step .d { width: 30px; height: 30px; border-radius: 50%; border: 3px solid var(--line); background: #fff; flex: none; display: grid; place-items: center; color: #fff; font-size: 16px; }
+.step.on { color: var(--fg); }
+.step.on .d { background: var(--care-d); border-color: var(--care-d); }
+.bars { display: flex; align-items: flex-end; gap: 10px; height: 150px; }
+.bars div { flex: 1; border-radius: 8px 8px 4px 4px; background: var(--care-d); }
+.bars div.miss { background: #F2C6BC; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="bg"></div>
+  <div id="bigring"></div>
+  <div class="grain"></div>
+
+  <!-- 1 · hook -->
+  <section class="scene" data-id="hook">
+    <div class="copy" style="top:300px">
+      <div class="kicker a" data-t="0.1" data-fx="up"><i></i>كل زيارة نفس القصة</div>
+      <h1 class="a" data-t="0.4" data-fx="up">الأوراق تضيع<br><em>والصحة تنتظر</em></h1>
+    </div>
+    <div class="paper a" data-t="0.2" data-fx="drop" data-fn="drift" data-dx="-60" data-r="-9" style="left:200px;top:180px"><b>طلب تحاليل</b><i></i><i style="width:70%"></i><i></i><i style="width:50%"></i></div>
+    <div class="paper a" data-t="1.6" data-fx="drop" data-fn="drift" data-dx="70" data-r="7" style="left:470px;top:330px"><b>وصفة طبية</b><i></i><i style="width:80%"></i><i style="width:60%"></i><i></i></div>
+    <div class="paper a" data-t="3.0" data-fx="drop" data-fn="drift" data-dx="-30" data-r="-3" style="left:310px;top:560px;height:260px"><b>نتيجة قديمة</b><i></i><i style="width:40%"></i><i style="width:90%"></i></div>
+    <div class="big-badge a" data-t="p0.72" data-fx="pop" style="left:690px;top:240px;font-size:44px;background:var(--pulse);padding:10px 26px;border-radius:16px;transform-origin:center">من الصفر… مرة ثانية</div>
+  </section>
+
+  <!-- 2 · intro / the loop -->
+  <section class="scene" data-id="intro">
+    <svg class="loopsvg" width="820" height="820" viewBox="0 0 820 820" style="left:120px;top:130px">
+      <circle cx="410" cy="410" r="300" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="22"/>
+      <circle class="ring-glow" data-fn="drawRing" data-t="0.2" data-d="3.2" cx="410" cy="410" r="300" fill="none" stroke="#14B8A6" stroke-width="22" stroke-linecap="round" pathLength="1" stroke-dasharray="1 1" transform="rotate(-90 410 410)"/>
+      <g class="a" data-t="1.0" data-fx="pop" style="transform-origin:410px 110px"><circle cx="410" cy="110" r="44" fill="#0B1E33" stroke="#FF6B4A" stroke-width="10"/></g>
+      <g class="a" data-t="1.8" data-fx="pop" style="transform-origin:710px 410px"><circle cx="710" cy="410" r="44" fill="#0B1E33" stroke="#14B8A6" stroke-width="10"/></g>
+      <g class="a" data-t="2.6" data-fx="pop" style="transform-origin:410px 710px"><circle cx="410" cy="710" r="44" fill="#0B1E33" stroke="#14B8A6" stroke-width="10"/></g>
+      <g class="a" data-t="3.4" data-fx="pop" style="transform-origin:110px 410px"><circle cx="110" cy="410" r="44" fill="#0B1E33" stroke="#14B8A6" stroke-width="10"/></g>
+      <text class="node-t a" data-t="p0.45" data-fx="fade" x="410" y="200" text-anchor="middle">المريض</text>
+      <text class="node-t a" data-t="p0.52" data-fx="fade" x="600" y="422" text-anchor="middle">الطبيب</text>
+      <text class="node-t a" data-t="p0.60" data-fx="fade" x="410" y="640" text-anchor="middle">المختبر</text>
+      <text class="node-t a" data-t="p0.68" data-fx="fade" x="226" y="422" text-anchor="middle">الصيدلية</text>
+    </svg>
+    <div class="copy" style="top:330px">
+      <div class="kicker a" data-t="0.3" data-fx="up"><i></i><span class="brandname">منصة الرعاية</span></div>
+      <h1 class="a" data-t="0.7" data-fx="up">رعايتك صارت<br><em>حلقة وحدة</em></h1>
+      <p class="sub a" data-t="p0.5" data-fx="up">المريض والطبيب والمختبر والصيدلية… بمكان واحد</p>
+    </div>
+  </section>
+
+  <!-- 3 · booking -->
+  <section class="scene" data-id="book">
+    <div class="copy">
+      <div class="kicker a" data-t="0" data-fx="up"><i></i>المريض</div>
+      <h1 class="a" data-t="0.3" data-fx="up">احجز <em>بلمسة</em></h1>
+      <div class="pts">
+        <div class="pt a" data-t="p0.12" data-fx="left"><b>⌖</b>أقرب طبيب حسب الاختصاص</div>
+        <div class="pt a" data-t="p0.35" data-fx="left"><b>◷</b>المواعيد الفارغة أمامك</div>
+        <div class="pt a" data-t="p0.62" data-fx="left"><b>✓</b>تأكيد وتذكير قبل الموعد</div>
+      </div>
+    </div>
+    <div class="phone a" data-t="-0.3" data-fx="up" style="left:330px;top:130px">
+      <div class="screen"><div class="notch"></div>
+        <div class="sbar"><span>9:41</span><span>●●●</span></div>
+        <div class="appbar"><strong>اكتشف</strong><div class="logo-s"></div></div>
+        <div class="pbody">
+          <div class="search" data-fn="type" data-t="0.4" data-d="1.4" data-text="طبيب قلبية قريب"></div>
+          <div class="card a" data-t="p0.16" data-fx="up"><div class="row"><div class="av">أس</div><div style="flex:1"><div class="nm">د. أحمد سالم</div><div class="mu">باطنية وقلبية · الكرادة</div></div><span class="chip">1.2 كم</span></div></div>
+          <div class="card a" data-t="p0.22" data-fx="up"><div class="row"><div class="av">نر</div><div style="flex:1"><div class="nm">د. نور الربيعي</div><div class="mu">قلبية · المنصور</div></div><span class="chip">3.4 كم</span></div></div>
+          <div class="card a" data-t="p0.34" data-fx="up">
+            <div class="mu" style="font-weight:600;color:var(--fg)">الأحد ٢٦ تشرين الأول</div>
+            <div class="slots">
+              <div class="slot">4:00</div><div class="slot" data-fn="sel" data-t="p0.5">4:30</div><div class="slot">5:00</div>
+              <div class="slot">5:30</div><div class="slot">6:00</div><div class="slot">6:30</div>
+            </div>
+          </div>
+          <div class="btn care a" data-t="p0.55" data-fx="up">تأكيد الحجز</div>
+        </div>
+        <div class="notif a" data-t="p0.66" data-fx="drop" data-ding="1"><div class="ic"><div class="logo-s"></div></div><div><strong>تم تأكيد موعدك</strong><span>الأحد ٤:٣٠ م — رقم الحجز B-2041</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · queue -->
+  <section class="scene" data-id="queue">
+    <div class="copy" style="width:640px;right:110px;top:250px">
+      <div class="kicker a" data-t="0" data-fx="up"><i></i>الاستقبال</div>
+      <h1 class="a" data-t="0.3" data-fx="up" style="font-size:84px">نداء يوصل<br><em>للجيب</em></h1>
+      <p class="sub a" data-t="p0.3" data-fx="up">بلا زحمة، وبلا انتظار مجهول</p>
+    </div>
+    <div class="desk a" data-t="-0.3" data-fx="up" style="left:450px;top:170px;width:700px;height:560px">
+      <div class="dtop"><i></i><i></i><i></i><span>لوحة الاستقبال — عيادات الرافدين</span></div>
+      <div class="dwrap">
+        <div class="dmain">
+          <div class="dh">مرضى اليوم</div>
+          <div class="lane in"><div class="av" style="width:44px;height:44px;font-size:17px">زه</div><div class="nm">زهراء كاظم</div><span class="chip">داخل الجلسة</span></div>
+          <div class="lane wait" data-fn="callrow" data-t="p0.3"><div class="av" style="width:44px;height:44px;font-size:17px">حع</div><div class="nm">حسن علي</div><span class="chip gray" data-fn="swap" data-t="p0.33" data-a="حضر وينتظر" data-b="نُودي الآن">حضر وينتظر</span><span class="callbtn">نداء</span></div>
+          <div class="lane wait"><div class="av" style="width:44px;height:44px;font-size:17px">مر</div><div class="nm">مريم رعد</div><span class="chip gray">حضر وينتظر</span></div>
+          <div class="lane done"><div class="av" style="width:44px;height:44px;font-size:17px">عج</div><div class="nm">علي جاسم</div><span class="chip gray">انتهى</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="phone a" data-t="p0.2" data-fx="up" style="left:70px;top:190px;width:340px;height:700px;border-radius:50px">
+      <div class="screen" style="background:linear-gradient(180deg,#0E2A47,#123B5D);border-radius:40px"><div class="notch"></div>
+        <div class="sbar" style="color:#fff"><span>4:31</span><span>●●●</span></div>
+        <div data-fn="pulse" data-t="p0.36" style="position:absolute;left:50%;top:330px;width:0;height:0"></div>
+        <div class="a" data-t="p0.36" data-fx="pop" data-ding="2" style="position:absolute;left:0;right:0;top:230px;text-align:center;color:#fff">
+          <div style="width:150px;height:150px;border-radius:50%;background:var(--pulse);margin:0 auto;display:grid;place-items:center;font-size:72px">🔔</div>
+          <div style="font-family:var(--fd);font-weight:800;font-size:46px;margin-top:26px">حان دورك</div>
+          <div style="font-size:22px;opacity:.8;margin-top:6px">تفضّل إلى غرفة د. أحمد</div>
+        </div>
+      </div>
+    </div>
+    <div class="big-badge a" data-t="p0.5" data-fx="pop" style="left:470px;top:790px;font-size:30px;background:rgba(255,255,255,.1);padding:10px 22px;border-radius:14px">يوصل خلال ٠٫٣ ثانية ⚡</div>
+  </section>
+
+  <!-- 5 · doctor -->
+  <section class="scene" data-id="doctor">
+    <div class="copy" style="width:600px;right:100px;top:240px">
+      <div class="kicker a" data-t="0" data-fx="up"><i></i>الطبيب</div>
+      <h1 class="a" data-t="0.3" data-fx="up" style="font-size:84px">الصورة<br><em>كاملة</em></h1>
+      <div class="pts">
+        <div class="pt a" data-t="p0.12" data-fx="left"><b>♥</b>الأمراض والأدوية والحساسية</div>
+        <div class="pt a" data-t="p0.42" data-fx="left"><b>↗</b>التحاليل السابقة برسم</div>
+        <div class="pt a" data-t="p0.72" data-fx="left"><b>℞</b>وصفة وتحاليل بثواني</div>
+      </div>
+    </div>
+    <div class="desk a" data-t="-0.3" data-fx="up" style="left:60px;top:150px;width:1000px;height:680px">
+      <div class="dtop"><i></i><i></i><i></i><span>الجلسة — حسن علي</span></div>
+      <div class="dwrap">
+        <div class="dside"><div class="it on">البطاقة الطبية</div><div class="it">التحاليل</div><div class="it">الوصفة</div><div class="it">الأدوية</div></div>
+        <div class="dmain">
+          <div class="row"><div class="row" style="gap:14px;justify-content:flex-start"><div class="av">حع</div><div><div class="dh" style="font-size:24px">حسن علي · ٤٧ سنة</div><div class="mu">ID-W50 · آخر زيارة قبل ٣ أشهر</div></div></div></div>
+          <div class="row a" data-t="p0.14" data-fx="up" style="justify-content:flex-start;flex-wrap:wrap"><span class="chip">سكري نوع ٢</span><span class="chip">ضغط</span><span class="chip blue">ميتفورمين ٥٠٠</span><span class="chip red">حساسية: بنسلين</span></div>
+          <div class="card a" data-t="p0.38" data-fx="up" style="padding:16px 18px">
+            <div class="row"><strong style="font-size:18px">سكر صائم</strong><span class="chip">تحسّن ↓</span></div>
+            <svg width="100%" height="170" viewBox="0 0 640 170">
+              <rect x="0" y="62" width="640" height="56" fill="#E3ECFB"/>
+              <line x1="0" y1="62" x2="640" y2="62" stroke="#B9CBEA" stroke-dasharray="6 6"/><line x1="0" y1="118" x2="640" y2="118" stroke="#B9CBEA" stroke-dasharray="6 6"/>
+              <path data-fn="draw" data-t="p0.44" data-d="1.8" d="M40,20 L220,48 L400,78 L600,96" fill="none" stroke="#0E8F80" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1 1"/>
+              <g class="a" data-t="p0.46" data-fx="fade"><circle cx="40" cy="20" r="8" fill="#C62828"/><text x="40" y="150" text-anchor="middle" font-size="18" fill="#5B6F82">140</text></g>
+              <g class="a" data-t="p0.52" data-fx="fade"><circle cx="220" cy="48" r="8" fill="#C62828"/><text x="220" y="150" text-anchor="middle" font-size="18" fill="#5B6F82">124</text></g>
+              <g class="a" data-t="p0.58" data-fx="fade"><circle cx="400" cy="78" r="8" fill="#1D5FD1"/><text x="400" y="150" text-anchor="middle" font-size="18" fill="#5B6F82">106</text></g>
+              <g class="a" data-t="p0.64" data-fx="fade"><circle cx="600" cy="96" r="10" fill="#1D5FD1"/><text x="600" y="150" text-anchor="middle" font-size="18" font-weight="700" fill="#1D5FD1">98</text></g>
+            </svg>
+          </div>
+          <div class="card a" data-t="p0.7" data-fx="up" style="padding:14px 18px;gap:8px">
+            <div class="row"><strong style="font-size:18px">℞ الوصفة</strong><span class="chip a" data-t="p0.92" data-fx="pop">معتمدة ✓</span></div>
+            <div style="font-size:18px" data-fn="type" data-t="p0.72" data-d="1.6" data-text="ميتفورمين ٥٠٠ ملغم — حبة بعد الأكل مرتين يومياً"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · lab -->
+  <section class="scene" data-id="lab">
+    <div class="copy" style="width:560px;right:90px;top:220px">
+      <div class="kicker a" data-t="0" data-fx="up"><i></i>المختبر</div>
+      <h1 class="a" data-t="0.3" data-fx="up" style="font-size:80px">أي مختبر<br><em>برمز واحد</em></h1>
+      <div class="pts">
+        <div class="pt a" data-t="p0.08" data-fx="left"><b>▦</b>رمز QR بهاتف المريض</div>
+        <div class="pt a" data-t="p0.3" data-fx="left"><b>⇄</b>المختبر يمسح ويستلم</div>
+        <div class="pt a" data-t="p0.5" data-fx="left"><b>●</b>أحمر مرتفع · أزرق طبيعي</div>
+        <div class="pt a" data-t="p0.8" data-fx="left"><b>✎</b>أو أدخل النتيجة بنفسك</div>
+      </div>
+    </div>
+    <div class="phone a" data-t="-0.3" data-fx="up" style="left:760px;top:140px;width:360px;height:760px">
+      <div class="screen"><div class="notch"></div>
+        <div class="sbar"><span>10:12</span><span>●●●</span></div>
+        <div class="appbar"><strong>طلبات التحاليل</strong><div class="logo-s"></div></div>
+        <div class="pbody" style="align-items:center">
+          <div class="mu" style="align-self:stretch;text-align:center">د. أحمد سالم — صالح ٧ أيام</div>
+          <div class="qr"><canvas id="qrc" width="29" height="29"></canvas><div class="scanline" data-fn="scan" data-t="p0.26" data-d="1.6"></div></div>
+          <div class="code">64JE-0X9N</div>
+          <div class="card" style="align-self:stretch;gap:8px">
+            <div class="row"><span>سكر صائم</span><span class="chip gray" data-fn="swap" data-t="p0.34" data-a="لم يُجرَ بعد" data-b="بالمختبر">لم يُجرَ بعد</span></div>
+            <div class="row"><span>السكر التراكمي</span><span class="chip gray" data-fn="swap" data-t="p0.34" data-a="لم يُجرَ بعد" data-b="بالمختبر">لم يُجرَ بعد</span></div>
+            <div class="row"><span>فيتامين D</span><span class="chip gray" data-fn="swap" data-t="p0.82" data-a="لم يُجرَ بعد" data-b="أدخلتها أنت">لم يُجرَ بعد</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="desk a" data-t="p0.22" data-fx="right" style="left:70px;top:250px;width:640px;height:520px">
+      <div class="dtop"><i></i><i></i><i></i><span>مختبر الرافدين — النتائج</span></div>
+      <div class="dmain" style="padding:22px">
+        <div class="dh" style="font-size:24px">حسن علي · رمز 64JE-0X9N</div>
+        <div class="res a" data-t="p0.46" data-fx="up" data-ding="3"><div><div class="nm">سكر صائم</div><div class="mu">المجال 70–100 mg/dL</div></div><div class="row" style="gap:12px"><span class="chip red">مرتفع ↑</span><span class="v" style="color:var(--high)">124</span></div></div>
+        <div class="res a" data-t="p0.52" data-fx="up"><div><div class="nm">السكر التراكمي HbA1c</div><div class="mu">المجال 4.0–5.6 %</div></div><div class="row" style="gap:12px"><span class="chip blue">طبيعي</span><span class="v" style="color:var(--normal)">5.4</span></div></div>
+        <div class="res a" data-t="p0.84" data-fx="up"><div><div class="nm">فيتامين D</div><div class="mu">مختبر خارجي</div></div><div class="row" style="gap:12px"><span class="chip" style="background:#FFF1D6;color:#9A6400">أدخلها المريض</span><span class="v" style="color:var(--normal)">34</span></div></div>
+        <div class="row a" data-t="p0.58" data-fx="up" style="justify-content:flex-start;gap:10px"><span class="chip">✓ وصلت للمريض</span><span class="chip">✓ وصلت للطبيب</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 · pharmacy -->
+  <section class="scene" data-id="pharmacy">
+    <div class="copy" style="width:620px;right:110px;top:260px">
+      <div class="kicker a" data-t="0" data-fx="up"><i></i>الصيدلية</div>
+      <h1 class="a" data-t="0.3" data-fx="up" style="font-size:84px">وصفة بلا<br><em>ورق ولا خط</em></h1>
+      <p class="sub a" data-t="p0.35" data-fx="up">والصيدلي يحچي الطبيب مباشرة</p>
+    </div>
+    <div class="desk a" data-t="-0.3" data-fx="up" style="left:80px;top:170px;width:860px;height:470px">
+      <div class="dtop"><i></i><i></i><i></i><span>وارد الوصفات — صيدلية دجلة</span></div>
+      <div class="dmain">
+        <div class="card" data-fn="flyin" data-t="0.1" style="padding:18px 20px;gap:10px">
+          <div class="row"><strong style="font-size:21px">℞ RX-7781 · حسن علي</strong><span class="chip gray" data-fn="swap" data-t="p0.32" data-a="جديدة" data-b="تم الصرف ✓">جديدة</span></div>
+          <div class="row"><span style="font-size:19px">ميتفورمين ٥٠٠ ملغم — ٦٠ حبة</span><span class="mu">د. أحمد سالم</span></div>
+          <div class="row"><span style="font-size:19px">أملوديبين ٥ ملغم — ٣٠ حبة</span><span class="mu">مرة يومياً</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="bubble b1 a" data-t="p0.5" data-fx="up" style="left:150px;top:660px"><small>الصيدلي ← الطبيب</small>أملوديبين ٥ غير متوفر، ممكن ١٠ ملغم نص حبة؟</div>
+    <div class="bubble b2 a" data-t="p0.82" data-fx="up" data-ding="4" style="left:660px;top:700px"><small>رد الطبيب</small>نعم، نص حبة يومياً ✓</div>
+  </section>
+
+  <!-- 8 · meds -->
+  <section class="scene" data-id="meds">
+    <div class="copy" style="top:260px">
+      <div class="kicker a" data-t="0" data-fx="up"><i></i>بالبيت</div>
+      <h1 class="a" data-t="0.3" data-fx="up">ولا جرعة<br><em>تفوتك</em></h1>
+      <p class="sub a" data-t="p0.45" data-fx="up">وطبيبك يتابع التزامك أسبوع بأسبوع</p>
+    </div>
+    <div class="phone a" data-t="-0.3" data-fx="up" style="left:260px;top:130px">
+      <div class="screen" style="background:linear-gradient(170deg,#1A3E63,#0B1E33)"><div class="notch"></div>
+        <div class="sbar" style="color:#fff"><span></span><span>●●●</span></div>
+        <div style="text-align:center;color:#fff;margin-top:40px"><div style="font-family:var(--fd);font-weight:700;font-size:96px;direction:ltr">8:00</div><div style="font-size:22px;opacity:.8">الإثنين ٢٧ تشرين الأول</div></div>
+        <div class="notif a" data-t="p0.06" data-fx="drop" data-ding="5" style="top:300px;flex-wrap:wrap">
+          <div class="ic"><div class="logo-s"></div></div><div style="flex:1"><strong>تذكير</strong><span>حان موعد جرعتك حسب خطتك</span></div>
+          <div class="row" style="width:100%;gap:8px;margin-top:6px"><div class="btn care" style="flex:1;padding:11px;font-size:17px" data-fn="press" data-t="p0.3">أخذتها ✓</div><div class="btn" style="flex:1;padding:11px;font-size:17px;background:#E9EEF2;color:var(--fg)">بعد ١٠ دقائق</div></div>
+        </div>
+        <div class="a" data-t="p0.34" data-fx="pop" style="position:absolute;top:470px;left:0;right:0;text-align:center;color:#fff;font-family:var(--fd);font-weight:700;font-size:30px">✓ سُجّلت الجرعة</div>
+      </div>
+    </div>
+    <div class="desk a" data-t="p0.42" data-fx="right" style="left:720px;top:560px;width:430px;height:330px;border-radius:18px">
+      <div class="dmain" style="padding:20px">
+        <div class="row"><strong style="font-size:20px">الالتزام بالعلاج</strong><span class="chip"><span data-fn="count" data-t="p0.5" data-d="1.4" data-to="92">0</span>٪</span></div>
+        <div class="bars" data-fn="bars" data-t="p0.5" data-d="1.4">
+          <div style="--h:100%"></div><div style="--h:100%"></div><div class="miss" style="--h:30%"></div><div style="--h:100%"></div><div style="--h:85%"></div><div style="--h:100%"></div><div style="--h:100%"></div>
+        </div>
+        <div class="mu">آخر ٧ أيام · حسن علي</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 · extras -->
+  <section class="scene" data-id="extras">
+    <div class="copy" style="width:600px;right:110px;top:250px">
+      <div class="kicker a" data-t="0" data-fx="up"><i></i>وأكثر</div>
+      <h1 class="a" data-t="0.3" data-fx="up" style="font-size:84px">التحليل يجيك<br><em>للبيت</em></h1>
+      <p class="sub a" data-t="p0.55" data-fx="up">ومساعد ذكي يدلك على الطبيب المناسب</p>
+    </div>
+    <div class="phone a" data-t="-0.3" data-fx="up" style="left:700px;top:150px;width:360px;height:760px">
+      <div class="screen"><div class="notch"></div>
+        <div class="sbar"><span>11:20</span><span>●●●</span></div>
+        <div class="appbar"><strong>تحليل منزلي</strong><div class="logo-s"></div></div>
+        <div class="pbody">
+          <div class="card"><div class="row"><div class="nm">مختبر الرافدين</div><span class="chip">سحب منزلي</span></div><div class="mu">صورة دم كاملة · سكر صائم</div></div>
+          <div class="card steps4">
+            <div class="step" data-fn="stepon" data-t="p0.04"><span class="d">✓</span>وصل الطلب</div>
+            <div class="step" data-fn="stepon" data-t="p0.14"><span class="d">✓</span>تحدد الموعد — ٩:٠٠ ص</div>
+            <div class="step" data-fn="stepon" data-t="p0.26"><span class="d">✓</span>المختص بالطريق</div>
+            <div class="step" data-fn="stepon" data-t="p0.38"><span class="d">✓</span>سُحبت العينة</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bubble b1 a" data-t="p0.55" data-fx="up" style="left:110px;top:300px"><small>أنت</small>عندي صداع يتكرر كل يوم بالعصر</div>
+    <div class="bubble b2 a" data-t="p0.7" data-fx="up" style="left:200px;top:500px"><small>المساعد الذكي</small>أقرب طبيب أعصاب: د. سارة — ٢ كم، وعندها موعد اليوم</div>
+  </section>
+
+  <!-- 10 · close -->
+  <section class="scene" data-id="close">
+    <div class="benefit a" data-t="0.1" data-fx="up" style="right:150px;top:150px"><div class="who">للمريض</div><p>راحة وأمان، وكل ملفك الصحي بجيبك</p></div>
+    <div class="benefit a" data-t="p0.12" data-fx="up" style="right:725px;top:150px"><div class="who">للطبيب</div><p>صورة كاملة عن مريضه، ووقت أكثر للعلاج</p></div>
+    <div class="benefit a" data-t="p0.24" data-fx="up" style="right:1300px;top:150px"><div class="who">للمختبر والصيدلية</div><p>شغل أسرع، ومرضى أكثر يوصلون</p></div>
+    <div class="a" data-t="p0.42" data-fx="up" style="position:absolute;left:0;right:0;top:510px;display:flex;flex-direction:column;align-items:center;gap:22px">
+      <div style="display:flex;align-items:center;gap:26px">
+        <svg width="120" height="120" viewBox="0 0 120 120"><circle cx="60" cy="60" r="44" fill="none" stroke="#14B8A6" stroke-width="12"/><circle cx="60" cy="16" r="11" fill="#0B1E33" stroke="#FF6B4A" stroke-width="6"/><circle cx="104" cy="60" r="9" fill="#0B1E33" stroke="#14B8A6" stroke-width="5"/><circle cx="60" cy="104" r="9" fill="#0B1E33" stroke="#14B8A6" stroke-width="5"/><circle cx="16" cy="60" r="9" fill="#0B1E33" stroke="#14B8A6" stroke-width="5"/></svg>
+        <div style="font-family:var(--fd);font-weight:800;font-size:96px" class="brandname">منصة الرعاية</div>
+      </div>
+      <div style="font-family:var(--fd);font-weight:500;font-size:40px;color:var(--care)">حلقة وحدة، وصحتك بالنص</div>
+    </div>
+    <div class="a" data-t="p0.8" data-fx="pop" style="position:absolute;left:0;right:0;top:800px;display:flex;justify-content:center;gap:18px">
+      <div style="background:var(--care-d);padding:16px 40px;border-radius:18px;font-family:var(--fd);font-weight:700;font-size:34px">حمّل التطبيق اليوم</div>
+      <div style="border:2px solid rgba(255,255,255,.25);padding:16px 30px;border-radius:18px;font-size:28px;font-weight:600;display:flex;align-items:center">Android · iPhone · الويب</div>
+    </div>
+  </section>
+
+  <div id="cap"></div>
+</div>
+
+<script src="data.js"></script>
+<script>
+const SCRIPT = window.SCRIPT;
+const BRAND = (window.BRAND || 'منصة الرعاية');
+document.querySelectorAll('.brandname').forEach((e) => e.textContent = BRAND);
+const LEAD = 0.9, TAIL = 0.55, END_HOLD = 2.2;
+const clamp = (x) => Math.max(0, Math.min(1, x));
+const easeOut = (x) => 1 - Math.pow(1 - x, 3);
+const easeBack = (x) => { const c1 = 1.5, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+
+// timeline from narration
+let cur = 0;
+const scenes = SCRIPT.map((s, i) => {
+  const vs = cur, as = vs + (i === 0 ? LEAD : 0.55), ae = as + s.dur, ve = ae + TAIL + (i === SCRIPT.length - 1 ? END_HOLD : 0);
+  cur = ve;
+  return { ...s, vs, as, ae, ve, el: document.querySelector(`.scene[data-id="${s.id}"]`) };
+});
+window.TOTAL = cur;
+window.AUDIO = scenes.map((s) => ({ id: s.id, at: +s.as.toFixed(3) }));
+const at = (v, s) => (String(v).startsWith('p') ? parseFloat(v.slice(1)) * s.dur : parseFloat(v || 0));
+
+// captions: sentence chunks, timed by length
+scenes.forEach((s) => {
+  const parts = s.text.split(/(?<=[.؟:،])\s+/);
+  const chunks = []; let buf = '';
+  for (const p of parts) { buf = buf ? buf + ' ' + p : p; if (buf.length >= 26) { chunks.push(buf); buf = ''; } }
+  if (buf) { if (chunks.length && buf.length < 14) chunks[chunks.length - 1] += ' ' + buf; else chunks.push(buf); }
+  const total = chunks.reduce((n, c) => n + c.length, 0); let t = s.as;
+  s.caps = chunks.map((c) => { const d = s.dur * c.length / total; const r = { t0: t, t1: t + d, text: c.replace(/[،.]$/, '') }; t += d; return r; });
+});
+
+window.DINGS = [];
+scenes.forEach((s) => s.el.querySelectorAll('[data-ding]').forEach((e) => window.DINGS.push(+(s.as + at(e.dataset.t, s) + 0.15).toFixed(3))));
+
+// QR pattern (decorative, deterministic)
+(function () {
+  const c = document.getElementById('qrc'), g = c.getContext('2d'), n = 29; let seed = 7;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  g.fillStyle = '#fff'; g.fillRect(0, 0, n, n); g.fillStyle = '#0B1E33';
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (rnd() > 0.52) g.fillRect(x, y, 1, 1);
+  const finder = (x, y) => { g.fillStyle = '#0B1E33'; g.fillRect(x, y, 7, 7); g.fillStyle = '#fff'; g.fillRect(x + 1, y + 1, 5, 5); g.fillStyle = '#0B1E33'; g.fillRect(x + 2, y + 2, 3, 3); };
+  g.fillStyle = '#fff'; g.fillRect(0, 0, 8, 8); g.fillRect(n - 8, 0, 8, 8); g.fillRect(0, n - 8, 8, 8);
+  finder(0, 0); finder(n - 7, 0); finder(0, n - 7);
+})();
+
+const FN = {
+  type(el, k, s, l, t0) { const txt = el.dataset.text, d = parseFloat(el.dataset.d || 1.2); const n = Math.round(clamp((l - t0) / d) * txt.length);
+    el.innerHTML = n ? `<span>${txt.slice(0, n)}</span>${n < txt.length ? '|' : ''}` : 'ابحث عن طبيب أو مختبر…'; },
+  draw(el, k, s, l, t0) { el.style.strokeDashoffset = 1 - easeOut(clamp((l - t0) / parseFloat(el.dataset.d || 1))); },
+  drawRing(el, k, s, l, t0) { el.style.strokeDashoffset = 1 - easeOut(clamp((l - t0) / parseFloat(el.dataset.d || 1))); },
+  sel(el, k, s, l, t0) { el.classList.toggle('on', l >= t0); },
+  swap(el, k, s, l, t0) { const on = l >= t0; el.textContent = on ? el.dataset.b : el.dataset.a; el.className = 'chip ' + (on ? '' : 'gray'); },
+  stepon(el, k, s, l, t0) { el.classList.toggle('on', l >= t0); },
+  callrow(el, k, s, l, t0) { const p = clamp((l - t0) / 0.5); el.style.boxShadow = p > 0 && l < t0 + 2.5 ? `0 0 0 ${3 * p}px rgba(255,107,74,.6)` : 'none'; },
+  press(el, k, s, l, t0) { const p = l - t0; el.style.transform = p > 0 && p < 0.25 ? 'scale(.94)' : 'scale(1)'; },
+  scan(el, k, s, l, t0) { const p = (l - t0) / parseFloat(el.dataset.d || 1.5); el.style.opacity = p > 0 && p < 1 ? 1 : 0; el.style.top = (10 + 200 * (0.5 - 0.5 * Math.cos(Math.PI * 2 * clamp(p)))) + 'px'; },
+  count(el, k, s, l, t0) { el.textContent = Math.round(easeOut(clamp((l - t0) / parseFloat(el.dataset.d))) * parseFloat(el.dataset.to)); },
+  bars(el, k, s, l, t0) { const p = easeOut(clamp((l - t0) / parseFloat(el.dataset.d))); [...el.children].forEach((b, i) => b.style.height = `calc(${b.style.getPropertyValue('--h')} * ${clamp(p * 1.4 - i * 0.06)})`); },
+  pulse(el, k, s, l, t0) {
+    if (!el._r) { el._r = [0, 1, 2].map(() => { const r = document.createElement('div'); r.className = 'ring-pulse'; el.appendChild(r); return r; }); }
+    el._r.forEach((r, i) => { const p = l < t0 ? -1 : ((l - t0) / 1.6 + i / 3) % 1; const sz = 150 + 260 * p;
+      r.style.cssText = `width:${sz}px;height:${sz}px;left:${-sz / 2}px;top:${-sz / 2}px;opacity:${p < 0 ? 0 : (1 - p) * 0.8}`; }); },
+  drift(el, k, s, l, t0) { const p = clamp(l / s.dur); el.style.transform = `translate(${(+el.dataset.dx) * p}px, ${-(1 - k) * 140 + 30 * p}px) rotate(${(+el.dataset.r) * (0.4 + p)}deg)`; el.style.opacity = k * (1 - clamp((l - s.dur * 0.85) / 1)); },
+  flyin(el, k, s, l, t0) { const p = easeOut(clamp((l - t0) / 0.9)); el.style.transform = `translateX(${-(1 - p) * 500}px)`; el.style.opacity = p; },
+};
+
+function applyFx(el, k, fx) {
+  let tr = '';
+  if (fx === 'up') tr = `translateY(${(1 - k) * 46}px)`;
+  else if (fx === 'drop') tr = `translateY(${-(1 - k) * 110}px)`;
+  else if (fx === 'left') tr = `translateX(${(1 - k) * 60}px)`;
+  else if (fx === 'right') tr = `translateX(${-(1 - k) * 80}px)`;
+  else if (fx === 'pop') { const b = k <= 0 ? 0 : easeBack(Math.min(1, k)); tr = `scale(${0.5 + 0.5 * b})`; }
+  el.style.opacity = clamp(k * 1.4);
+  if (el instanceof SVGElement && fx === 'fade') { el.style.opacity = k; return; }
+  el.style.transform = tr;
+}
+
+function seek(t) {
+  document.getElementById('bigring').style.transform = `rotate(${t * 3}deg)`;
+  let caption = '';
+  for (const s of scenes) {
+    const vis = t >= s.vs - 0.01 && t < s.ve + 0.45;
+    s.el.style.display = vis ? 'block' : 'none';
+    if (!vis) continue;
+    const fadeIn = clamp((t - s.vs) / 0.5), fadeOut = s.id === 'close' ? 1 : clamp((s.ve + 0.45 - t) / 0.45);
+    s.el.style.opacity = Math.min(fadeIn, fadeOut);
+    const l = t - s.as;
+    s.el.style.transform = `scale(${1 + 0.025 * clamp((t - s.vs) / (s.ve - s.vs))})`;
+    s.el.querySelectorAll('.a').forEach((el) => { if (el.dataset.fn) return; const k = easeOut(clamp((l - at(el.dataset.t, s)) / 0.7)); applyFx(el, k, el.dataset.fx); });
+    s.el.querySelectorAll('[data-fn]').forEach((el) => { const t0 = at(el.dataset.t, s); const k = easeOut(clamp((l - t0) / 0.7)); FN[el.dataset.fn](el, k, s, l, t0); });
+    for (const c of s.caps) if (t >= c.t0 && t < c.t1 + 0.12) caption = c.text;
+  }
+  document.getElementById('cap').textContent = window.NOCAP ? '' : caption;
+}
+window.seek = seek;
+seek(0);
+</script>
+</body>
+</html>
