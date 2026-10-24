@@ -1827,14 +1827,14 @@ isOneToOne: false
                   ]
                 },"push_devices": {
                   Row: {
-                    "created_at": string,"disabled_at": string | null,"failures": number,"id": string,"kind": string,"last_seen_at": string,"platform": string | null,"token": string,"user_id": string,"web_keys": Json | null
+                    "created_at": string,"disabled_at": string | null,"failures": number,"id": string,"kind": string,"last_seen_at": string,"local_reminders": boolean,"platform": string | null,"token": string,"user_id": string,"web_keys": Json | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"disabled_at"?: string | null,"failures"?: number,"id"?: string,"kind": string,"last_seen_at"?: string,"platform"?: string | null,"token": string,"user_id": string,"web_keys"?: Json | null
+                    "created_at"?: string,"disabled_at"?: string | null,"failures"?: number,"id"?: string,"kind": string,"last_seen_at"?: string,"local_reminders"?: boolean,"platform"?: string | null,"token": string,"user_id": string,"web_keys"?: Json | null
                   }
                   Update: {
-                    "created_at"?: string,"disabled_at"?: string | null,"failures"?: number,"id"?: string,"kind"?: string,"last_seen_at"?: string,"platform"?: string | null,"token"?: string,"user_id"?: string,"web_keys"?: Json | null
+                    "created_at"?: string,"disabled_at"?: string | null,"failures"?: number,"id"?: string,"kind"?: string,"last_seen_at"?: string,"local_reminders"?: boolean,"platform"?: string | null,"token"?: string,"user_id"?: string,"web_keys"?: Json | null
                   }
                   Relationships: [
                     {
@@ -3733,6 +3733,9 @@ isOneToOne: false
                            },
 "set_membership_status":
 { Args: { "p_membership_id": string,"p_reason": string,"p_status": Database["public"]['Enums']["membership_status"] }; Returns: undefined
+                           },
+"set_push_device_local_reminders":
+{ Args: { "p_on": boolean,"p_token": string }; Returns: undefined
                            },
 "set_reception_scope":
 { Args: { "p_allowed": boolean,"p_membership_id": string,"p_practitioner_id": string }; Returns: undefined

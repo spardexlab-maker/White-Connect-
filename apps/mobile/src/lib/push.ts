@@ -3,6 +3,8 @@ import * as Notifications from 'expo-notifications';
 import * as SecureStore from 'expo-secure-store';
 import { router } from 'expo-router';
 import { supabase } from './supabase';
+import { enableReminders, remindersEnabled } from './reminders';
+import { resyncDoses } from './doseActions';
 
 /**
  * Server push on Android (Firebase Cloud Messaging): appointment changes,
@@ -19,22 +21,35 @@ async function channel() {
   });
 }
 
-/** After sign-in: ask once, then register this phone's FCM token for the user. */
+/** After sign-in: ask once; then medicine reminders ring from the phone's own schedule
+ *  (also offline), and on Android the FCM token is registered for everything else. */
 export async function registerPhonePush(): Promise<void> {
-  if (Platform.OS !== 'android') return;
+  if (Platform.OS === 'web') return;
   try {
-    await channel();
+    if (Platform.OS === 'android') await channel();
     let perm = await Notifications.getPermissionsAsync();
     if (!perm.granted && (await SecureStore.getItemAsync(ASKED)) !== '1') {
       await SecureStore.setItemAsync(ASKED, '1');
       perm = await Notifications.requestPermissionsAsync();
     }
     if (!perm.granted) return;
+    if (await remindersEnabled()) { await enableReminders(); await resyncDoses(); }
+    if (Platform.OS !== 'android') return;
     const tok = await Notifications.getDevicePushTokenAsync();   // fails on builds without Firebase — fine
     if (typeof tok.data === 'string' && tok.data) {
       await supabase.rpc('register_push_device', { p_kind: 'fcm', p_token: tok.data, p_platform: 'android' });
+      await reportLocalReminders();
     }
   } catch { /* older app build without Firebase: local reminders keep working */ }
+}
+
+/** Tell the server whether this phone rings doses itself (then it sends no medicine push here). */
+export async function reportLocalReminders(): Promise<void> {
+  if (Platform.OS !== 'android') return;
+  try {
+    const tok = await Notifications.getDevicePushTokenAsync();
+    if (typeof tok.data === 'string') await supabase.rpc('set_push_device_local_reminders', { p_token: tok.data, p_on: await remindersEnabled() });
+  } catch { /* no Firebase on this build */ }
 }
 
 /** Before sign-out: stop this phone receiving the account's notifications. */

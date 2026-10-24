@@ -5,6 +5,8 @@ import { useAuth } from '../../src/lib/auth';
 import { supabase, webUrl } from '../../src/lib/supabase';
 import { useAsync } from '../../src/lib/useAsync';
 import { disableReminders, enableReminders, remindersEnabled } from '../../src/lib/reminders';
+import { reportLocalReminders } from '../../src/lib/push';
+import { resyncDoses } from '../../src/lib/doseActions';
 import { AuthForm, RegisterSelf } from '../../src/components/AuthForms';
 import { PatientCard } from '../../src/components/PatientCard';
 import { UpdateCheckRow } from '../../src/components/UpdatePrompt';
@@ -72,9 +74,10 @@ function ReminderToggle() {
   if (Platform.OS === 'web') return null;
   const toggle = async (v: boolean) => {
     setMsg(null);
-    if (!v) { await disableReminders(); setOn(false); return; }
+    if (!v) { await disableReminders(); setOn(false); void reportLocalReminders(); return; }
     const res = await enableReminders();
     setOn(res === 'granted');
+    if (res === 'granted') { await resyncDoses(); void reportLocalReminders(); }
     if (res === 'denied') setMsg('لم يُمنح إذن الإشعارات. يمكنك تفعيله من إعدادات الهاتف.');
   };
   return (
@@ -82,7 +85,7 @@ function ReminderToggle() {
       <Row between>
         <Stack gap={2} style={{ flex: 1 }}>
           <Text variant="title">تذكيرات الدواء على هذا الهاتف</Text>
-          <Text variant="small" muted>نص الإشعار عام ولا يذكر اسم الدواء. تُحذف التذكيرات عند الخروج.</Text>
+          <Text variant="small" muted>تشتغل تلقائياً بعد السماح بالإشعارات، وترن حتى بدون إنترنت. تُحذف التذكيرات عند الخروج.</Text>
         </Stack>
         <Switch value={on} onValueChange={(v) => void toggle(v)} trackColor={{ true: color.accent, false: color.borderStrong }} accessibilityLabel="تذكيرات الدواء" />
       </Row>

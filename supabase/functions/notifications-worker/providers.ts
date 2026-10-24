@@ -38,8 +38,8 @@ class PushProvider implements Provider {
   constructor(rpc: Rpc) { this.rpc = rpc; }
   async send(userId: string, msg: Rendered, template: string): Promise<DeliveryResult> {
     let targets = await this.rpc<PushTarget[]>('push_targets', { p_user_id: userId });
-    // the phone already rings for each dose from its own local schedule — only browsers get these
-    if (template === 'medication.reminder') targets = targets.filter((t) => t.kind === 'web');
+    // a phone that rings each dose from its own schedule is skipped (no double ring)
+    if (template === 'medication.reminder') targets = targets.filter((t) => t.kind === 'web' || !t.local_reminders);
     if (!targets.length) return { ok: true };          // nowhere to deliver: the in-app inbox has it
     const sa = fcmAccount();
     let delivered = 0, lastError: string | undefined;

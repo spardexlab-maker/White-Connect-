@@ -34,9 +34,11 @@ if (Platform.OS !== 'web') {
   });
 }
 
+/** On by default once notifications are allowed; off only when the patient switched it off. */
 export async function remindersEnabled(): Promise<boolean> {
   if (Platform.OS === 'web') return false;
-  return (await SecureStore.getItemAsync(FLAG)) === '1';
+  if ((await SecureStore.getItemAsync(FLAG)) === '0') return false;
+  return (await Notifications.getPermissionsAsync()).granted;
 }
 
 /** Ask permission (only after the patient taps "enable"). */
@@ -56,7 +58,7 @@ export async function enableReminders(): Promise<'granted' | 'denied' | 'unsuppo
 
 export async function disableReminders(): Promise<void> {
   if (Platform.OS === 'web') return;
-  await SecureStore.deleteItemAsync(FLAG);
+  await SecureStore.setItemAsync(FLAG, '0');
   await cancelAllReminders();
 }
 

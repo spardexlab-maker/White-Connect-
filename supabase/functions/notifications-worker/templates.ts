@@ -37,6 +37,8 @@ export function render(template: string, payload: Record<string, unknown>): Rend
       return { title: 'تعذّر تنفيذ طلب السحب المنزلي', body: `اعتذر المختبر عن الطلب ${req}. افتح التطبيق للتفاصيل.`, link: '/patient/home-lab' };
     case 'application.new':
       return { title: 'طلب انضمام جديد', body: `استمارة ${typeof payload.application_number === 'string' ? payload.application_number : ''} بانتظار المراجعة.`, link: '/platform-admin/applications' };
+    case 'queue.called':
+      return { title: 'حان دورك 🔔', body: `تفضّل إلى غرفة الطبيب${typeof payload.doctor === 'string' && payload.doctor ? ` — ${payload.doctor}` : ''}.`, link: '/patient/appointments' };
     case 'medication.reminder':
       return { title: 'تذكير', body: 'حان موعد جرعتك حسب خطتك. افتح التطبيق للتفاصيل.', link: '/patient/meds' };
     case 'prescription.approved':

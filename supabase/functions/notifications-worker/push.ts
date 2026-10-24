@@ -16,7 +16,7 @@ const concat = (...parts: Uint8Array[]) => {
   return out;
 };
 
-export interface PushTarget { id: string; kind: 'fcm' | 'web'; token: string; web_keys: { p256dh: string; auth: string } | null }
+export interface PushTarget { id: string; kind: 'fcm' | 'web'; token: string; web_keys: { p256dh: string; auth: string } | null; local_reminders?: boolean }
 export interface SendResult { ok: boolean; gone?: boolean; error?: string }
 
 // ---------------------------------------------------------------- FCM
