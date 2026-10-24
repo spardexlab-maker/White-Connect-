@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { HeartPulse, ShieldCheck, Smartphone } from 'lucide-react';
 import { errorMessage } from '@app/shared';
 import { supabase, productName } from '../../lib/supabase';
@@ -80,6 +80,7 @@ export function Security() {
         )}
         {error && <Alert tone="danger">{error}</Alert>}
         {state === 'done' && <Button onClick={() => navigate(next)}>متابعة</Button>}
+        <Link to="/reset-password" className="small">تغيير كلمة المرور</Link>
       </div>
     </main>
   );

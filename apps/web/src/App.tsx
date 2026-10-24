@@ -22,6 +22,7 @@ import { MyHealth } from './pages/patient/Health';
 import { AssistantPage } from './pages/patient/Assistant';
 import { VerifyRx } from './pages/VerifyRx';
 import { JoinDoctor } from './pages/JoinDoctor';
+import { ResetPassword } from './pages/ResetPassword';
 
 // Professional and admin areas are code-split so patients on mobile do not download them.
 const ProLogin = lazy(() => import('./pages/pro/Login').then((m) => ({ default: m.ProLogin })));
@@ -138,6 +139,7 @@ export function App() {
               <Route path="/print/receipt/:id" element={<RequireStaffOrPatient><PrintReceipt /></RequireStaffOrPatient>} />
               <Route path="/verify/rx" element={<VerifyRx />} />
               <Route path="/join" element={<JoinDoctor />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/dev/components" element={<ComponentGallery />} />
               <Route path="*" element={<Navigate to="/patient" replace />} />
             </Routes>
