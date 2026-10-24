@@ -365,3 +365,24 @@
 .hl-steps li.now { color: var(--c-text); font-weight: 600; }
 .home-lab-cta { text-decoration: none; color: inherit; padding: var(--s-3); }
 .home-lab-cta:hover { border-color: var(--c-accent); }
+
+/* «استمارة انضمام طبيب» — on screen and as a printed paper form */
+.join-wrap { min-height: 100dvh; background: var(--c-canvas); padding: var(--s-4) var(--s-3); }
+.join-card { max-width: 900px; margin: 0 auto; background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 18px; padding: var(--s-5) var(--s-4); }
+.join-h { font-size: var(--f-h3); border-bottom: 2px solid var(--c-accent-soft); padding-bottom: 6px; margin: 0; }
+.join-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: var(--s-2) var(--s-3); align-items: start; }
+.join-svc { width: 100%; border-collapse: collapse; }
+.join-svc th { text-align: start; font-size: 13px; color: var(--c-muted); padding: 4px; }
+.join-svc td { padding: 4px; }
+.join-sign { display: none; }
+@media print {
+  .join-wrap { padding: 0; background: #fff; }
+  .join-card, .join-card * { visibility: visible !important; }
+  .join-card { position: absolute; inset-block-start: 0; inset-inline-start: 0; width: 100%; border: 0; padding: 0; max-width: none; }
+  .join-card .no-print { display: none !important; }
+  .join-card .input, .join-card select, .join-card textarea { border: 0; border-bottom: 1px dotted #999; border-radius: 0; background: transparent; min-height: 28px; }
+  .join-svc td { border: 1px solid #bbb; height: 28px; }
+  .join-svc tr.print-only { display: table-row; }
+  .join-sign { display: flex !important; justify-content: space-between; margin-top: 24px; }
+  .join-card section { break-inside: avoid; }
+}

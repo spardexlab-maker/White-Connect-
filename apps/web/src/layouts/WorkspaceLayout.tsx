@@ -21,6 +21,7 @@ function navFor(ws: Workspace | null, isPlatformAdmin: boolean, path: string): N
       { to: '/platform-admin', label: 'نظرة عامة', icon: <LayoutDashboard size={20} />, end: true },
       { to: '/platform-admin/organizations', label: 'المجمعات والجهات', icon: <Building2 size={20} /> },
       { to: '/platform-admin/members', label: 'الحسابات والعضويات', icon: <Users size={20} /> },
+      { to: '/platform-admin/applications', label: 'طلبات الانضمام', icon: <ClipboardList size={20} /> },
       { to: '/platform-admin/reports', label: 'التقارير والمالية', icon: <BarChart3 size={20} /> },
       { to: '/platform-admin/audit', label: 'سجل التدقيق', icon: <ScrollText size={20} /> },
       { to: '/platform-admin/health', label: 'صحة النظام', icon: <Activity size={20} /> },

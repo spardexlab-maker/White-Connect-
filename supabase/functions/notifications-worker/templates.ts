@@ -35,6 +35,8 @@ export function render(template: string, payload: Record<string, unknown>): Rend
       return { title: 'سُحبت العينة', body: 'تظهر النتيجة في التطبيق حال جهوزها.', link: '/patient/home-lab' };
     case 'homelab.rejected':
       return { title: 'تعذّر تنفيذ طلب السحب المنزلي', body: `اعتذر المختبر عن الطلب ${req}. افتح التطبيق للتفاصيل.`, link: '/patient/home-lab' };
+    case 'application.new':
+      return { title: 'طلب انضمام جديد', body: `استمارة ${typeof payload.application_number === 'string' ? payload.application_number : ''} بانتظار المراجعة.`, link: '/platform-admin/applications' };
     case 'medication.reminder':
       return { title: 'تذكير', body: 'حان موعد جرعتك حسب خطتك. افتح التطبيق للتفاصيل.', link: '/patient/meds' };
     case 'prescription.approved':

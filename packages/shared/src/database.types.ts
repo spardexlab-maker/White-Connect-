@@ -1749,6 +1749,44 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"provider_applications": {
+                  Row: {
+                    "accepts_walk_in": boolean,"address": string,"admin_note": string | null,"application_number": string,"appointment_minutes": number | null,"area": string | null,"bio": string | null,"city_id": string | null,"clinic_name": string,"clinic_phone": string | null,"consent": boolean,"consultation_fee_minor": number | null,"created_at": string,"email": string | null,"full_name": string,"gender": string | null,"graduation_year": number | null,"id": string,"kind": string,"languages": string | null,"latitude": number | null,"license_number": string,"longitude": number | null,"notes": string | null,"phone": string,"qualifications": string | null,"reviewed_at": string | null,"reviewed_by": string | null,"services": NonNullable<Json>,"specialty_id": string | null,"specialty_other": string | null,"status": string,"sub_specialty": string | null,"submitted_by": string | null,"title": string | null,"updated_at": string,"version": number,"whatsapp": string | null,"working_hours": string | null,"years_experience": number | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "accepts_walk_in"?: boolean,"address": string,"admin_note"?: string | null,"application_number"?: string,"appointment_minutes"?: number | null,"area"?: string | null,"bio"?: string | null,"city_id"?: string | null,"clinic_name": string,"clinic_phone"?: string | null,"consent": boolean,"consultation_fee_minor"?: number | null,"created_at"?: string,"email"?: string | null,"full_name": string,"gender"?: string | null,"graduation_year"?: number | null,"id"?: string,"kind"?: string,"languages"?: string | null,"latitude"?: number | null,"license_number": string,"longitude"?: number | null,"notes"?: string | null,"phone": string,"qualifications"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"services"?: NonNullable<Json>,"specialty_id"?: string | null,"specialty_other"?: string | null,"status"?: string,"sub_specialty"?: string | null,"submitted_by"?: string | null,"title"?: string | null,"updated_at"?: string,"version"?: number,"whatsapp"?: string | null,"working_hours"?: string | null,"years_experience"?: number | null
+                  }
+                  Update: {
+                    "accepts_walk_in"?: boolean,"address"?: string,"admin_note"?: string | null,"application_number"?: string,"appointment_minutes"?: number | null,"area"?: string | null,"bio"?: string | null,"city_id"?: string | null,"clinic_name"?: string,"clinic_phone"?: string | null,"consent"?: boolean,"consultation_fee_minor"?: number | null,"created_at"?: string,"email"?: string | null,"full_name"?: string,"gender"?: string | null,"graduation_year"?: number | null,"id"?: string,"kind"?: string,"languages"?: string | null,"latitude"?: number | null,"license_number"?: string,"longitude"?: number | null,"notes"?: string | null,"phone"?: string,"qualifications"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"services"?: NonNullable<Json>,"specialty_id"?: string | null,"specialty_other"?: string | null,"status"?: string,"sub_specialty"?: string | null,"submitted_by"?: string | null,"title"?: string | null,"updated_at"?: string,"version"?: number,"whatsapp"?: string | null,"working_hours"?: string | null,"years_experience"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "provider_applications_city_id_fkey"
+      columns: ["city_id"]
+isOneToOne: false
+      referencedRelation: "cities"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "provider_applications_reviewed_by_fkey"
+      columns: ["reviewed_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "provider_applications_specialty_id_fkey"
+      columns: ["specialty_id"]
+isOneToOne: false
+      referencedRelation: "specialties"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "provider_applications_submitted_by_fkey"
+      columns: ["submitted_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"provider_media": {
                   Row: {
                     "caption": string | null,"created_at": string,"facility_id": string | null,"id": string,"kind": string,"practitioner_id": string | null,"removed_at": string | null,"storage_path": string,"uploaded_by": string
@@ -3522,6 +3560,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"review_provider_application":
+{ Args: { "p_id": string,"p_note"?: string,"p_status": string }; Returns: undefined
+                           },
 "revise_prescription":
 { Args: { "p_prescription_id": string }; Returns: Json
                            },
@@ -3747,6 +3788,9 @@ isOneToOne: false
                            },
 "submit_attachment":
 { Args: { "p_id": string }; Returns: undefined
+                           },
+"submit_provider_application":
+{ Args: { "p": Json }; Returns: Json
                            },
 "system_health":
 { Args: Record<PropertyKey, never>; Returns: Json

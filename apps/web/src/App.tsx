@@ -21,6 +21,7 @@ import { PrintLab } from './pages/PrintLab';
 import { MyHealth } from './pages/patient/Health';
 import { AssistantPage } from './pages/patient/Assistant';
 import { VerifyRx } from './pages/VerifyRx';
+import { JoinDoctor } from './pages/JoinDoctor';
 
 // Professional and admin areas are code-split so patients on mobile do not download them.
 const ProLogin = lazy(() => import('./pages/pro/Login').then((m) => ({ default: m.ProLogin })));
@@ -34,6 +35,7 @@ const OrganizationAdmin = lazy(() => import('./pages/pro/OrganizationAdmin').the
 const AdminOverview = lazy(() => import('./pages/admin/Overview').then((m) => ({ default: m.AdminOverview })));
 const AdminOrganizations = lazy(() => import('./pages/admin/Organizations').then((m) => ({ default: m.AdminOrganizations })));
 const AdminMembers = lazy(() => import('./pages/admin/Members').then((m) => ({ default: m.AdminMembers })));
+const AdminApplications = lazy(() => import('./pages/admin/Applications').then((m) => ({ default: m.AdminApplications })));
 const AdminAudit = lazy(() => import('./pages/admin/Audit').then((m) => ({ default: m.AdminAudit })));
 const DoctorSession = lazy(() => import('./pages/pro/DoctorSession').then((m) => ({ default: m.DoctorSession })));
 const PharmacyInbox = lazy(() => import('./pages/pro/PharmacyInbox').then((m) => ({ default: m.PharmacyInbox })));
@@ -127,6 +129,7 @@ export function App() {
                 <Route path="/workspace/organization/reports" element={<RequireWorkspaceRole roles={['organization_admin']}><FacilityReports /></RequireWorkspaceRole>} />
                 <Route path="/platform-admin/health" element={<RequirePlatformAdmin><AdminHealth /></RequirePlatformAdmin>} />
                 <Route path="/platform-admin/reports" element={<RequirePlatformAdmin><AdminReportsPage /></RequirePlatformAdmin>} />
+                <Route path="/platform-admin/applications" element={<RequirePlatformAdmin><AdminApplications /></RequirePlatformAdmin>} />
                 <Route path="/platform-admin/audit" element={<RequirePlatformAdmin><AdminAudit /></RequirePlatformAdmin>} />
               </Route>
 
@@ -134,6 +137,7 @@ export function App() {
               <Route path="/print/lab/:orderId" element={<RequireStaffOrPatient><PrintLab /></RequireStaffOrPatient>} />
               <Route path="/print/receipt/:id" element={<RequireStaffOrPatient><PrintReceipt /></RequireStaffOrPatient>} />
               <Route path="/verify/rx" element={<VerifyRx />} />
+              <Route path="/join" element={<JoinDoctor />} />
               <Route path="/dev/components" element={<ComponentGallery />} />
               <Route path="*" element={<Navigate to="/patient" replace />} />
             </Routes>

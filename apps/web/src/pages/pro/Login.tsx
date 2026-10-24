@@ -33,6 +33,7 @@ export function ProLogin() {
         <div className="stack-sm">
           <h1 id="login-title" style={{ fontSize: 'var(--f-h2)' }}>دخول المهنيين</h1>
           <p className="muted small">للأطباء والسكرتارية والصيدليات والمختبرات وإدارة المنشآت. الحسابات تُنشأ بدعوة من الإدارة فقط.</p>
+          <p className="small">طبيب وتريد تنضم للمنصة؟ <Link to="/join">املأ استمارة الانضمام</Link></p>
         </div>
         <TextField label="البريد الإلكتروني أو معرف الدخول" type="email" autoComplete="username" ltr required value={email} onChange={(e) => setEmail(e.target.value)} />
         <TextField label="كلمة المرور" type="password" autoComplete="current-password" ltr required value={password} onChange={(e) => setPassword(e.target.value)} />
