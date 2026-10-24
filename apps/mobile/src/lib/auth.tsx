@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from './supabase';
 import { cancelAllReminders } from './reminders';
+import { registerPhonePush, unregisterPhonePush } from './push';
 
 export interface AccessSummary {
   user_id: string | null;
@@ -42,9 +43,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     else setAccess(null);
   }, [session, refreshAccess]);
 
+  // server push (Android): this phone receives the signed-in user's notifications
+  const uid = session?.user.id;
+  useEffect(() => { if (uid) void registerPhonePush(); }, [uid]);
+
   const signOut = useCallback(async () => {
     // local reminders belong to this account; never leave them on a shared phone
     await cancelAllReminders();
+    await unregisterPhonePush();
     await supabase.auth.signOut();
   }, []);
 

@@ -11,6 +11,7 @@ import {
 import { AuthProvider } from '../src/lib/auth';
 import { UpdateProvider } from '../src/components/UpdatePrompt';
 import { handleDoseResponse, resyncDoses } from '../src/lib/doseActions';
+import { watchPushToken } from '../src/lib/push';
 import { configMissing } from '../src/lib/supabase';
 import { Alert, Screen } from '../src/components/ui';
 import { color, family } from '../src/theme';
@@ -39,7 +40,8 @@ export default function RootLayout() {
     void Notifications.getLastNotificationResponseAsync().then((r) => { if (r) void handleDoseResponse(r); });
     void resyncDoses();
     const app = AppState.addEventListener('change', (st) => { if (st === 'active') void resyncDoses(); });
-    return () => { sub.remove(); app.remove(); };
+    const unwatch = watchPushToken();
+    return () => { sub.remove(); app.remove(); unwatch(); };
   }, []);
 
   if (!loaded) return <View style={{ flex: 1, backgroundColor: color.primary }} />;

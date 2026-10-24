@@ -4,6 +4,7 @@ export interface Rendered { title: string; body: string; link: string | null }
 
 export function render(template: string, payload: Record<string, unknown>): Rendered {
   const num = typeof payload.booking_number === 'string' ? payload.booking_number : '';
+  const when = typeof payload.starts_at === 'string' ? baghdad(payload.starts_at) : '';
   switch (template) {
     case 'appointment.requested':
       return { title: 'تم استلام طلب الحجز', body: `رقم الحجز ${num} — بانتظار تأكيد العيادة.`, link: '/patient/appointments' };
@@ -15,6 +16,12 @@ export function render(template: string, payload: Record<string, unknown>): Rend
       return { title: 'تم إلغاء موعد', body: `رقم الحجز ${num}.`, link: '/patient/appointments' };
     case 'appointment.delay':
       return { title: 'تحديث على وقت الانتظار', body: 'هناك تأخير تقديري في العيادة اليوم. افتح التطبيق للتفاصيل.', link: '/patient/appointments' };
+    case 'appointment.followup':
+      return { title: 'موعد مراجعة جديد', body: `حدّد طبيبك موعد مراجعتك${when ? ` ${when}` : ''}. رقم الحجز ${num}.`, link: '/patient/appointments' };
+    case 'appointment.reminder_day':
+      return { title: 'تذكير بموعدك غداً', body: `موعدك${when ? ` ${when}` : ''}. رقم الحجز ${num}.`, link: '/patient/appointments' };
+    case 'appointment.reminder_soon':
+      return { title: 'موعدك بعد قليل', body: `موعدك${when ? ` ${when}` : ''} — رقم الحجز ${num}.`, link: '/patient/appointments' };
     case 'medication.reminder':
       return { title: 'تذكير', body: 'حان موعد جرعتك حسب خطتك. افتح التطبيق للتفاصيل.', link: '/patient/meds' };
     case 'prescription.approved':
@@ -26,7 +33,7 @@ export function render(template: string, payload: Record<string, unknown>): Rend
     case 'prescription.clarification':
       return { title: 'طلب توضيح من صيدلية', body: 'تطلب صيدلية توضيحاً على وصفة أصدرتها.', link: '/workspace/doctor' };
     case 'lab.released':
-      return { title: 'نتائج جاهزة', body: 'اعتُمدت نتائج تحاليل. افتح التطبيق لعرضها.', link: '/patient/journey' };
+      return { title: 'نتيجة تحليلك جاهزة', body: 'صدرت نتيجة تحاليل. افتح التطبيق لعرضها.', link: '/patient/journey' };
     case 'lab.corrected':
       return { title: 'تصحيح نتيجة', body: 'صحّح المختبر نتيجة سابقة. افتح التطبيق للتفاصيل.', link: '/patient/journey' };
     case 'lab.released_for_doctor':
@@ -35,4 +42,13 @@ export function render(template: string, payload: Record<string, unknown>): Rend
     default:
       return { title: 'إشعار جديد', body: 'لديك تحديث في حسابك.', link: null };
   }
+}
+
+/** «الأحد 26 تشرين الأول، 4:30 م» in Baghdad time. */
+function baghdad(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  try {
+    return new Intl.DateTimeFormat('ar-IQ', { timeZone: 'Asia/Baghdad', weekday: 'long', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' }).format(d);
+  } catch { return ''; }
 }

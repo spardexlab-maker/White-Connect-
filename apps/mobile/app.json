@@ -3,7 +3,7 @@
     "name": "منصة الرعاية",
     "slug": "white-connect",
     "scheme": "whiteconnect",
-    "version": "0.6.0",
+    "version": "0.7.0",
     "runtimeVersion": "2",
     "updates": {
       "url": "https://utuwjykgubsqqescpiwz.supabase.co/functions/v1/app-update",
@@ -44,7 +44,8 @@
         "ACCESS_BACKGROUND_LOCATION",
         "READ_CONTACTS"
       ],
-      "versionCode": 9
+      "versionCode": 10,
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "output": "single",

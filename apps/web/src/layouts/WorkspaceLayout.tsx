@@ -9,6 +9,8 @@ import { useAuth } from '../lib/auth';
 import { useWorkspace, type Workspace } from '../lib/workspace';
 import { productName } from '../lib/supabase';
 import { OfflineBanner, Sheet } from '../components/ui';
+import { PushToggle } from '../components/PushToggle';
+import { LiveNotifications } from '../components/LiveNotifications';
 
 interface NavItem { to: string; label: string; icon: ReactNode; end?: boolean }
 
@@ -112,6 +114,8 @@ export function WorkspaceLayout() {
           <span className="truncate">{pageTitle}</span>
         </div>
         <span className="grow" />
+        <PushToggle compact />
+        <LiveNotifications />
         <span className="muted small hide-sm">{formatDate(new Date())}</span>
         <button className="btn btn-ghost btn-sm" onClick={async () => { await signOut(); navigate('/login'); }}>
           <LogOut size={16} aria-hidden /><span className="hide-sm">خروج</span>

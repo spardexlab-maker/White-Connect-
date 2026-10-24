@@ -1717,6 +1717,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"push_devices": {
+                  Row: {
+                    "created_at": string,"disabled_at": string | null,"failures": number,"id": string,"kind": string,"last_seen_at": string,"platform": string | null,"token": string,"user_id": string,"web_keys": Json | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"disabled_at"?: string | null,"failures"?: number,"id"?: string,"kind": string,"last_seen_at"?: string,"platform"?: string | null,"token": string,"user_id": string,"web_keys"?: Json | null
+                  }
+                  Update: {
+                    "created_at"?: string,"disabled_at"?: string | null,"failures"?: number,"id"?: string,"kind"?: string,"last_seen_at"?: string,"platform"?: string | null,"token"?: string,"user_id"?: string,"web_keys"?: Json | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "push_devices_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"queue_entries": {
                   Row: {
                     "appointment_id": string | null,"arrived_at": string,"called_at": string | null,"created_at": string,"created_by": string | null,"facility_id": string,"finished_at": string | null,"id": string,"idempotency_key": string | null,"kind": string,"patient_id": string,"practitioner_id": string | null,"priority": number,"priority_reason": string | null,"priority_set_by": string | null,"service_date": string,"started_at": string | null,"status": Database["public"]['Enums']["queue_status"],"updated_at": string,"version": number
@@ -3109,6 +3129,21 @@ isOneToOne: false
 "provider_media":
 { Args: { "p_facility_id": string,"p_practitioner_id"?: string }; Returns: Json
                            },
+"push_device_result":
+{ Args: { "p_gone"?: boolean,"p_id": string,"p_ok": boolean }; Returns: undefined
+                           },
+"push_store_vapid":
+{ Args: { "p_value": Json }; Returns: Json
+                           },
+"push_targets":
+{ Args: { "p_user_id": string }; Returns: Json
+                           },
+"push_vapid":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"queue_appointment_reminders":
+{ Args: Record<PropertyKey, never>; Returns: number
+                           },
 "receive_stock":
 { Args: { "p_batch_no": string,"p_expiry_date": string,"p_idempotency_key": string,"p_packs": number,"p_product_id": string,"p_supplier_name"?: string,"p_unit_cost_minor": number }; Returns: {
               "batch_no": string,
@@ -3171,6 +3206,9 @@ isOneToOne: false
                            },
 "record_prescription_print":
 { Args: { "p_facility_id": string,"p_prescription_id": string }; Returns: undefined
+                           },
+"register_push_device":
+{ Args: { "p_kind": string,"p_platform"?: string,"p_token": string,"p_web_keys"?: Json }; Returns: undefined
                            },
 "register_self_patient":
 { Args: { "p_birth_date"?: string,"p_city_id"?: string,"p_full_name": string,"p_phone"?: string,"p_sex"?: Database["public"]['Enums']["patient_sex"] }; Returns: {
@@ -3569,6 +3607,9 @@ isOneToOne: false
 "system_health":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
+"unregister_push_device":
+{ Args: { "p_token": string }; Returns: undefined
+                           },
 "update_own_medication_plan":
 { Args: { "p_days"?: number,"p_instructions"?: string,"p_interval_hours"?: number,"p_name": string,"p_plan_id": string,"p_times": (string)[] }; Returns: {
               "as_needed": boolean,
@@ -3686,6 +3727,9 @@ isOneToOne: false
                            },
 "void_invoice":
 { Args: { "p_invoice_id": string,"p_reason": string }; Returns: undefined
+                           },
+"web_push_public_key":
+{ Args: Record<PropertyKey, never>; Returns: string
                            }
           }
           Enums: {

@@ -5,7 +5,7 @@
 // which is idempotent and applies retry/backoff/dead-letter.
 // No third-party imports: talks to PostgREST RPC endpoints directly.
 import { render } from './templates.ts';
-import { providerFor } from './providers.ts';
+import { ensureVapid, providerFor } from './providers.ts';
 
 const SECRET = Deno.env.get('WORKER_SHARED_SECRET');
 const URL_ = Deno.env.get('SUPABASE_URL')!;
@@ -31,6 +31,8 @@ Deno.serve(async (req) => {
   if (!SECRET || req.headers.get('x-worker-secret') !== SECRET) {
     return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401 });
   }
+  // make sure browsers can subscribe (the public key is read by web_push_public_key)
+  await ensureVapid(rpc).catch((e) => console.error(JSON.stringify({ event: 'vapid_failed', error: String(e) })));
   let batch: OutboxRow[];
   try {
     batch = await rpc<OutboxRow[]>('outbox_claim', { p_limit: 50, p_lease_seconds: 60 });
@@ -45,7 +47,7 @@ Deno.serve(async (req) => {
     let ok = true;
     let err: string | undefined;
     if (row.channel !== 'in_app') {
-      const res = await providerFor(row.channel).send(row.recipient_user_id, msg);
+      const res = await providerFor(row.channel, rpc).send(row.recipient_user_id, msg, row.template);
       ok = res.ok; err = res.error;
     }
     try {

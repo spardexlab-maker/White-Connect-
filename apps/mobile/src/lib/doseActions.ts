@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { errorMessage } from '@app/shared';
 import { supabase } from './supabase';
 import { doseLabel, syncFromServer } from './reminders';
+import { openPushLink } from './push';
 
 const handled = new Set<string>();
 export const resyncDoses = () => syncFromServer(() => supabase.rpc('my_upcoming_doses', { p_hours: 72 }));
@@ -15,6 +16,7 @@ export async function handleDoseResponse(r: Notifications.NotificationResponse):
   const key = `${r.notification.request.identifier}:${r.actionIdentifier}`;
   if (handled.has(key)) return;
   handled.add(key);
+  if (!data?.jobId && openPushLink(r)) return;
   if (!data?.jobId) { if (data?.url === '/meds') router.push('/meds'); return; }
 
   if (r.actionIdentifier === 'taken' || r.actionIdentifier === 'snooze') {

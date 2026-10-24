@@ -1,4 +1,5 @@
 import { NavLink, Outlet, Link, useLocation } from 'react-router-dom';
+import { LiveNotifications } from '../components/LiveNotifications';
 import { Activity, Bell, CalendarDays, Home, Route, UserRound, HeartPulse, Briefcase } from 'lucide-react';
 import { productName } from '../lib/supabase';
 import { OfflineBanner } from '../components/ui';
@@ -25,6 +26,7 @@ export function PatientLayout() {
           <nav className="p-desktop-nav" aria-label="التنقل الرئيسي">
             {items.map((i) => <NavLink key={i.to} to={i.to} end={i.end}>{i.label}</NavLink>)}
           </nav>
+          <LiveNotifications />
           {session && <Link to="/patient/notifications" className="icon-btn" aria-label="الإشعارات" title="الإشعارات"><Bell size={20} aria-hidden /></Link>}
           {!session && <Link to="/login" className="btn btn-ghost btn-sm"><Briefcase size={16} aria-hidden />دخول المهنيين</Link>}
         </div>
