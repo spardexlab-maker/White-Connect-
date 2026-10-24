@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
-  Activity, Award, House, BarChart3, Boxes, Receipt, Building2, CalendarClock, ChevronDown, ClipboardList, FlaskConical, HeartPulse, LayoutDashboard, LogOut, Menu,
+  Activity, Award, House, QrCode, BarChart3, Boxes, Receipt, Building2, CalendarClock, ChevronDown, ClipboardList, FlaskConical, HeartPulse, LayoutDashboard, LogOut, Menu,
   LockKeyhole, Pill, ScrollText, Settings2, ShieldCheck, Stethoscope, Users,
 } from 'lucide-react';
 import { facilityTypeLabel, roleLabel, workspaceArea, formatDate } from '@app/shared';
@@ -23,6 +23,7 @@ function navFor(ws: Workspace | null, isPlatformAdmin: boolean, path: string): N
       { to: '/platform-admin/organizations', label: 'المجمعات والجهات', icon: <Building2 size={20} /> },
       { to: '/platform-admin/members', label: 'الحسابات والعضويات', icon: <Users size={20} /> },
       { to: '/platform-admin/applications', label: 'طلبات الانضمام', icon: <ClipboardList size={20} /> },
+      { to: '/platform-admin/lab-tests', label: 'دليل التحاليل', icon: <FlaskConical size={20} /> },
       { to: '/platform-admin/reports', label: 'التقارير والمالية', icon: <BarChart3 size={20} /> },
       { to: '/platform-admin/audit', label: 'سجل التدقيق', icon: <ScrollText size={20} /> },
       { to: '/platform-admin/health', label: 'صحة النظام', icon: <Activity size={20} /> },
@@ -50,6 +51,7 @@ function navFor(ws: Workspace | null, isPlatformAdmin: boolean, path: string): N
     case 'lab':
       return [
         { to: '/workspace/lab', label: 'طلبات المختبر', icon: <FlaskConical size={20} />, end: true },
+        { to: '/workspace/lab/open', label: 'طلب برمز (QR)', icon: <QrCode size={20} /> },
         { to: '/workspace/lab/home', label: 'السحب المنزلي', icon: <House size={20} /> },
         { to: '/workspace/lab/doctors', label: 'أطباء المجمع', icon: <Users size={20} /> },
       ];

@@ -132,6 +132,19 @@ export default function Home() {
           </View>
         </Card>
       </Pressable>
+      {session && (
+        <Pressable accessibilityRole="link" onPress={() => router.push('/lab-orders')}>
+          <Card style={{ flexDirection: 'row', alignItems: 'center', gap: space[3] }}>
+            <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: color.accentSoft, alignItems: 'center', justifyContent: 'center' }}>
+              <QrCode size={20} color={color.accent} />
+            </View>
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text variant="title">طلبات التحاليل</Text>
+              <Text variant="small" muted>رمز طلب طبيبك لأي مختبر، وأدخل نتيجتك إذا سويتها بمختبر ثاني</Text>
+            </View>
+          </Card>
+        </Pressable>
+      )}
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space[2] }}>
         <Chip label={geo === 'ok' ? 'الأقرب إليك' : geo === 'asking' ? 'جارٍ التحديد…' : 'استخدم موقعي'} selected={geo === 'ok'}

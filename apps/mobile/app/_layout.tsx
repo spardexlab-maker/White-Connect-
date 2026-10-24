@@ -75,6 +75,7 @@ export default function RootLayout() {
           <Stack.Screen name="lab/[orderId]" options={{ title: 'نتائج التحليل' }} />
           <Stack.Screen name="meds" options={{ title: 'خطة الدواء' }} />
           <Stack.Screen name="home-lab" options={{ title: 'تحليل منزلي' }} />
+          <Stack.Screen name="lab-orders" options={{ title: 'طلبات التحاليل' }} />
           <Stack.Screen name="card/[patientId]" options={{ title: 'بطاقة التعريف', presentation: 'modal' }} />
         </Stack>
         </UpdateProvider>

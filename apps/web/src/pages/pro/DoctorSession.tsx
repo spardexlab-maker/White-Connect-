@@ -14,6 +14,7 @@ import { MedicalCard } from '../../components/clinical/MedicalCard';
 import { HealthStrip, HealthSummary, type Health } from '../../components/clinical/HealthSummary';
 import { EncounterLabResults } from '../../components/clinical/EncounterLabResults';
 import { loadPharmacyNotes, NoteCard } from './PharmacyNotes';
+import { OpenLabOrderForm, OpenOrderCard, type OpenOrder } from '../../components/clinical/OpenLabOrder';
 import { AdherenceBoard } from '../../components/clinical/AdherenceBoard';
 import { FollowUpBooking } from '../../components/clinical/FollowUpBooking';
 
@@ -413,6 +414,10 @@ function LabOrderPanel({ encounterId, orders, onChanged, active }: { encounterId
   const [idem, setIdem] = useState(() => newIdempotencyKey('lab'));
   useEffect(() => { const d = labs.data?.find((l) => l.is_default) ?? labs.data?.[0]; if (d && !labId) setLabId(d.lab_id); }, [labs.data, labId]);
   const lab = labs.data?.find((l) => l.lab_id === labId);
+  // no lab in the complex → the order goes to any lab with a code for the patient
+  const [mode, setMode] = useState<'lab' | 'open'>('lab');
+  useEffect(() => { if (labs.data && labs.data.length === 0) setMode('open'); }, [labs.data]);
+  const openOrders = useAsync(async () => (await unwrap(supabase.rpc('encounter_open_lab_orders', { p_encounter_id: encounterId }))) as unknown as OpenOrder[], [encounterId]);
 
   const submit = async () => {
     setBusy(true);
@@ -426,7 +431,15 @@ function LabOrderPanel({ encounterId, orders, onChanged, active }: { encounterId
   return (
     <div className="stack">
       <EncounterLabResults orders={orders?.lab_orders ?? []} />
+      {openOrders.data?.map((o) => <OpenOrderCard key={o.id} o={o} />)}
       {active && (
+        <div className="segmented block" role="group" aria-label="نوع الطلب">
+          <button aria-pressed={mode === 'lab'} disabled={!labs.data?.length} onClick={() => setMode('lab')}>مختبر محدد</button>
+          <button aria-pressed={mode === 'open'} onClick={() => setMode('open')}>أي مختبر (رمز للمريض)</button>
+        </div>
+      )}
+      {active && mode === 'open' && <OpenLabOrderForm encounterId={encounterId} onCreated={openOrders.reload} />}
+      {active && mode === 'lab' && (
         <div className="card stack">
           <h3 className="section-title">طلب تحاليل جديد</h3>
           <div className="field">

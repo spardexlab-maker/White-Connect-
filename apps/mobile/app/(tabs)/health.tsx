@@ -14,7 +14,7 @@ import { RangeBar, TrendChart } from '../../src/components/LabCharts';
 import { labReportPdf } from '../../src/lib/labPdf';
 import { OwnReminder } from '../../src/components/OwnReminder';
 
-interface Point { value_numeric: number | null; value_text: string | null; flag: string | null; released_at: string; lab: string; order_id: string }
+interface Point { value_numeric: number | null; value_text: string | null; flag: string | null; released_at: string; lab: string; order_id: string | null; source?: 'lab' | 'patient' }
 interface Trend { key: string; name: string; unit: string | null; reference_range: string | null; points: Point[] }
 interface Health {
   patient: { id: string; full_name: string; birth_date: string | null; birth_year: number | null };
@@ -180,19 +180,19 @@ function Tests({ trends }: { trends: Trend[] }) {
             {range && cur.value_numeric != null ? <RangeBar value={Number(cur.value_numeric)} range={range} />
               : <Text variant="small" muted>المرجع: {t.reference_range ?? '—'}</Text>}
             <TrendChart points={t.points} range={range} />
-            <Text variant="small" muted>{formatDate(cur.released_at)} · {cur.lab}</Text>
+            <Text variant="small" muted>{formatDate(cur.released_at)} · {cur.lab}{cur.source === 'patient' && cur.lab !== 'أدخلها المريض' ? ' · أدخلها المريض' : ''}</Text>
             <Row gap={space[2]} wrap>
-              <Button title="تقرير PDF" small icon={<FileText size={14} color={color.surface} />} loading={busy === cur.order_id + 'print'} onPress={() => void pdf(cur.order_id, 'print')} />
-              <Button title="مشاركة" small variant="secondary" icon={<Share2 size={14} color={color.primary} />} loading={busy === cur.order_id + 'share'} onPress={() => void pdf(cur.order_id, 'share')} />
+              {cur.order_id && <Button title="تقرير PDF" small icon={<FileText size={14} color={color.surface} />} loading={busy === cur.order_id + 'print'} onPress={() => void pdf(cur.order_id!, 'print')} />}
+              {cur.order_id && <Button title="مشاركة" small variant="secondary" icon={<Share2 size={14} color={color.primary} />} loading={busy === cur.order_id + 'share'} onPress={() => void pdf(cur.order_id!, 'share')} />}
               {t.points.length > 1 && <Button title={`كل النتائج (${t.points.length})`} small variant="ghost" onPress={() => setOpen(open === t.key ? null : t.key)} />}
             </Row>
             {open === t.key && (
               <Stack gap={space[2]}>
                 {t.points.map((p, i) => (
-                  <Pressable key={i} accessibilityRole="link" onPress={() => router.push(`/lab/${p.order_id}`)}>
+                  <Pressable key={i} accessibilityRole="link" disabled={!p.order_id} onPress={() => p.order_id && router.push(`/lab/${p.order_id}`)}>
                     <Row between style={{ backgroundColor: color.surfaceSunken, borderRadius: radius.sm, padding: space[2] }}>
                       <Text variant="small"><Ltr>{val(p)}</Ltr>{p.flag ? ` · ${labFlag[p.flag] ?? p.flag}` : ''}</Text>
-                      <Row gap={4}><Text variant="small" muted>{formatDate(p.released_at)} · التقرير</Text><ChevronLeft size={14} color={color.mutedText} /></Row>
+                      <Row gap={4}><Text variant="small" muted>{formatDate(p.released_at)} · {p.order_id ? 'التقرير' : 'أدخلها المريض'}</Text>{p.order_id && <ChevronLeft size={14} color={color.mutedText} />}</Row>
                     </Row>
                   </Pressable>
                 ))}

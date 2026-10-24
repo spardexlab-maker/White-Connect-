@@ -75,6 +75,7 @@ const ROUTES: [RegExp, string][] = [
   [/^\/patient\/appointments/, '/(tabs)/appointments'],
   [/^\/patient\/meds/, '/meds'],
   [/^\/patient\/home-lab/, '/home-lab'],
+  [/^\/patient\/lab-orders/, '/lab-orders'],
   [/^\/patient\/labs\/(.+)/, '/lab/$1'],
   [/^\/patient\/rx\/(.+)/, '/rx/$1'],
   [/^\/patient\/(journey|health)/, '/(tabs)/$1'],

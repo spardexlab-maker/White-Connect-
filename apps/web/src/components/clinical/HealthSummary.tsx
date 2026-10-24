@@ -6,7 +6,8 @@ import { supabase } from '../../lib/supabase';
 import { unwrap, useAsync } from '../../lib/useAsync';
 import { Badge, EmptyState, Ltr } from '../ui';
 
-export interface TrendPoint { value_numeric: number | null; value_text: string | null; flag: string | null; released_at: string; lab: string; order_id: string }
+export interface TrendPoint { value_numeric: number | null; value_text: string | null; flag: string | null; released_at: string; lab: string; order_id: string | null;
+  source?: 'lab' | 'patient'; entry_id?: string | null }
 export interface Trend { key: string; name: string; unit: string | null; reference_range: string | null; latest_at: string; points: TrendPoint[] }
 export interface Health {
   patient: { id: string; full_name: string; public_code: string; sex: string | null; birth_date: string | null; birth_year: number | null };
@@ -186,9 +187,9 @@ export function LabTrends({ trends, linkBase }: { trends: Trend[]; linkBase?: st
               {range && cur.value_numeric != null ? <RangeBar value={Number(cur.value_numeric)} range={range} />
                 : <span className="small muted">المرجع: <Ltr>{t.reference_range ?? '—'}</Ltr></span>}
               <TrendChart points={t.points} range={range} unit={t.unit} />
-              <span className="small muted">{formatDate(cur.released_at)} · {cur.lab}</span>
+              <span className="small muted">{formatDate(cur.released_at)} · {cur.lab}{cur.source === 'patient' && <> · <Badge tone="accent">أدخلها المريض</Badge></>}</span>
               <div className="row" style={{ gap: 'var(--s-2)' }}>
-                <Link className="btn btn-secondary btn-sm" to={`/print/lab/${cur.order_id}`}><FileText size={14} aria-hidden />تقرير PDF</Link>
+                {cur.order_id && <Link className="btn btn-secondary btn-sm" to={`/print/lab/${cur.order_id}`}><FileText size={14} aria-hidden />تقرير PDF</Link>}
                 {t.points.length > 1 && <button className="btn btn-ghost btn-sm" aria-expanded={open === t.key} onClick={() => setOpen(open === t.key ? null : t.key)}><History size={14} aria-hidden />كل النتائج ({t.points.length})</button>}
               </div>
               {open === t.key && (
@@ -196,7 +197,9 @@ export function LabTrends({ trends, linkBase }: { trends: Trend[]; linkBase?: st
                   {t.points.map((p, i) => (
                     <div key={i} className="row-between small">
                       <span><span className="num" style={{ fontWeight: 600 }}><Ltr>{fmtVal(p)} {t.unit ?? ''}</Ltr></span>{p.flag ? ` · ${labFlag[p.flag] ?? p.flag}` : ''}</span>
-                      <span className="muted">{formatDate(p.released_at)} · <Link to={`/print/lab/${p.order_id}`}>PDF</Link>{linkBase && <> · <Link to={`${linkBase}${p.order_id}`}>التفاصيل</Link></>}</span>
+                      <span className="muted">{formatDate(p.released_at)} · {p.order_id
+                        ? <><Link to={`/print/lab/${p.order_id}`}>PDF</Link>{linkBase && <> · <Link to={`${linkBase}${p.order_id}`}>التفاصيل</Link></>}</>
+                        : <>{p.lab} (أدخلها المريض)</>}</span>
                     </div>
                   ))}
                 </div>

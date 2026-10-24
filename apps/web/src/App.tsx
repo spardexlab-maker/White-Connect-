@@ -16,6 +16,8 @@ import { Account } from './pages/patient/Account';
 import { PatientRx } from './pages/patient/PatientRx';
 import { Meds } from './pages/patient/Meds';
 import { HomeLab } from './pages/patient/HomeLab';
+import { PatientLabOrders } from './pages/patient/LabOrders';
+import { LabOrderLink } from './pages/LabOrderLink';
 import { LabOrderPage } from './pages/LabOrderPage';
 import { PrintLab } from './pages/PrintLab';
 import { MyHealth } from './pages/patient/Health';
@@ -36,6 +38,7 @@ const OrganizationAdmin = lazy(() => import('./pages/pro/OrganizationAdmin').the
 const AdminOverview = lazy(() => import('./pages/admin/Overview').then((m) => ({ default: m.AdminOverview })));
 const AdminOrganizations = lazy(() => import('./pages/admin/Organizations').then((m) => ({ default: m.AdminOrganizations })));
 const AdminMembers = lazy(() => import('./pages/admin/Members').then((m) => ({ default: m.AdminMembers })));
+const AdminLabTests = lazy(() => import('./pages/admin/LabTests').then((m) => ({ default: m.AdminLabTests })));
 const AdminApplications = lazy(() => import('./pages/admin/Applications').then((m) => ({ default: m.AdminApplications })));
 const AdminAudit = lazy(() => import('./pages/admin/Audit').then((m) => ({ default: m.AdminAudit })));
 const DoctorSession = lazy(() => import('./pages/pro/DoctorSession').then((m) => ({ default: m.DoctorSession })));
@@ -51,6 +54,7 @@ const ComplexDoctors = lazy(() => import('./pages/pro/ComplexDoctors').then((m) 
 const LabHomeRequests = lazy(() => import('./pages/pro/LabHomeRequests').then((m) => ({ default: m.LabHomeRequests })));
 const PharmacyNotes = lazy(() => import('./pages/pro/PharmacyNotes').then((m) => ({ default: m.PharmacyNotes })));
 const StaffInbox = lazy(() => import('./pages/pro/StaffInbox').then((m) => ({ default: m.StaffInbox })));
+const LabOpenOrder = lazy(() => import('./pages/pro/LabOpenOrder').then((m) => ({ default: m.LabOpenOrder })));
 const LabWorkspace = lazy(() => import('./pages/pro/LabWorkspace').then((m) => ({ default: m.LabWorkspace })));
 const PrintRx = lazy(() => import('./pages/PrintRx').then((m) => ({ default: m.PrintRx })));
 const Security = lazy(() => import('./pages/pro/Security').then((m) => ({ default: m.Security })));
@@ -100,6 +104,7 @@ export function App() {
                 <Route path="rx/:id" element={<PatientRx />} />
                 <Route path="meds" element={<Meds />} />
                 <Route path="home-lab" element={<HomeLab />} />
+                <Route path="lab-orders" element={<PatientLabOrders />} />
                 <Route path="health" element={<MyHealth />} />
                 <Route path="assistant" element={<AssistantPage />} />
                 <Route path="labs/:orderId" element={<LabOrderPage back="/patient/journey" />} />
@@ -107,6 +112,7 @@ export function App() {
 
               {/* Professional portal */}
               <Route path="/login" element={<ProLogin />} />
+              <Route path="/lab-order" element={<LabOrderLink />} />
               <Route path="/invite" element={<AcceptInvite />} />
               <Route path="/security" element={<RequireStaff><Security /></RequireStaff>} />
               <Route path="/workspace" element={<RequireStaff><WorkspacePicker /></RequireStaff>} />
@@ -125,6 +131,7 @@ export function App() {
                 <Route path="/workspace/pharmacy/reports" element={<RequireWorkspaceRole roles={['pharmacist']}><PharmacyReports /></RequireWorkspaceRole>} />
                 <Route path="/workspace/lab" element={<RequireWorkspaceRole roles={['lab_technician', 'lab_approver']}><LabWorkspace /></RequireWorkspaceRole>} />
                 <Route path="/workspace/pharmacy/doctors" element={<RequireWorkspaceRole roles={['pharmacist', 'pharmacy_staff']}><ComplexDoctors /></RequireWorkspaceRole>} />
+                <Route path="/workspace/lab/open" element={<RequireWorkspaceRole roles={['lab_technician', 'lab_approver']}><LabOpenOrder /></RequireWorkspaceRole>} />
                 <Route path="/workspace/lab/home" element={<RequireWorkspaceRole roles={['lab_technician', 'lab_approver']}><LabHomeRequests /></RequireWorkspaceRole>} />
                 <Route path="/workspace/lab/doctors" element={<RequireWorkspaceRole roles={['lab_technician', 'lab_approver']}><ComplexDoctors /></RequireWorkspaceRole>} />
                 <Route path="/workspace/organization" element={<RequireWorkspaceRole roles={['organization_admin']}><OrganizationAdmin /></RequireWorkspaceRole>} />
@@ -134,6 +141,7 @@ export function App() {
                 <Route path="/workspace/organization/reports" element={<RequireWorkspaceRole roles={['organization_admin']}><FacilityReports /></RequireWorkspaceRole>} />
                 <Route path="/platform-admin/health" element={<RequirePlatformAdmin><AdminHealth /></RequirePlatformAdmin>} />
                 <Route path="/platform-admin/reports" element={<RequirePlatformAdmin><AdminReportsPage /></RequirePlatformAdmin>} />
+                <Route path="/platform-admin/lab-tests" element={<RequirePlatformAdmin><AdminLabTests /></RequirePlatformAdmin>} />
                 <Route path="/platform-admin/applications" element={<RequirePlatformAdmin><AdminApplications /></RequirePlatformAdmin>} />
                 <Route path="/platform-admin/audit" element={<RequirePlatformAdmin><AdminAudit /></RequirePlatformAdmin>} />
               </Route>

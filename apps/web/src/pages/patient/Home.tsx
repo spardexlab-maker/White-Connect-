@@ -133,6 +133,11 @@ export function PatientHome() {
         <span className="grow stack-sm" style={{ gap: 2 }}><strong>تحليل منزلي</strong><span className="small muted">المختبر يجيك للبيت ويسحب العينة، وتتابع الزيارة من هنا</span></span>
       </Link>
 
+      <Link to="/patient/lab-orders" className="card row home-lab-cta" style={{ gap: 'var(--s-3)', alignItems: 'center' }}>
+        <span className="ai-ico" aria-hidden><QrCode size={20} /></span>
+        <span className="grow stack-sm" style={{ gap: 2 }}><strong>طلبات التحاليل</strong><span className="small muted">رمز طلب طبيبك لأي مختبر، وأدخل نتيجتك إذا سويتها بمختبر ثاني</span></span>
+      </Link>
+
       {kind === 'doctor' && (
         <section aria-label="التخصصات" className="stack-sm">
           <div className="spec-rail" role="group" aria-label="التخصصات">

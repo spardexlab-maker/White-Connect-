@@ -53,6 +53,12 @@ export function render(template: string, payload: Record<string, unknown>): Rend
       return { title: 'دواء غير متوفر', body: 'أبلغت صيدلية أن دواءً في وصفتك غير متوفر. افتح «ملاحظات الصيدلية».', link: '/workspace/doctor/pharmacy-notes' };
     case 'prescription.clarification_reply':
       return { title: 'ردّ الطبيب على طلب التوضيح', body: 'وصل رد الطبيب — افتح الوصفة في «وارد الوصفات».', link: '/workspace/pharmacy' };
+    case 'lab.open_order':
+      return { title: 'طلب تحاليل من طبيبك', body: `اعرض الرمز ${typeof payload.code === 'string' ? payload.code : ''} في أي مختبر — صالح 7 أيام.`, link: '/patient/lab-orders' };
+    case 'lab.open_claimed':
+      return { title: 'استلم المختبر طلب التحاليل', body: 'تظهر النتيجة في التطبيق حال جهوزها.', link: '/patient/lab-orders' };
+    case 'lab.patient_entered':
+      return { title: 'نتيجة أدخلها المريض', body: 'أدخل مريضك نتيجة تحليل من مختبر خارجي. افتح بطاقته الطبية.', link: '/workspace/doctor' };
     case 'lab.released':
       return { title: 'نتيجة تحليلك جاهزة', body: 'صدرت نتيجة تحاليل. افتح التطبيق لعرضها.', link: '/patient/journey' };
     case 'lab.corrected':

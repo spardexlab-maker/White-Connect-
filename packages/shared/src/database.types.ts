@@ -1065,14 +1065,14 @@ isOneToOne: false
                   ]
                 },"lab_test_catalog": {
                   Row: {
-                    "code": string,"created_at": string,"id": string,"is_active": boolean,"lab_facility_id": string,"name": string,"preparation_note": string | null,"price_minor": number | null,"reference_range_text": string | null,"specimen_type": string,"turnaround_hours": number | null,"unit": string | null
+                    "code": string,"created_at": string,"id": string,"is_active": boolean,"lab_facility_id": string,"master_id": string | null,"name": string,"preparation_note": string | null,"price_minor": number | null,"reference_range_text": string | null,"specimen_type": string,"turnaround_hours": number | null,"unit": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "code": string,"created_at"?: string,"id"?: string,"is_active"?: boolean,"lab_facility_id": string,"name": string,"preparation_note"?: string | null,"price_minor"?: number | null,"reference_range_text"?: string | null,"specimen_type": string,"turnaround_hours"?: number | null,"unit"?: string | null
+                    "code": string,"created_at"?: string,"id"?: string,"is_active"?: boolean,"lab_facility_id": string,"master_id"?: string | null,"name": string,"preparation_note"?: string | null,"price_minor"?: number | null,"reference_range_text"?: string | null,"specimen_type": string,"turnaround_hours"?: number | null,"unit"?: string | null
                   }
                   Update: {
-                    "code"?: string,"created_at"?: string,"id"?: string,"is_active"?: boolean,"lab_facility_id"?: string,"name"?: string,"preparation_note"?: string | null,"price_minor"?: number | null,"reference_range_text"?: string | null,"specimen_type"?: string,"turnaround_hours"?: number | null,"unit"?: string | null
+                    "code"?: string,"created_at"?: string,"id"?: string,"is_active"?: boolean,"lab_facility_id"?: string,"master_id"?: string | null,"name"?: string,"preparation_note"?: string | null,"price_minor"?: number | null,"reference_range_text"?: string | null,"specimen_type"?: string,"turnaround_hours"?: number | null,"unit"?: string | null
                   }
                   Relationships: [
                     {
@@ -1081,7 +1081,27 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "facilities"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "lab_test_catalog_master_id_fkey"
+      columns: ["master_id"]
+isOneToOne: false
+      referencedRelation: "lab_test_master"
+      referencedColumns: ["id"]
     }
+                  ]
+                },"lab_test_master": {
+                  Row: {
+                    "category": string | null,"code": string,"created_at": string,"id": string,"is_active": boolean,"name_ar": string,"name_en": string | null,"reference_range": string | null,"sort_order": number,"specimen_type": string | null,"unit": string | null,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "category"?: string | null,"code": string,"created_at"?: string,"id"?: string,"is_active"?: boolean,"name_ar": string,"name_en"?: string | null,"reference_range"?: string | null,"sort_order"?: number,"specimen_type"?: string | null,"unit"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "category"?: string | null,"code"?: string,"created_at"?: string,"id"?: string,"is_active"?: boolean,"name_ar"?: string,"name_en"?: string | null,"reference_range"?: string | null,"sort_order"?: number,"specimen_type"?: string | null,"unit"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    
                   ]
                 },"medication_catalog": {
                   Row: {
@@ -1225,6 +1245,88 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"open_lab_order_items": {
+                  Row: {
+                    "claimed_at": string | null,"id": string,"lab_facility_id": string | null,"lab_order_id": string | null,"master_id": string | null,"name": string,"order_id": string,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "claimed_at"?: string | null,"id"?: string,"lab_facility_id"?: string | null,"lab_order_id"?: string | null,"master_id"?: string | null,"name": string,"order_id": string,"status"?: string
+                  }
+                  Update: {
+                    "claimed_at"?: string | null,"id"?: string,"lab_facility_id"?: string | null,"lab_order_id"?: string | null,"master_id"?: string | null,"name"?: string,"order_id"?: string,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "open_lab_order_items_lab_facility_id_fkey"
+      columns: ["lab_facility_id"]
+isOneToOne: false
+      referencedRelation: "facilities"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "open_lab_order_items_lab_order_id_fkey"
+      columns: ["lab_order_id"]
+isOneToOne: false
+      referencedRelation: "lab_orders"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "open_lab_order_items_master_id_fkey"
+      columns: ["master_id"]
+isOneToOne: false
+      referencedRelation: "lab_test_master"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "open_lab_order_items_order_id_fkey"
+      columns: ["order_id"]
+isOneToOne: false
+      referencedRelation: "open_lab_orders"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"open_lab_orders": {
+                  Row: {
+                    "cancelled_at": string | null,"code": string,"created_at": string,"created_by": string,"encounter_id": string,"expires_at": string,"facility_id": string,"id": string,"note": string | null,"patient_id": string,"practitioner_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "cancelled_at"?: string | null,"code": string,"created_at"?: string,"created_by": string,"encounter_id": string,"expires_at"?: string,"facility_id": string,"id"?: string,"note"?: string | null,"patient_id": string,"practitioner_id": string
+                  }
+                  Update: {
+                    "cancelled_at"?: string | null,"code"?: string,"created_at"?: string,"created_by"?: string,"encounter_id"?: string,"expires_at"?: string,"facility_id"?: string,"id"?: string,"note"?: string | null,"patient_id"?: string,"practitioner_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "open_lab_orders_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "open_lab_orders_encounter_id_fkey"
+      columns: ["encounter_id"]
+isOneToOne: false
+      referencedRelation: "encounters"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "open_lab_orders_facility_id_fkey"
+      columns: ["facility_id"]
+isOneToOne: false
+      referencedRelation: "facilities"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "open_lab_orders_patient_id_fkey"
+      columns: ["patient_id"]
+isOneToOne: false
+      referencedRelation: "patients"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "open_lab_orders_practitioner_id_fkey"
+      columns: ["practitioner_id"]
+isOneToOne: false
+      referencedRelation: "practitioner_profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"organizations": {
                   Row: {
                     "created_at": string,"created_by": string | null,"id": string,"kind": string,"name": string,"status": Database["public"]['Enums']["entity_status"],"status_reason": string | null,"updated_at": string,"verified_at": string | null,"verified_by": string | null,"version": number
@@ -1358,6 +1460,44 @@ isOneToOne: false
       columns: ["verified_by"]
 isOneToOne: false
       referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"patient_lab_entries": {
+                  Row: {
+                    "created_at": string,"created_by": string,"id": string,"lab_name": string | null,"master_id": string | null,"name": string,"open_item_id": string | null,"patient_id": string,"reference_range": string | null,"taken_on": string,"unit": string | null,"value_numeric": number | null,"value_text": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by": string,"id"?: string,"lab_name"?: string | null,"master_id"?: string | null,"name": string,"open_item_id"?: string | null,"patient_id": string,"reference_range"?: string | null,"taken_on": string,"unit"?: string | null,"value_numeric"?: number | null,"value_text"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string,"id"?: string,"lab_name"?: string | null,"master_id"?: string | null,"name"?: string,"open_item_id"?: string | null,"patient_id"?: string,"reference_range"?: string | null,"taken_on"?: string,"unit"?: string | null,"value_numeric"?: number | null,"value_text"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "patient_lab_entries_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "patient_lab_entries_master_id_fkey"
+      columns: ["master_id"]
+isOneToOne: false
+      referencedRelation: "lab_test_master"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "patient_lab_entries_open_item_id_fkey"
+      columns: ["open_item_id"]
+isOneToOne: false
+      referencedRelation: "open_lab_order_items"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "patient_lab_entries_patient_id_fkey"
+      columns: ["patient_id"]
+isOneToOne: false
+      referencedRelation: "patients"
       referencedColumns: ["id"]
     }
                   ]
@@ -2335,6 +2475,28 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"add_self_lab_result":
+{ Args: { "p_lab_name"?: string,"p_master_id"?: string,"p_name": string,"p_open_item_id"?: string,"p_patient_id": string,"p_reference_range"?: string,"p_taken_on": string,"p_unit"?: string,"p_value": string }; Returns: {
+              "created_at": string,
+"created_by": string,
+"id": string,
+"lab_name": string | null,
+"master_id": string | null,
+"name": string,
+"open_item_id": string | null,
+"patient_id": string,
+"reference_range": string | null,
+"taken_on": string,
+"unit": string | null,
+"value_numeric": number | null,
+"value_text": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "patient_lab_entries"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "adjust_stock":
 { Args: { "p_batch_id": string,"p_counted_quantity": number,"p_reason": string }; Returns: undefined
                            },
@@ -2826,6 +2988,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"create_open_lab_order":
+{ Args: { "p_encounter_id": string,"p_items": Json,"p_note"?: string }; Returns: Json
+                           },
 "create_own_medication_plan":
 { Args: { "p_days"?: number,"p_instructions"?: string,"p_interval_hours"?: number,"p_name": string,"p_patient_id": string,"p_reported_medication_id"?: string,"p_start_date"?: string,"p_times": (string)[] }; Returns: {
               "as_needed": boolean,
@@ -2884,6 +3049,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"delete_self_lab_result":
+{ Args: { "p_entry_id": string }; Returns: undefined
+                           },
 "direct_sale":
 { Args: { "p_idempotency_key": string,"p_lines": Json,"p_patient_id"?: string,"p_pharmacy_id": string,"p_source": string,"p_source_note"?: string }; Returns: Json
                            },
@@ -2903,6 +3071,9 @@ isOneToOne: false
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
 "encounter_context":
+{ Args: { "p_encounter_id": string }; Returns: Json
+                           },
+"encounter_open_lab_orders":
 { Args: { "p_encounter_id": string }; Returns: Json
                            },
 "encounter_orders":
@@ -2999,8 +3170,14 @@ isOneToOne: false
               "branch": string,"is_default": boolean,"lab_id": string,"name": string,"tests": Json
             }[]
                            },
+"lab_claim_open_order":
+{ Args: { "p_code": string,"p_lab_facility_id": string,"p_pick": Json }; Returns: Json
+                           },
 "lab_home_requests":
 { Args: { "p_lab_facility_id": string }; Returns: Json
+                           },
+"lab_lookup_open_order":
+{ Args: { "p_code": string,"p_lab_facility_id": string }; Returns: Json
                            },
 "lab_order_detail":
 { Args: { "p_order_id": string }; Returns: Json
@@ -3115,6 +3292,9 @@ isOneToOne: false
             }[]
                            },
 "my_medication_plans":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"my_open_lab_orders":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
 "my_patient_card":
@@ -3900,6 +4080,27 @@ isOneToOne: false
                           SetofOptions: {
         from: "*"
         to: "clinic_services"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"upsert_lab_test_master":
+{ Args: { "p": Json }; Returns: {
+              "category": string | null,
+"code": string,
+"created_at": string,
+"id": string,
+"is_active": boolean,
+"name_ar": string,
+"name_en": string | null,
+"reference_range": string | null,
+"sort_order": number,
+"specimen_type": string | null,
+"unit": string | null,
+"updated_at": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "lab_test_master"
         isOneToOne: true
         isSetofReturn: false
       } },
