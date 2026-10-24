@@ -65,7 +65,7 @@ export async function sendFcm(sa: ServiceAccount, token: string, msg: Rendered):
   });
   if (r.ok) return { ok: true };
   const text = await r.text();
-  const gone = r.status === 404 || /UNREGISTERED|registration-token-not-registered|INVALID_ARGUMENT.*token/i.test(text);
+  const gone = r.status === 404 || /UNREGISTERED|registration-token-not-registered|not a valid FCM registration token/i.test(text);
   return { ok: false, gone, error: `fcm_${r.status}` };
 }
 
