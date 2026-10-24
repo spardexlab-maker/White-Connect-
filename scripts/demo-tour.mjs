@@ -88,14 +88,14 @@ async function proLogin(page, email) {
   await page.goto(`${BASE}/login`);
   await page.getByLabel('البريد الإلكتروني أو معرف الدخول').fill(email);
   await page.getByLabel('كلمة المرور').fill(PASSWORD);
-  await page.getByRole('button', { name: 'دخول' }).click();
+  await page.getByRole('button', { name: 'دخول', exact: true }).click();
   await page.waitForURL(/workspace|platform-admin/);
 }
 async function patientLogin(page) {
   await page.goto(`${BASE}/patient/account`);
   await page.getByLabel('البريد الإلكتروني').fill('hasan@demo.test');
   await page.getByLabel('كلمة المرور').fill(PASSWORD);
-  await page.getByRole('button', { name: 'دخول' }).click();
+  await page.getByRole('button', { name: 'دخول', exact: true }).click();
   await page.locator('canvas').first().waitFor();
 }
 async function doctorLogin(page) {

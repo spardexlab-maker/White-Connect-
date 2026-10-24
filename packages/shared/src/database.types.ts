@@ -499,14 +499,14 @@ isOneToOne: false
                   ]
                 },"dispatch_line_notes": {
                   Row: {
-                    "created_at": string,"created_by": string,"dispatch_id": string,"id": string,"kind": string,"line_no": number,"note": string | null
+                    "created_at": string,"created_by": string,"dispatch_id": string,"doctor_reply": string | null,"doctor_seen_at": string | null,"id": string,"kind": string,"line_no": number,"note": string | null,"replied_at": string | null,"replied_by": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"created_by": string,"dispatch_id": string,"id"?: string,"kind": string,"line_no": number,"note"?: string | null
+                    "created_at"?: string,"created_by": string,"dispatch_id": string,"doctor_reply"?: string | null,"doctor_seen_at"?: string | null,"id"?: string,"kind": string,"line_no": number,"note"?: string | null,"replied_at"?: string | null,"replied_by"?: string | null
                   }
                   Update: {
-                    "created_at"?: string,"created_by"?: string,"dispatch_id"?: string,"id"?: string,"kind"?: string,"line_no"?: number,"note"?: string | null
+                    "created_at"?: string,"created_by"?: string,"dispatch_id"?: string,"doctor_reply"?: string | null,"doctor_seen_at"?: string | null,"id"?: string,"kind"?: string,"line_no"?: number,"note"?: string | null,"replied_at"?: string | null,"replied_by"?: string | null
                   }
                   Relationships: [
                     {
@@ -520,6 +520,12 @@ isOneToOne: false
       columns: ["dispatch_id"]
 isOneToOne: false
       referencedRelation: "prescription_dispatches"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "dispatch_line_notes_replied_by_fkey"
+      columns: ["replied_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
       referencedColumns: ["id"]
     }
                   ]
@@ -2893,6 +2899,9 @@ isOneToOne: false
 "dispense_prescription":
 { Args: { "p_dispatch_id": string,"p_idempotency_key": string,"p_lines": Json }; Returns: Json
                            },
+"doctor_pharmacy_notes":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
 "encounter_context":
 { Args: { "p_encounter_id": string }; Returns: Json
                            },
@@ -3074,6 +3083,9 @@ isOneToOne: false
 { Args: { "p_facility_id": string,"p_kind"?: string,"p_query": string }; Returns: {
               "birth_year": number,"full_name": string,"has_account": boolean,"is_provisional": boolean,"known_here": boolean,"patient_id": string,"phone_masked": string,"public_code": string,"sex": Database["public"]['Enums']["patient_sex"]
             }[]
+                           },
+"mark_pharmacy_notes_seen":
+{ Args: Record<PropertyKey, never>; Returns: undefined
                            },
 "medication_adherence":
 { Args: { "p_days"?: number,"p_patient_id": string }; Returns: Json
@@ -3442,6 +3454,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"reply_pharmacy_note":
+{ Args: { "p_note_id": string,"p_reply": string }; Returns: undefined
+                           },
 "request_attachment_upload":
 { Args: { "p_file_name": string,"p_kind": string,"p_mime": string,"p_ref_id": string,"p_size": number }; Returns: Json
                            },

@@ -21,7 +21,7 @@ async function login(page) {
   await page.goto(`${BASE}/login`);
   await page.getByLabel('البريد الإلكتروني أو معرف الدخول').fill('admin@demo.test');
   await page.getByLabel('كلمة المرور').fill('Demo-Pass-2026!');
-  await page.getByRole('button', { name: 'دخول' }).click();
+  await page.getByRole('button', { name: 'دخول', exact: true }).click();
   await page.waitForURL(/workspace/);
 }
 const p = await (await browser.newContext(ctx)).newPage();

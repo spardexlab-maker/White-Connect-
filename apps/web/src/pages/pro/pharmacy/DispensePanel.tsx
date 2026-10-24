@@ -9,7 +9,7 @@ import { ReminderSetup } from '../../../components/clinical/ReminderSetup';
 
 interface Line {
   line_no: number; display_name: string; prescribed_quantity: number | null; quantity_unit: string | null; dispensed: number; reserved: number; reserved_product_id: string | null;
-  notes: { kind: string; note: string | null; at: string }[];
+  notes: { kind: string; note: string | null; at: string; reply?: string | null; replied_at?: string | null }[];
   products: { product_id: string; name: string; unit_name: string; unit_price_minor: number; available: number; manual_availability: string | null; manual_availability_at: string | null }[];
 }
 
@@ -96,7 +96,12 @@ export function DispensePanel({ dispatchId, status, onChanged, prescriptionId, i
               {remaining != null && <span>المتبقي: <strong className="num">{remaining}</strong></span>}
               {l.reserved > 0 && <Badge tone="warning">محجوز {l.reserved}</Badge>}
             </div>
-            {l.notes.map((n, i) => <span key={i} className="small" style={{ color: 'var(--c-warning)' }}>{n.kind === 'not_available' ? 'غير متوفر' : n.kind === 'clarification_requested' ? 'طُلب توضيح' : 'ملاحظة'}: {n.note ?? '—'} · {formatDateTime(n.at)}</span>)}
+            {l.notes.map((n, i) => (
+              <span key={i} className="stack-sm" style={{ gap: 2 }}>
+                <span className="small" style={{ color: 'var(--c-warning)' }}>{n.kind === 'not_available' ? 'غير متوفر' : n.kind === 'clarification_requested' ? 'طُلب توضيح' : 'ملاحظة'}: {n.note ?? '—'} · {formatDateTime(n.at)}</span>
+                {n.reply && <span className="small pharmacy-reply"><strong>رد الطبيب:</strong> {n.reply}{n.replied_at ? ` · ${formatDateTime(n.replied_at)}` : ''}</span>}
+              </span>
+            ))}
             {!closed && remaining !== 0 && (
               <>
                 {l.products.length === 0

@@ -38,7 +38,7 @@ async function proLogin(page, email) {
   await page.goto(`${BASE}/login`);
   await page.getByLabel('البريد الإلكتروني أو معرف الدخول').fill(email);
   await page.getByLabel('كلمة المرور').fill(PASSWORD);
-  await page.getByRole('button', { name: 'دخول' }).click();
+  await page.getByRole('button', { name: 'دخول', exact: true }).click();
   await page.waitForURL(/workspace|platform-admin/);
 }
 
@@ -66,7 +66,7 @@ for (const width of WIDTHS) {
     await page.goto(`${BASE}/patient/account`);
     await page.getByLabel('البريد الإلكتروني').fill('hasan@demo.test');
     await page.getByLabel('كلمة المرور').fill(PASSWORD);
-    await page.getByRole('button', { name: 'دخول' }).click();
+    await page.getByRole('button', { name: 'دخول', exact: true }).click();
     await page.locator('canvas').first().waitFor({ timeout: 10000 });
     await shot(page, '04-patient-card', width);
     await page.goto(`${BASE}/patient/appointments`);

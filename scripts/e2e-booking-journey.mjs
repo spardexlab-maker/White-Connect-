@@ -17,7 +17,7 @@ const p = await (await browser.newContext(ctxOpts)).newPage();
 await p.goto(`${BASE}/patient/account`);
 await p.getByLabel('البريد الإلكتروني').fill('hasan@demo.test');
 await p.getByLabel('كلمة المرور').fill(PASSWORD);
-await p.getByRole('button', { name: 'دخول' }).click();
+await p.getByRole('button', { name: 'دخول', exact: true }).click();
 await p.locator('canvas').first().waitFor();
 await p.goto(`${BASE}/patient/book/${A1}/${AHMED}?service=${SVC}`);
 await p.locator('.day-btn:not([disabled])').first().click();
@@ -38,7 +38,7 @@ const r = await (await browser.newContext(ctxOpts)).newPage();
 await r.goto(`${BASE}/login`);
 await r.getByLabel('البريد الإلكتروني أو معرف الدخول').fill('reception.a@demo.test');
 await r.getByLabel('كلمة المرور').fill(PASSWORD);
-await r.getByRole('button', { name: 'دخول' }).click();
+await r.getByRole('button', { name: 'دخول', exact: true }).click();
 await r.waitForURL(/reception/);
 if (!isToday) {
   // navigate forward day by day until the booked slot appears
@@ -67,7 +67,7 @@ if (isToday) {
   await d.goto(`${BASE}/login`);
   await d.getByLabel('البريد الإلكتروني أو معرف الدخول').fill('dr.ahmed@demo.test');
   await d.getByLabel('كلمة المرور').fill(PASSWORD);
-  await d.getByRole('button', { name: 'دخول' }).click();
+  await d.getByRole('button', { name: 'دخول', exact: true }).click();
   await d.getByRole('button', { name: /عيادات الرافدين.*طبيب/ }).first().click();
   await d.waitForURL(/doctor/);
   const q = d.locator('.queue-item', { hasText: 'حسن علي' });

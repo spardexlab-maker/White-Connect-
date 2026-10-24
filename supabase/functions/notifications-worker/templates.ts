@@ -46,7 +46,11 @@ export function render(template: string, payload: Record<string, unknown>): Rend
     case 'prescription.dispensed':
       return { title: 'تم الصرف', body: 'سُجل صرف من الصيدلية. افتح التطبيق للتفاصيل.', link: '/patient/journey' };
     case 'prescription.clarification':
-      return { title: 'طلب توضيح من صيدلية', body: 'تطلب صيدلية توضيحاً على وصفة أصدرتها.', link: '/workspace/doctor' };
+      return { title: 'طلب توضيح من صيدلية', body: 'تطلب صيدلية توضيحاً على وصفة أصدرتها. افتح «ملاحظات الصيدلية» للرد.', link: '/workspace/doctor/pharmacy-notes' };
+    case 'prescription.not_available':
+      return { title: 'دواء غير متوفر', body: 'أبلغت صيدلية أن دواءً في وصفتك غير متوفر. افتح «ملاحظات الصيدلية».', link: '/workspace/doctor/pharmacy-notes' };
+    case 'prescription.clarification_reply':
+      return { title: 'ردّ الطبيب على طلب التوضيح', body: 'وصل رد الطبيب — افتح الوصفة في «وارد الوصفات».', link: '/workspace/pharmacy' };
     case 'lab.released':
       return { title: 'نتيجة تحليلك جاهزة', body: 'صدرت نتيجة تحاليل. افتح التطبيق لعرضها.', link: '/patient/journey' };
     case 'lab.corrected':

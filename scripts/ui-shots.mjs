@@ -14,7 +14,7 @@ for (const w of widthsArg.split(',').map(Number)) {
     await p.goto(`${BASE}/login`);
     await p.getByLabel('البريد الإلكتروني').fill(email);
     await p.getByLabel('كلمة المرور').fill('Demo-Pass-2026!');
-    await p.getByRole('button', { name: /دخول/ }).click();
+    await p.getByRole('button', { name: 'دخول', exact: true }).click();
     await p.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 15000 });
   }
   await p.goto(`${BASE}${path}`);

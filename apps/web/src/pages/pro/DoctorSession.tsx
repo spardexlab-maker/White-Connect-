@@ -13,11 +13,15 @@ import { RxBuilder, type EncounterOrders } from '../../components/clinical/RxBui
 import { MedicalCard } from '../../components/clinical/MedicalCard';
 import { HealthStrip, HealthSummary, type Health } from '../../components/clinical/HealthSummary';
 import { EncounterLabResults } from '../../components/clinical/EncounterLabResults';
+import { loadPharmacyNotes, NoteCard } from './PharmacyNotes';
 import { AdherenceBoard } from '../../components/clinical/AdherenceBoard';
 import { FollowUpBooking } from '../../components/clinical/FollowUpBooking';
 
 /** «ملخص المريض» is hidden for now (owner request, 24 Oct 2026); kept for later. */
 const SHOW_SUMMARY_TAB = false;
+// owner request (25 Oct 2026): the note form (vitals, complaint, exam, plan…) is hidden too —
+// the diagnosis lives in the side panel; flip this back to show the form again
+const SHOW_NOTE_TAB = false;
 const REOPEN_REASONS = ['ملاحظة من الصيدلية على الدواء', 'عاد المريض بسبب خطأ أو مضاعفة', 'تصحيح الوصفة', 'سبب آخر'];
 
 interface Note {
@@ -63,7 +67,9 @@ function SessionInner({ encounterId }: { encounterId: string }) {
   const orders = useAsync(async () => (await unwrap(supabase.rpc('encounter_orders', { p_encounter_id: encounterId }))) as unknown as EncounterOrders, [encounterId]);
   const patientId = ctx.data?.patient.id;
   const health = useAsync(async () => (patientId ? (await unwrap(supabase.rpc('health_profile', { p_patient_id: patientId }))) as unknown as Health : null), [patientId]);
-  const [tab, setTab] = useState<Tab>('session');
+  const [tab, setTab] = useState<Tab>(SHOW_NOTE_TAB ? 'session' : 'card');
+  // the pharmacy's questions about this session's prescriptions
+  const rxNotes = useAsync(async () => (await loadPharmacyNotes()).filter((n) => n.encounter_id === encounterId), [encounterId]);
   const [form, setForm] = useState<Partial<Note>>({});
   const [saveState, setSaveState] = useState<SaveState>('saved');
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -207,8 +213,9 @@ function SessionInner({ encounterId }: { encounterId: string }) {
       <div className="card card-flush" style={{ minWidth: 0 }}>
         <Tabs<Tab> label="ملف الجلسة" value={tab} onChange={setTab} tabs={[
           ...(SHOW_SUMMARY_TAB ? [{ id: 'summary' as Tab, label: 'ملخص المريض' }] : []),
-          { id: 'session', label: 'الجلسة الحالية' }, { id: 'card', label: 'البطاقة الطبية' },
-          { id: 'labs', label: `تحاليل (${orders.data?.lab_orders.length ?? 0})` }, { id: 'rx', label: 'وصفة' },
+          ...(SHOW_NOTE_TAB ? [{ id: 'session' as Tab, label: 'الجلسة الحالية' }] : []), { id: 'card', label: 'البطاقة الطبية' },
+          { id: 'labs', label: `تحاليل (${orders.data?.lab_orders.length ?? 0})` },
+          { id: 'rx', label: rxNotes.data?.some((n) => !n.reply) ? `وصفة (ملاحظة صيدلية ${rxNotes.data.filter((n) => !n.reply).length})` : 'وصفة' },
           { id: 'meds', label: 'الأدوية والالتزام' },
         ]} />
         <div role="tabpanel" id={`panel-${tab}`} key={tab} aria-labelledby={`tab-${tab}`} style={{ padding: 'var(--s-5)' }}>
@@ -218,7 +225,7 @@ function SessionInner({ encounterId }: { encounterId: string }) {
             {health.data ? <HealthSummary h={health.data} /> : <SkeletonList rows={3} />}
           </div>}
           {tab === 'card' && <MedicalCard patientId={c.patient.id} excludeEncounterId={encounterId} />}
-          {tab === 'session' && (
+          {SHOW_NOTE_TAB && tab === 'session' && (
             <div className="stack">
               {locked && <Alert tone="success" title={`الملاحظة معتمدة (${note?.signed_at ? formatDateTime(note.signed_at) : ''})`}>النسخة مقفلة؛ أي تصحيح لاحق يُضاف كإصدار جديد مع السبب.</Alert>}
               <fieldset className="note-section" disabled={locked}>
@@ -241,6 +248,12 @@ function SessionInner({ encounterId }: { encounterId: string }) {
             </div>
           )}
           {tab === 'labs' && <LabOrderPanel encounterId={encounterId} orders={orders.data ?? null} onChanged={orders.reload} active={active} />}
+          {tab === 'rx' && !!rxNotes.data?.length && (
+            <div className="stack-sm" style={{ marginBlockEnd: 'var(--s-4)' }}>
+              <h3 className="section-title">ملاحظات الصيدلية على هذه الوصفة</h3>
+              {rxNotes.data.map((n) => <NoteCard key={n.id} n={n} compact onChanged={rxNotes.reload} />)}
+            </div>
+          )}
           {tab === 'rx' && previewBase && (active || orders.data?.prescriptions.length
             ? <RxBuilder encounterId={encounterId} facilityId={c.encounter.facility_id} patientName={c.patient.full_name} orders={orders.data ?? null} onChanged={orders.reload} preview={previewBase}
                          diagnosisMissing={!(form.assessment ?? '').trim()} />
@@ -259,7 +272,8 @@ function SessionInner({ encounterId }: { encounterId: string }) {
         <div className="card stack-sm">
           <h2 className="eyebrow">أدوات الجلسة</h2>
           {!locked && active && <Button variant="secondary" icon={<Save size={18} />} loading={saveState === 'saving'} onClick={() => void save()}>حفظ مسودة</Button>}
-          <Button variant="secondary" icon={<NotebookPen size={18} />} onClick={() => setTab('session')}>الملاحظة</Button>
+          {SHOW_NOTE_TAB && <Button variant="secondary" icon={<NotebookPen size={18} />} onClick={() => setTab('session')}>الملاحظة</Button>}
+          <Button variant="secondary" icon={<NotebookPen size={18} />} onClick={() => setTab('card')}>البطاقة الطبية</Button>
           <Button variant="secondary" icon={<FlaskConical size={18} />} onClick={() => setTab('labs')}>التحاليل والنتائج</Button>
           <Button variant="secondary" icon={<Pill size={18} />} onClick={() => setTab('rx')}>الوصفة</Button>
           <Button variant="secondary" icon={<Activity size={18} />} onClick={() => setTab('meds')}>الأدوية والالتزام</Button>
@@ -267,7 +281,7 @@ function SessionInner({ encounterId }: { encounterId: string }) {
         {active ? (
           <div className="card stack-sm">
             <h2 className="eyebrow">قرارات</h2>
-            {!locked && <Button variant="accent" icon={<CheckCircle2 size={18} />} onClick={() => setConfirm('sign')}>اعتماد الملاحظة</Button>}
+            {SHOW_NOTE_TAB && !locked && <Button variant="accent" icon={<CheckCircle2 size={18} />} onClick={() => setConfirm('sign')}>اعتماد الملاحظة</Button>}
             {c.encounter.status === 'in_progress' && !paused && <Button variant="secondary" icon={<PauseCircle size={18} />} onClick={() => setConfirm('pause')}>إيقاف مؤقت واستقبال مريض آخر</Button>}
             {paused && <Button icon={<PlayCircle size={18} />} loading={busy} onClick={() => void resume()}>استئناف الجلسة</Button>}
             {c.encounter.status === 'in_progress' && <Button variant="soft" icon={<Hourglass size={18} />} onClick={() => setConfirm('await')}>انتظار النتائج واستقبال التالي</Button>}

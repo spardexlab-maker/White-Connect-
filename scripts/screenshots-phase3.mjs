@@ -16,7 +16,7 @@ async function login(p, email) {
   await p.goto(`${BASE}/login`);
   await p.getByLabel('البريد الإلكتروني أو معرف الدخول').fill(email);
   await p.getByLabel('كلمة المرور').fill(PASSWORD);
-  await p.getByRole('button', { name: 'دخول' }).click();
+  await p.getByRole('button', { name: 'دخول', exact: true }).click();
   await p.waitForURL(/workspace|platform-admin/);
 }
 async function shot(p, name, width) {
@@ -67,7 +67,7 @@ for (const width of [390, 1440]) {
   await pt.goto(`${BASE}/patient/account`);
   await pt.getByLabel('البريد الإلكتروني').fill('hasan@demo.test');
   await pt.getByLabel('كلمة المرور').fill(PASSWORD);
-  await pt.getByRole('button', { name: 'دخول' }).click();
+  await pt.getByRole('button', { name: 'دخول', exact: true }).click();
   await pt.locator('canvas').first().waitFor();
   await pt.goto(`${BASE}/patient/journey`);
   await pt.getByText(/^وصفة RX/).first().waitFor();

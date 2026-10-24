@@ -19,7 +19,7 @@ async function pro(email) {
   await page.goto(`${BASE}/login`);
   await page.getByLabel('البريد الإلكتروني أو معرف الدخول').fill(email);
   await page.getByLabel('كلمة المرور').fill(PASSWORD);
-  await page.getByRole('button', { name: 'دخول' }).click();
+  await page.getByRole('button', { name: 'دخول', exact: true }).click();
   await page.waitForURL(/workspace/);
   return page;
 }
@@ -41,7 +41,7 @@ p.on('pageerror', (e) => errors.push(e.message));
 await p.goto(`${BASE}/patient/account`);
 await p.getByLabel('البريد الإلكتروني').fill('hasan@demo.test');
 await p.getByLabel('كلمة المرور').fill(PASSWORD);
-await p.getByRole('button', { name: 'دخول' }).click();
+await p.getByRole('button', { name: 'دخول', exact: true }).click();
 await p.locator('canvas').first().waitFor();
 await p.goto(`${BASE}/patient`);
 await p.getByRole('link', { name: /تحليل منزلي/ }).click();

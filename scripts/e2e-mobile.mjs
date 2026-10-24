@@ -54,7 +54,7 @@ try {
   await p.getByLabel('البريد الإلكتروني').fill('mona@demo.test');
   await p.getByLabel('كلمة المرور').fill('Demo-Pass-2026!');
   await shot(p, 'm04-review-signin');
-  await p.getByRole('button', { name: 'دخول' }).click();
+  await p.getByRole('button', { name: 'دخول', exact: true }).click();
   await p.getByRole('button', { name: 'إرسال طلب الحجز' }).waitFor({ timeout: 15000 });
   step('signed in inline without losing the chosen slot');
   await p.getByRole('button', { name: 'إرسال طلب الحجز' }).click();

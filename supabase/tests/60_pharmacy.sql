@@ -2,7 +2,7 @@
 -- version only, never above prescribed, FEFO, no expired, no negative
 -- stock, partial dispensing, returns, reports (prescribed ≠ sold).
 begin;
-select plan(22);
+select plan(25);
 
 \set A1 '''00000000-0000-4000-f000-0000000000a1'''
 \set PH_A '''00000000-0000-4000-f000-0000000000a2'''
@@ -109,6 +109,20 @@ select is((select (public.pharmacy_report(:PH_A, current_date, current_date) -> 
 select tests.login(:U_PHB);
 select is((select count(*)::int from public.pharmacy_products where pharmacy_id = :PH_A) + (select count(*)::int from public.sales where pharmacy_id = :PH_A), 0,
           'other pharmacy cannot see pharmacy A stock or sales');
+
+-- the pharmacist's question reaches the doctor, and the answer comes back to the pharmacy
+select tests.login(:U_PHA);
+select public.dispatch_line_note((select id from t where k = 'disp'), 1, 'clarification_requested', 'هل المقصود 500 ملغ؟');
+select tests.login(:U_DRAHMED);
+select is((select e ->> 'note' from jsonb_array_elements(public.doctor_pharmacy_notes()) e limit 1), 'هل المقصود 500 ملغ؟',
+          'the doctor sees the pharmacist''s note');
+select public.reply_pharmacy_note((select (e ->> 'id')::uuid from jsonb_array_elements(public.doctor_pharmacy_notes()) e limit 1), 'نعم 500 ملغ');
+select tests.login(:U_PHB);
+select throws_ok(format($q$ select public.reply_pharmacy_note(%L, 'x y') $q$, (select id from public.dispatch_line_notes limit 1)),
+                 'P0001', 'app:forbidden', 'only the prescribing doctor answers');
+select tests.login(:U_PHA);
+select is((select n ->> 'reply' from jsonb_array_elements(public.dispatch_lines((select id from t where k = 'disp'))) l, jsonb_array_elements(l -> 'notes') n
+            where n ->> 'kind' = 'clarification_requested' limit 1), 'نعم 500 ملغ', 'the pharmacy sees the doctor''s answer under the line');
 
 select * from finish();
 rollback;

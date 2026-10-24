@@ -1,3 +1,4 @@
+import { loadPharmacyNotes } from './PharmacyNotes';
 import { useCallback, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AlertOctagon, BellRing, CalendarDays, ClipboardCheck, DoorOpen, IdCard, Play, PlayCircle, Stethoscope } from 'lucide-react';
@@ -79,6 +80,7 @@ export function DoctorToday() {
   return (
     <div className="stack">
       <PageHead title="اليوم والطابور" subtitle={<>{current!.facility_name} — {current!.branch_name} · {formatDate(new Date(), tz)}</>} />
+      <PharmacyNotesBanner />
       {inProgress && (
         <Alert tone="info" title={`جلسة جارية: ${inProgress.patients?.full_name ?? ''}`}
                action={<Link className="btn btn-primary btn-sm" to={`/workspace/doctor/session/${inProgress.id}`}>متابعة الجلسة</Link>}>
@@ -200,5 +202,18 @@ function RecentSessions({ tz }: { tz: string }) {
         ))}
       </ul>
     </section>
+  );
+}
+
+/** A pharmacy asked about one of the doctor's prescriptions and it is not answered yet. */
+function PharmacyNotesBanner() {
+  const notes = useAsync(loadPharmacyNotes, []);
+  const open = (notes.data ?? []).filter((n) => !n.reply);
+  if (!open.length) return null;
+  return (
+    <Alert tone="warning" title={`ملاحظات من الصيدلية (${open.length})`}
+           action={<Link className="btn btn-secondary btn-sm" to="/workspace/doctor/pharmacy-notes">عرض والرد</Link>}>
+      {open.slice(0, 2).map((n) => `${n.medicine ?? ''} — ${n.patient_name}: ${n.note ?? (n.kind === 'not_available' ? 'غير متوفر' : 'طلب توضيح')}`).join(' · ')}
+    </Alert>
   );
 }

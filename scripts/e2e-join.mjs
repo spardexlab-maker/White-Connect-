@@ -43,7 +43,7 @@ a.on('pageerror', (e) => errors.push(e.message));
 await a.goto(`${BASE}/login`);
 await a.getByLabel('البريد الإلكتروني').fill('admin@demo.test');
 await a.getByLabel('كلمة المرور').fill('Demo-Pass-2026!');
-await a.getByRole('button', { name: /دخول/ }).click();
+await a.getByRole('button', { name: 'دخول', exact: true }).click();
 await a.waitForURL((u) => !u.pathname.startsWith('/login'));
 await a.goto(`${BASE}/platform-admin/applications`);
 await a.getByText('سارة محمد علي').first().click();

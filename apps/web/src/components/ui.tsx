@@ -233,6 +233,11 @@ export function Tabs<T extends string>({ tabs, value, onChange, label }: { tabs:
 /* ------------------------------------------------------------------ */
 function useFocusTrap(open: boolean, onClose: () => void) {
   const ref = useRef<HTMLDivElement>(null);
+  // the latest close handler, without re-running the trap: callers pass a new
+  // arrow function on every render, and re-running would steal the focus
+  // from whatever field the user is typing in
+  const close = useRef(onClose);
+  close.current = onClose;
   useEffect(() => {
     if (!open) return;
     const previous = document.activeElement as HTMLElement | null;
@@ -241,7 +246,7 @@ function useFocusTrap(open: boolean, onClose: () => void) {
       .filter((el) => !el.hasAttribute('disabled'));
     (node?.querySelector<HTMLElement>('[data-autofocus]') ?? focusables()[0])?.focus();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { e.preventDefault(); onClose(); }
+      if (e.key === 'Escape') { e.preventDefault(); close.current(); }
       if (e.key === 'Tab') {
         const els = focusables();
         if (!els.length) return;
@@ -253,7 +258,7 @@ function useFocusTrap(open: boolean, onClose: () => void) {
     document.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
     return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = ''; previous?.focus(); };
-  }, [open, onClose]);
+  }, [open]);
   return ref;
 }
 

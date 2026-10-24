@@ -11,6 +11,7 @@ import { productName } from '../lib/supabase';
 import { OfflineBanner, Sheet } from '../components/ui';
 import { PushToggle } from '../components/PushToggle';
 import { LiveNotifications } from '../components/LiveNotifications';
+import { InboxBell } from '../components/InboxBell';
 
 interface NavItem { to: string; label: string; icon: ReactNode; end?: boolean }
 
@@ -34,6 +35,7 @@ function navFor(ws: Workspace | null, isPlatformAdmin: boolean, path: string): N
     case 'doctor':
       return [
         { to: '/workspace/doctor', label: 'اليوم والطابور', icon: <Stethoscope size={20} />, end: true },
+        { to: '/workspace/doctor/pharmacy-notes', label: 'ملاحظات الصيدلية', icon: <Pill size={20} /> },
         { to: '/workspace/doctor/schedule', label: 'الجدول والخدمات', icon: <Settings2 size={20} /> },
         { to: '/workspace/doctor/profile', label: 'ملفي المهني', icon: <Award size={20} /> },
       ];
@@ -116,6 +118,7 @@ export function WorkspaceLayout() {
           <span className="truncate">{pageTitle}</span>
         </div>
         <span className="grow" />
+        <InboxBell />
         <PushToggle compact />
         <LiveNotifications />
         <span className="muted small hide-sm">{formatDate(new Date())}</span>

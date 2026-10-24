@@ -10,7 +10,7 @@ async function login(email) {
   await p.goto(`${BASE}/login`);
   await p.getByLabel('البريد الإلكتروني').fill(email);
   await p.getByLabel('كلمة المرور').fill('Demo-Pass-2026!');
-  await p.getByRole('button', { name: /دخول/ }).click();
+  await p.getByRole('button', { name: 'دخول', exact: true }).click();
   await p.waitForURL((u) => !u.pathname.startsWith('/login'));
   return p;
 }

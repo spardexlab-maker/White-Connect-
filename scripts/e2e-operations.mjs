@@ -11,7 +11,7 @@ async function pro(email) {
   await p.goto(`${BASE}/login`);
   await p.getByLabel('البريد الإلكتروني أو معرف الدخول').fill(email);
   await p.getByLabel('كلمة المرور').fill(PASSWORD);
-  await p.getByRole('button', { name: 'دخول' }).click();
+  await p.getByRole('button', { name: 'دخول', exact: true }).click();
   await p.waitForURL(/workspace|platform-admin/);
   return p;
 }

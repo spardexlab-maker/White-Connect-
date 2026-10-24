@@ -49,6 +49,8 @@ const AdminHealth = lazy(() => import('./pages/admin/Health').then((m) => ({ def
 const PrintReceipt = lazy(() => import('./pages/PrintReceipt').then((m) => ({ default: m.PrintReceipt })));
 const ComplexDoctors = lazy(() => import('./pages/pro/ComplexDoctors').then((m) => ({ default: m.ComplexDoctors })));
 const LabHomeRequests = lazy(() => import('./pages/pro/LabHomeRequests').then((m) => ({ default: m.LabHomeRequests })));
+const PharmacyNotes = lazy(() => import('./pages/pro/PharmacyNotes').then((m) => ({ default: m.PharmacyNotes })));
+const StaffInbox = lazy(() => import('./pages/pro/StaffInbox').then((m) => ({ default: m.StaffInbox })));
 const LabWorkspace = lazy(() => import('./pages/pro/LabWorkspace').then((m) => ({ default: m.LabWorkspace })));
 const PrintRx = lazy(() => import('./pages/PrintRx').then((m) => ({ default: m.PrintRx })));
 const Security = lazy(() => import('./pages/pro/Security').then((m) => ({ default: m.Security })));
@@ -112,6 +114,8 @@ export function App() {
                 <Route path="/workspace/reception" element={<RequireWorkspaceRole roles={['receptionist', 'doctor']}><ReceptionDashboard /></RequireWorkspaceRole>} />
                 <Route path="/workspace/doctor" element={<RequireWorkspaceRole roles={['doctor']}><DoctorToday /></RequireWorkspaceRole>} />
                 <Route path="/workspace/doctor/session/:encounterId" element={<RequireWorkspaceRole roles={['doctor']}><DoctorSession /></RequireWorkspaceRole>} />
+                <Route path="/workspace/doctor/pharmacy-notes" element={<RequireWorkspaceRole roles={['doctor']}><PharmacyNotes /></RequireWorkspaceRole>} />
+                <Route path="/workspace/notifications" element={<StaffInbox />} />
                 <Route path="/workspace/doctor/lab/:orderId" element={<RequireWorkspaceRole roles={['doctor']}><LabOrderPage back="/workspace/doctor" /></RequireWorkspaceRole>} />
                 <Route path="/workspace/doctor/schedule" element={<RequireWorkspaceRole roles={['doctor']}><DoctorSchedule /></RequireWorkspaceRole>} />
                 <Route path="/workspace/doctor/profile" element={<RequireWorkspaceRole roles={['doctor']}><DoctorProfile /></RequireWorkspaceRole>} />
