@@ -19,8 +19,7 @@ begin
   return null;
 end;
 $$;
-drop trigger if exists notification_outbox_mirror_push on public.notification_outbox;
-create trigger notification_outbox_mirror_push after insert on public.notification_outbox
+create or replace trigger notification_outbox_mirror_push after insert on public.notification_outbox
   for each row execute function private.mirror_inbox_to_push();
 
 -- «حان دورك»: the receptionist (or the doctor) calls the patient in
@@ -36,8 +35,7 @@ begin
   return new;
 end;
 $$;
-drop trigger if exists queue_entries_notify_called on public.queue_entries;
-create trigger queue_entries_notify_called after update of status on public.queue_entries
+create or replace trigger queue_entries_notify_called after update of status on public.queue_entries
   for each row execute function private.notify_queue_called();
 
 -- the phone tells whether it rings doses itself
