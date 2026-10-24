@@ -187,7 +187,7 @@ await scene('doctor', 'الطبيب', 'الجلسة والبطاقة الطبي�
   await cap('ملف الجلسة', 'الحساسية ظاهرة دائماً أعلى الشاشة، والحفظ تلقائي');
   await page.getByLabel('النبض').pressSequentially('82', { delay: 80 });
   await page.getByLabel('سبب الزيارة').pressSequentially('صداع متكرر منذ أسبوع', { delay: 35 });
-  await page.getByLabel('التقييم / التشخيص').pressSequentially('صداع توتري (تجريبي)', { delay: 35 });
+  await page.getByLabel('التشخيص', { exact: false }).first().pressSequentially('صداع توتري (تجريبي)', { delay: 35 });
   await page.getByLabel('الخطة').pressSequentially('مسكن عند اللزوم وفحص سكر صائم', { delay: 35 });
   await page.getByText(/محفوظ/).first().waitFor({ timeout: 10000 });
   await page.evaluate(() => window.scrollTo(0, 0));
@@ -206,16 +206,16 @@ await scene('doctor', 'الطبيب', 'الجلسة والبطاقة الطبي�
   await cap('عاد المريض — استئناف الجلسة');
   await paused.getByRole('button', { name: 'استئناف' }).click();
   await page.waitForURL(/session/);
-  await page.getByLabel('التقييم / التشخيص').waitFor();
+  await page.getByLabel('التشخيص', { exact: false }).first().waitFor();
   await hold(page);
 
   await page.getByRole('tab', { name: 'وصفة' }).click();
   await cap('كتابة الوصفة', 'بحث بالمادة الفعالة، والجرعة كما يكتبها الطبيب دون تفسير آلي');
   await page.getByLabel('بحث بالمادة الفعالة أو الاسم التجاري').pressSequentially('Paracet', { delay: 70 });
   await page.locator('.combo-list button', { hasText: '500 mg' }).click();
-  await page.getByLabel('الجرعة', { exact: true }).fill('1');
-  await page.getByLabel('وحدة الجرعة').fill('قرص');
-  await page.getByLabel('عدد المرات / الفاصل (كما تكتبه)').pressSequentially('ثلاث مرات يومياً', { delay: 35 });
+  await page.getByLabel('الكمية بكل جرعة').fill('1');
+  await page.getByLabel('الوحدة').selectOption('حبة');
+  await page.getByLabel('كم مرة باليوم').selectOption('8');
   await page.getByLabel('المدة (أيام)').fill('5');
   await page.getByLabel('كمية الصرف').fill('15');
   await hold(page); await shot('rx-edit', 'كتابة الوصفة', 'محرر الوصفة مع معاينة الطباعة جنبه');
@@ -354,7 +354,7 @@ await scene('patient-follow', 'المريض', 'متابعة الرحلة وال�
   await cap('رحلتي العلاجية', 'الزيارات، الوصفات، والنتائج المعتمدة');
   await hold(page, 2000); await shot('journey', 'رحلتي العلاجية', 'الزيارة والوصفة والنتيجة في خط زمني واحد');
   await page.locator('.card', { hasText: /^وصفة RX/ }).first().getByRole('link', { name: 'التفاصيل' }).click();
-  await page.getByText('ثلاث مرات يومياً').first().waitFor();
+  await page.getByText('3 مرات يومياً').first().waitFor();
   await cap('الوصفة كما كتبها الطبيب');
   await hold(page, 1800); await shot('rx', 'وصفة المريض', 'الوصفة كما كتبها الطبيب، مع رمز التحقق');
   await page.goto(`${BASE}/patient/meds`);

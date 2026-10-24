@@ -190,6 +190,7 @@ select is((select count(*)::int from public.clinical_notes), 0, 'patient does no
 
 -- same doctor at the OTHER location → that location's pharmacy (§18-f)
 select tests.login(:U_DRAHMED);
+select tests.diagnose((select id from public.encounters where queue_entry_id = (select id from t where k = 'q2')));
 select public.set_encounter_status((select id from public.encounters where queue_entry_id = (select id from t where k = 'q2')), 'completed');
 select tests.login(:U_RECB);
 insert into t (k, id) select 'q3', (public.reception_quick_book(:B1, :AHMED, 'idem-clin-walkin-b1', p_new_patient_name => 'مراجع فرع المنصور') ->> 'queue_entry_id')::uuid;

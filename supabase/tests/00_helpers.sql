@@ -44,6 +44,14 @@ returns void language sql as $$
   select p_facility, p_practitioner, d, '08:00', '22:00', current_date - 1 from generate_series(0, 6) d;
 $$;
 
+-- a diagnosis is required before a prescription is approved / a session completed
+create or replace function tests.diagnose(p_encounter_id uuid, p_text text default 'تشخيص للاختبار')
+returns void language plpgsql as $$
+begin
+  perform public.save_clinical_note_draft(p_encounter_id, jsonb_build_object('assessment', p_text));
+end;
+$$;
+
 grant execute on all functions in schema tests to authenticated, anon;
 
 select pass('helpers installed');

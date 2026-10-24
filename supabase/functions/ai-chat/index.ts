@@ -1,5 +1,8 @@
 // ai-chat — the conversational assistant («المساعد الذكي»), Gemini-style:
 //  * mode "transcribe": the patient's voice note (m4a / webm) → text
+//  * mode "adherence": for the treating doctor — a short summary of how the
+//    patient took their medicines (from medication_adherence, read with the
+//    doctor's own token, so only a treating doctor gets anything)
 //  * mode "chat": the conversation so far → the answer, STREAMED as
 //    server-sent events: {"t": "...text..."} chunks, then one final
 //    {"done": true, "specialty": {id,name}|null, "labs": [...], "emergency": bool}
@@ -92,15 +95,17 @@ Deno.serve(async (req) => {
   const auth = req.headers.get('authorization');
   if (!auth) return json({ error: 'not_authenticated' }, 401);
 
-  let body: { mode?: string; messages?: Msg[]; audio?: { mime?: string; data?: string } } = {};
+  let body: { mode?: string; messages?: Msg[]; audio?: { mime?: string; data?: string }; patient_id?: string } = {};
   try { body = await req.json(); } catch { /* empty */ }
-  const mode = body.mode === 'transcribe' ? 'transcribe' : 'chat';
+  const mode = body.mode === 'transcribe' ? 'transcribe' : body.mode === 'adherence' ? 'adherence' : 'chat';
   const messages = (Array.isArray(body.messages) ? body.messages : [])
     .filter((m) => (m?.role === 'user' || m?.role === 'model') && typeof m.text === 'string' && m.text.trim())
     .slice(-20).map((m) => ({ role: m.role, text: m.text.trim().slice(0, 1500) }));
   if (mode === 'transcribe') {
     const mime = String(body.audio?.mime ?? '').split(';')[0];
     if (!AUDIO_TYPES.includes(mime) || !body.audio?.data || body.audio.data.length > 3_000_000) return json({ error: 'invalid_input' }, 400);
+  } else if (mode === 'adherence') {
+    if (!/^[0-9a-f-]{36}$/i.test(String(body.patient_id ?? ''))) return json({ error: 'invalid_input' }, 400);
   } else if (!messages.length || messages[messages.length - 1].role !== 'user') {
     return json({ error: 'invalid_input' }, 400);
   }
@@ -115,6 +120,39 @@ Deno.serve(async (req) => {
     return json({ error: code }, code === 'ai_rate_limited' ? 429 : begin.status === 401 ? 401 : 503);
   }
   const { specialties } = (await begin.json()) as { specialties: Specialty[] };
+
+  if (mode === 'adherence') {
+    const a = await fetch(`${URL_}/rest/v1/rpc/medication_adherence`, {
+      method: 'POST', headers: { apikey: ANON, Authorization: auth, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_patient_id: body.patient_id, p_days: 14 }),
+    });
+    if (!a.ok) return json({ error: /app:(\w+)/.exec(await a.text())?.[1] ?? 'forbidden' }, 403);
+    const plans = (await a.json()) as Record<string, unknown>[];
+    if (!plans.length) return json({ text: 'لا توجد أدوية مسجلة بتذكيرات لهذا المريض خلال آخر 14 يوماً.' });
+    // only what the summary needs — no names or identifiers of the patient
+    const facts = plans.map((p) => ({
+      medicine: p.display_name, prescribed: p.prescribed, status: p.status, dose: p.dose, unit: p.dose_unit, every_hours: p.interval_hours,
+      due: p.due, taken: p.taken, skipped: p.skipped, missed: p.missed, taken_amount: p.taken_amount, last_taken_at: p.last_taken_at,
+      recent: (p.recent as { at: string; state: string }[] | undefined)?.map((d) => `${d.at.slice(5, 16).replace('T', ' ')} ${d.state}`),
+    }));
+    try {
+      const r = await gemini('generateContent', {
+        systemInstruction: { parts: [{ text: `أنت تساعد طبيباً في عيادة بالعراق. لخّص له التزام مريضه بالأدوية خلال آخر 14 يوماً من البيانات المرفقة (taken = أخذها، skipped = تخطاها، missed = لم يسجّل، الأوقات بتوقيت UTC وأضف 3 ساعات لتوقيت بغداد).
+اكتب بالعربية الفصحى المبسطة وبالحروف العربية فقط، بنقاط قصيرة (3 إلى 5 نقاط):
+- الحكم العام: ملتزم / متذبذب / غير ملتزم مع النسبة.
+- الأدوية التي تُفوَّت أكثر، وهل هناك نمط (مثلاً جرعات الليل أو نهاية الأسبوع).
+- اقتراح عملي للطبيب لمناقشته مع المريض (مثل سبب التفويت أو تبسيط المواعيد).
+لا تشخّص، ولا تقترح تغيير دواء أو جرعة، ولا تخترع بيانات غير موجودة.` }] },
+        contents: [{ role: 'user', parts: [{ text: JSON.stringify(facts) }] }],
+        generationConfig: { temperature: 0.2, maxOutputTokens: 500 },
+      });
+      const out = (await r.json())?.candidates?.[0]?.content?.parts?.map((x: { text?: string }) => x.text ?? '').join('').trim() ?? '';
+      return json({ text: out.replace(/[\u0590-\u05FF\u0400-\u04FF\u4E00-\u9FFF]/g, '').slice(0, 2000) });
+    } catch (e) {
+      console.error('ai-chat adherence', String(e));
+      return json({ error: 'ai_unavailable' }, 503);
+    }
+  }
 
   if (mode === 'transcribe') {
     try {

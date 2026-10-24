@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Activity, AlertTriangle, CheckCircle2, ClipboardList, CloudOff, FlaskConical, Hourglass, Loader2, LogOut, NotebookPen, PauseCircle, Pill, PlayCircle, Save, ShieldAlert, Stethoscope, Users } from 'lucide-react';
-import { encounterStatus, errorCode, errorMessage, formatDateTime, formatMoney, formatTime, localDateKey, queueStatus, type EncounterStatus } from '@app/shared';
+import { Activity, AlertTriangle, CheckCircle2, ClipboardList, CloudOff, FlaskConical, Hourglass, Loader2, LogOut, NotebookPen, PauseCircle, Pill, PlayCircle, RotateCcw, Save, ShieldAlert, Stethoscope, Users } from 'lucide-react';
+import { commonDiagnoses, encounterStatus, errorCode, errorMessage, formatDateTime, formatMoney, formatTime, localDateKey, queueStatus, type EncounterStatus } from '@app/shared';
 import { supabase } from '../../lib/supabase';
 import { unwrap, useAsync } from '../../lib/useAsync';
 import { useWorkspace } from '../../lib/workspace';
@@ -12,6 +12,13 @@ import { useFacilityRealtime, type QueueRow } from './Reception';
 import { RxBuilder, type EncounterOrders } from '../../components/clinical/RxBuilder';
 import { MedicalCard } from '../../components/clinical/MedicalCard';
 import { HealthStrip, HealthSummary, type Health } from '../../components/clinical/HealthSummary';
+import { EncounterLabResults } from '../../components/clinical/EncounterLabResults';
+import { AdherenceBoard } from '../../components/clinical/AdherenceBoard';
+import { FollowUpBooking } from '../../components/clinical/FollowUpBooking';
+
+/** «ملخص المريض» is hidden for now (owner request, 24 Oct 2026); kept for later. */
+const SHOW_SUMMARY_TAB = false;
+const REOPEN_REASONS = ['ملاحظة من الصيدلية على الدواء', 'عاد المريض بسبب خطأ أو مضاعفة', 'تصحيح الوصفة', 'سبب آخر'];
 
 interface Note {
   id: string; version: number; version_no: number; status: 'draft' | 'signed'; reason_for_visit: string | null; history: string | null;
@@ -26,17 +33,17 @@ interface Context {
   note: Note | null;
   history: { encounter_id: string; started_at: string; status: string; facility: string; assessment: string | null; plan: string | null }[];
 }
-type Tab = 'summary' | 'card' | 'session' | 'labs' | 'rx';
+type Tab = 'summary' | 'card' | 'session' | 'labs' | 'rx' | 'meds';
 export const PAUSE_REASONS = ['أُرسل لإجراء تحليل', 'أُرسل للأشعة / السونار', 'ينتظر خارج الغرفة', 'سبب آخر'];
 type SaveState = 'saved' | 'dirty' | 'saving' | 'error' | 'conflict';
 const FIELDS: [keyof Note, string][] = [
   ['reason_for_visit', 'سبب الزيارة'], ['history', 'التاريخ المرضي ذو الصلة'], ['examination', 'الفحص السريري'],
-  ['assessment', 'التقييم / التشخيص'], ['plan', 'الخطة'], ['follow_up', 'المتابعة'], ['free_text', 'ملاحظات إضافية'],
+  ['assessment', 'التشخيص'], ['plan', 'الخطة'], ['follow_up', 'المتابعة'], ['free_text', 'ملاحظات إضافية'],
 ];
 /** Visual grouping of the same fields (no field added or removed). */
 const GROUPS: { title: string; icon: JSX.Element; keys: (keyof Note)[] }[] = [
   { title: 'الشكوى والفحص', icon: <NotebookPen size={18} aria-hidden />, keys: ['reason_for_visit', 'history', 'examination'] },
-  { title: 'التقييم والخطة', icon: <ClipboardList size={18} aria-hidden />, keys: ['assessment', 'plan', 'follow_up'] },
+  { title: 'الخطة والمتابعة', icon: <ClipboardList size={18} aria-hidden />, keys: ['plan', 'follow_up'] },
   { title: 'ملاحظات أخرى', icon: <NotebookPen size={18} aria-hidden />, keys: ['free_text'] },
 ];
 const fieldLabel = Object.fromEntries(FIELDS) as Record<string, string>;
@@ -62,7 +69,9 @@ function SessionInner({ encounterId }: { encounterId: string }) {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const version = useRef<number | null>(null);
   const timer = useRef<number>();
-  const [confirm, setConfirm] = useState<null | 'sign' | 'await' | 'complete' | 'pause'>(null);
+  const [confirm, setConfirm] = useState<null | 'sign' | 'await' | 'complete' | 'pause' | 'reopen'>(null);
+  const [reopenReason, setReopenReason] = useState(REOPEN_REASONS[0]);
+  const [reopenOther, setReopenOther] = useState('');
   const [pauseReason, setPauseReason] = useState(PAUSE_REASONS[0]);
   const [busy, setBusy] = useState(false);
   const { access } = useAuth();
@@ -107,6 +116,9 @@ function SessionInner({ encounterId }: { encounterId: string }) {
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
   const act = async (kind: 'sign' | 'await' | 'complete') => {
+    if ((kind === 'complete' || kind === 'sign') && !(form.assessment ?? '').trim()) {
+      setConfirm(null); toast('اكتب التشخيص أولاً في اللوحة الجانبية', 'danger'); document.getElementById('dx')?.focus(); return;
+    }
     setBusy(true);
     if (!(await save())) { setBusy(false); setConfirm(null); toast('تعذّر حفظ المسودة؛ لم يُنفّذ الإجراء.', 'danger'); return; }
     const res = kind === 'sign'
@@ -135,6 +147,16 @@ function SessionInner({ encounterId }: { encounterId: string }) {
     if (error) { toast(errorMessage(error), 'danger'); return; }
     toast('استُؤنفت الجلسة', 'success');
     ctx.reload();
+  };
+
+  const reopen = async () => {
+    const reason = reopenReason === 'سبب آخر' ? reopenOther.trim() : reopenReason;
+    setBusy(true);
+    const { error } = await supabase.rpc('reopen_encounter', { p_encounter_id: encounterId, p_reason: reason });
+    setBusy(false); setConfirm(null);
+    if (error) { toast(errorMessage(error), 'danger'); return; }
+    toast('أُعيد فتح الجلسة — عدّل ما تحتاج؛ الوصفة المعدّلة تحلّ محل القديمة', 'success');
+    ctx.reload(); orders.reload();
   };
 
   const previewBase = useMemo(() => ctx.data ? ({
@@ -181,10 +203,13 @@ function SessionInner({ encounterId }: { encounterId: string }) {
       )}
       {saveState === 'conflict' && <Alert tone="danger" title="تعارض في الحفظ">عُدّلت المسودة من نافذة أخرى. حدّث الصفحة قبل المتابعة حتى لا تُفقد تغييرات.</Alert>}
 
-      <div className="card card-flush">
+      <div className="session-body">
+      <div className="card card-flush" style={{ minWidth: 0 }}>
         <Tabs<Tab> label="ملف الجلسة" value={tab} onChange={setTab} tabs={[
-          { id: 'summary', label: 'ملخص المريض' }, { id: 'card', label: 'البطاقة الطبية' }, { id: 'session', label: 'الجلسة الحالية' },
+          ...(SHOW_SUMMARY_TAB ? [{ id: 'summary' as Tab, label: 'ملخص المريض' }] : []),
+          { id: 'session', label: 'الجلسة الحالية' }, { id: 'card', label: 'البطاقة الطبية' },
           { id: 'labs', label: `تحاليل (${orders.data?.lab_orders.length ?? 0})` }, { id: 'rx', label: 'وصفة' },
+          { id: 'meds', label: 'الأدوية والالتزام' },
         ]} />
         <div role="tabpanel" id={`panel-${tab}`} key={tab} aria-labelledby={`tab-${tab}`} style={{ padding: 'var(--s-5)' }}>
           {tab === 'summary' && <div className="stack">
@@ -194,54 +219,83 @@ function SessionInner({ encounterId }: { encounterId: string }) {
           </div>}
           {tab === 'card' && <MedicalCard patientId={c.patient.id} excludeEncounterId={encounterId} />}
           {tab === 'session' && (
-            <div className="session-grid">
-              <div className="stack">
-                {locked && <Alert tone="success" title={`الملاحظة معتمدة (${note?.signed_at ? formatDateTime(note.signed_at) : ''})`}>النسخة مقفلة؛ أي تصحيح لاحق يُضاف كإصدار جديد مع السبب.</Alert>}
-                <fieldset className="note-section" disabled={locked}>
-                  <legend className="note-title"><Activity size={18} aria-hidden />العلامات الحيوية <span className="muted small">(اختياري)</span></legend>
-                  <div className="vitals-grid">
-                    {VITALS.map(([k, label]) => (
-                      <TextField key={k} label={label} inputMode="decimal" ltr value={form.vitals?.[k] ?? ''} onChange={(e) => change({ vitals: { ...(form.vitals ?? {}), [k]: e.target.value } })} />
-                    ))}
-                  </div>
+            <div className="stack">
+              {locked && <Alert tone="success" title={`الملاحظة معتمدة (${note?.signed_at ? formatDateTime(note.signed_at) : ''})`}>النسخة مقفلة؛ أي تصحيح لاحق يُضاف كإصدار جديد مع السبب.</Alert>}
+              <fieldset className="note-section" disabled={locked}>
+                <legend className="note-title"><Activity size={18} aria-hidden />العلامات الحيوية <span className="muted small">(اختياري)</span></legend>
+                <div className="vitals-grid">
+                  {VITALS.map(([k, label]) => (
+                    <TextField key={k} label={label} inputMode="decimal" ltr value={form.vitals?.[k] ?? ''} onChange={(e) => change({ vitals: { ...(form.vitals ?? {}), [k]: e.target.value } })} />
+                  ))}
+                </div>
+              </fieldset>
+              {GROUPS.map((g) => (
+                <fieldset key={g.title} className="note-section" disabled={locked}>
+                  <legend className="note-title">{g.icon}{g.title}</legend>
+                  {g.keys.map((k) => (
+                    <TextareaField key={k} label={fieldLabel[k]} optional value={(form[k] as string) ?? ''}
+                                   onChange={(e) => change({ [k]: e.target.value } as Partial<Note>)} style={{ minHeight: k === 'plan' ? 96 : 72 }} />
+                  ))}
                 </fieldset>
-                {GROUPS.map((g) => (
-                  <fieldset key={g.title} className="note-section" disabled={locked}>
-                    <legend className="note-title">{g.icon}{g.title}</legend>
-                    {g.keys.map((k) => (
-                      <TextareaField key={k} label={fieldLabel[k]} optional={k !== 'assessment'} value={(form[k] as string) ?? ''}
-                                     onChange={(e) => change({ [k]: e.target.value } as Partial<Note>)} style={{ minHeight: k === 'assessment' || k === 'plan' ? 96 : 72 }} />
-                    ))}
-                  </fieldset>
-                ))}
-              </div>
-              <aside className="session-actions" aria-label="إجراءات الجلسة">
-                <div className="card stack-sm">
-                  <h2 className="eyebrow">أدوات الجلسة</h2>
-                  {!locked && <Button variant="secondary" icon={<Save size={18} />} loading={saveState === 'saving'} onClick={() => void save()}>حفظ مسودة</Button>}
-                  <Button variant="secondary" icon={<FlaskConical size={18} />} onClick={() => setTab('labs')} disabled={!active}>طلب تحليل</Button>
-                  <Button variant="secondary" icon={<Pill size={18} />} onClick={() => setTab('rx')} disabled={!active}>وصفة</Button>
-                </div>
-                <div className="card stack-sm">
-                  <h2 className="eyebrow">قرارات</h2>
-                  {!locked && <Button variant="accent" icon={<CheckCircle2 size={18} />} onClick={() => setConfirm('sign')}>اعتماد الملاحظة</Button>}
-                  {c.encounter.status === 'in_progress' && !paused && <Button variant="secondary" icon={<PauseCircle size={18} />} onClick={() => setConfirm('pause')}>إيقاف مؤقت واستقبال مريض آخر</Button>}
-                  {paused && <Button icon={<PlayCircle size={18} />} loading={busy} onClick={() => void resume()}>استئناف الجلسة</Button>}
-                  {c.encounter.status === 'in_progress' && <Button variant="soft" icon={<Hourglass size={18} />} onClick={() => setConfirm('await')}>انتظار النتائج واستقبال التالي</Button>}
-                  {active && <Button icon={<LogOut size={18} />} onClick={() => setConfirm('complete')}>إنهاء الجلسة والتالي</Button>}
-                  <p className="small muted">الحفظ التلقائي كل بضع ثوانٍ. «التالي» يفتح قائمة اليوم دون نقل أي نموذج للمريض التالي.</p>
-                </div>
-              </aside>
+              ))}
             </div>
           )}
           {tab === 'labs' && <LabOrderPanel encounterId={encounterId} orders={orders.data ?? null} onChanged={orders.reload} active={active} />}
           {tab === 'rx' && previewBase && (active || orders.data?.prescriptions.length
-            ? <RxBuilder encounterId={encounterId} facilityId={c.encounter.facility_id} patientName={c.patient.full_name} orders={orders.data ?? null} onChanged={orders.reload} preview={previewBase} />
-            : <EmptyState icon={<Stethoscope />} title="الجلسة مغلقة" />)}
+            ? <RxBuilder encounterId={encounterId} facilityId={c.encounter.facility_id} patientName={c.patient.full_name} orders={orders.data ?? null} onChanged={orders.reload} preview={previewBase}
+                         diagnosisMissing={!(form.assessment ?? '').trim()} />
+            : <EmptyState icon={<Stethoscope />} title="الجلسة مغلقة">أعد فتحها من اللوحة الجانبية لتعديل الوصفة.</EmptyState>)}
+          {tab === 'meds' && <AdherenceBoard patientId={c.patient.id} />}
         </div>
+      </div>
+      <aside className="session-actions" aria-label="تفاصيل الجلسة وإجراءاتها">
+        <div className="card stack-sm">
+          <label className="eyebrow" htmlFor="dx">التشخيص <span style={{ color: 'var(--c-danger)' }}>*</span></label>
+          <input id="dx" className="input" list="dx-list" disabled={locked} value={form.assessment ?? ''} placeholder="اكتب أو اختر من القائمة"
+                 aria-invalid={!(form.assessment ?? '').trim() || undefined} onChange={(e) => change({ assessment: e.target.value })} />
+          <datalist id="dx-list">{commonDiagnoses.map((d) => <option key={d} value={d} />)}</datalist>
+          <span className="small muted">مطلوب قبل اعتماد الوصفة وإنهاء الجلسة.</span>
+        </div>
+        <div className="card stack-sm">
+          <h2 className="eyebrow">أدوات الجلسة</h2>
+          {!locked && active && <Button variant="secondary" icon={<Save size={18} />} loading={saveState === 'saving'} onClick={() => void save()}>حفظ مسودة</Button>}
+          <Button variant="secondary" icon={<NotebookPen size={18} />} onClick={() => setTab('session')}>الملاحظة</Button>
+          <Button variant="secondary" icon={<FlaskConical size={18} />} onClick={() => setTab('labs')}>التحاليل والنتائج</Button>
+          <Button variant="secondary" icon={<Pill size={18} />} onClick={() => setTab('rx')}>الوصفة</Button>
+          <Button variant="secondary" icon={<Activity size={18} />} onClick={() => setTab('meds')}>الأدوية والالتزام</Button>
+        </div>
+        {active ? (
+          <div className="card stack-sm">
+            <h2 className="eyebrow">قرارات</h2>
+            {!locked && <Button variant="accent" icon={<CheckCircle2 size={18} />} onClick={() => setConfirm('sign')}>اعتماد الملاحظة</Button>}
+            {c.encounter.status === 'in_progress' && !paused && <Button variant="secondary" icon={<PauseCircle size={18} />} onClick={() => setConfirm('pause')}>إيقاف مؤقت واستقبال مريض آخر</Button>}
+            {paused && <Button icon={<PlayCircle size={18} />} loading={busy} onClick={() => void resume()}>استئناف الجلسة</Button>}
+            {c.encounter.status === 'in_progress' && <Button variant="soft" icon={<Hourglass size={18} />} onClick={() => setConfirm('await')}>انتظار النتائج واستقبال التالي</Button>}
+            <Button icon={<LogOut size={18} />} onClick={() => setConfirm('complete')}>إنهاء الجلسة والتالي</Button>
+          </div>
+        ) : (
+          <div className="card stack-sm">
+            <h2 className="eyebrow">الجلسة منتهية</h2>
+            <span className="small muted">لتعديلها (ملاحظة من الصيدلية، أو رجوع المريض) أعد فتحها؛ إن غيّرت الدواء تُلغى الوصفة القديمة وتحلّ الجديدة محلها.</span>
+            <Button variant="secondary" icon={<RotateCcw size={18} />} onClick={() => setConfirm('reopen')}>إعادة فتح الجلسة للتعديل</Button>
+          </div>
+        )}
+        <div className="card stack-sm">
+          <h2 className="eyebrow">المراجعة القادمة</h2>
+          {access?.practitioner_id && <FollowUpBooking encounterId={encounterId} facilityId={c.encounter.facility_id} practitionerId={access.practitioner_id} tz={current?.timezone ?? 'Asia/Baghdad'} />}
+        </div>
+      </aside>
       </div>
       </div>
 
+      <ConfirmDialog open={confirm === 'reopen'} title="إعادة فتح الجلسة؟" confirmLabel="إعادة الفتح" loading={busy}
+                     onCancel={() => setConfirm(null)} onConfirm={() => void reopen()}>
+        <p>تعود جلسة <strong>{c.patient.full_name}</strong> فعّالة لتعديل الملاحظة أو الوصفة. يُسجَّل السبب.</p>
+        <SelectField label="السبب" value={reopenReason} onChange={(e) => setReopenReason(e.target.value)}>
+          {REOPEN_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
+        </SelectField>
+        {reopenReason === 'سبب آخر' && <TextField label="اكتب السبب" value={reopenOther} onChange={(e) => setReopenOther(e.target.value)} />}
+      </ConfirmDialog>
       <ConfirmDialog open={confirm === 'sign'} title="اعتماد الملاحظة؟" confirmLabel="اعتماد وقفل" loading={busy} onCancel={() => setConfirm(null)} onConfirm={() => act('sign')}>
         بعد الاعتماد تُقفل هذه النسخة لمريض: <strong>{c.patient.full_name}</strong>. التصحيح لاحقاً يُضاف كإصدار جديد مع سبب.
       </ConfirmDialog>
@@ -255,7 +309,7 @@ function SessionInner({ encounterId }: { encounterId: string }) {
         </SelectField>
       </ConfirmDialog>
       <ConfirmDialog open={confirm === 'complete'} title="إنهاء الجلسة؟" confirmLabel="إنهاء" loading={busy} onCancel={() => setConfirm(null)} onConfirm={() => act('complete')}>
-        {!locked ? 'الملاحظة لم تُعتمد بعد وستبقى مسودة. ' : ''}سيُسجل وقت الانتهاء الفعلي الآن.
+        {form.assessment ? <>التشخيص: <strong>{form.assessment}</strong>. </> : null}{!locked ? 'الملاحظة لم تُعتمد بعد وستبقى مسودة. ' : ''}سيُسجل وقت الانتهاء الفعلي الآن.
       </ConfirmDialog>
     </div>
   );
@@ -357,12 +411,7 @@ function LabOrderPanel({ encounterId, orders, onChanged, active }: { encounterId
 
   return (
     <div className="stack">
-      {orders?.lab_orders.map((o) => (
-        <div key={o.id} className="card stack-sm">
-          <div className="row-between"><strong>طلب <Ltr>{o.order_number}</Ltr> — {o.lab}</strong><Badge tone="info">{o.items.length} فحص</Badge></div>
-          <p className="small muted">{o.items.map((i) => i.name).join('، ')}</p>
-        </div>
-      ))}
+      <EncounterLabResults orders={orders?.lab_orders ?? []} />
       {active && (
         <div className="card stack">
           <h3 className="section-title">طلب تحاليل جديد</h3>

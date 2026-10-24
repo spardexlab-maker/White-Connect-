@@ -40,3 +40,20 @@ export function chartDomain(values: number[], r: NumRange | null): [number, numb
   const pad = (hi - lo) * 0.15;
   return [Math.max(lo - pad, Math.min(...pts) >= 0 ? 0 : lo - pad), hi + pad];
 }
+
+/** Colour family for a result: high / low (red) or normal (blue); null when it cannot be judged. */
+export type LabState = 'high' | 'low' | 'normal';
+export function labState(i: { value_numeric: number | null; reference_range: string | null; flag?: string | null }): LabState | null {
+  if (i.flag === 'high') return 'high';
+  if (i.flag === 'low') return 'low';
+  const r = parseRange(i.reference_range);
+  if (i.value_numeric != null && r) {
+    const p = rangePosition(Number(i.value_numeric), r);
+    return p === 'above' ? 'high' : p === 'below' ? 'low' : 'normal';
+  }
+  if (i.flag === 'critical' || i.flag === 'abnormal') return 'high';
+  return i.flag ? null : (i.value_numeric != null || i.reference_range ? 'normal' : null);
+}
+export const labStateLabel: Record<LabState, string> = { high: 'مرتفع', low: 'منخفض', normal: 'طبيعي' };
+/** red for out of range (high or low), blue for normal */
+export const labStateColor: Record<LabState, string> = { high: '#C62828', low: '#C62828', normal: '#1D4ED8' };

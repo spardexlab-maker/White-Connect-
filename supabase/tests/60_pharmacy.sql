@@ -39,6 +39,7 @@ insert into t (k, id) select 'enc', (public.start_encounter((select id from t wh
 insert into t (k, id) select 'rx', (public.save_prescription_draft((select id from t where k = 'enc'),
   jsonb_build_array(jsonb_build_object('medication_id', (select id from t where k = 'para'), 'frequency_text', 'ثلاث مرات يومياً', 'quantity', '12', 'quantity_unit', 'قرص')),
   'idem-ph-rx') ->> 'prescription_id')::uuid;
+select tests.diagnose((select id from t where k = 'enc'));
 select public.approve_prescription((select id from t where k = 'rx'), :PH_A);
 -- printing twice changes nothing in dispensing or counts
 select public.record_prescription_print((select id from t where k = 'rx'), :A1);

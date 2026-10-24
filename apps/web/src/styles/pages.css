@@ -324,3 +324,31 @@
 .dose-log li { display: flex; justify-content: space-between; gap: 12px; padding: 4px 8px; border-radius: 8px; background: var(--c-surface-2, #f5f7fa); }
 .dose-log-taken span:last-child { color: var(--c-success, #15803d); font-weight: 600; }
 .dose-log-missed span:last-child { color: var(--c-warning, #b45309); }
+
+/* session: the tabs and a side panel that stays visible on every tab */
+.session-body { display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: var(--s-4); align-items: start; }
+@media (max-width: 1180px) { .session-body { grid-template-columns: minmax(0, 1fr); } .session-body .session-actions { position: static; } }
+.session-body .session-actions { position: sticky; inset-block-start: calc(var(--topbar-h, 64px) + 12px); max-height: calc(100vh - var(--topbar-h, 64px) - 24px); overflow: auto; }
+.session-actions input[aria-invalid='true'] { border-color: #E7B4B4; background: #FFF8F8; }
+.followup .chip { min-height: 32px; padding-inline: 10px; }
+
+/* lab results: high / low red, normal blue */
+.lab-table { width: 100%; border-collapse: collapse; font-size: var(--f-small, 14px); }
+.lab-table th, .lab-table td { text-align: start; padding: 8px 10px; border-bottom: 1px solid var(--c-border); }
+.lab-table th { color: var(--c-muted, #5B6B78); font-weight: 600; font-size: 12.5px; }
+.lab-pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 700; }
+.lab-high, .lab-low { background: #FDECEC; color: #C62828; }
+.lab-normal { background: #E8EFFE; color: #1D4ED8; }
+
+/* medicines board */
+.adh-head { display: flex; align-items: center; gap: var(--s-4); flex-wrap: wrap; }
+.lg { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-inline-end: 4px; vertical-align: -1px; }
+.lg-taken { background: #15803D; } .lg-skipped { background: #D97706; } .lg-missed { background: #C62828; }
+.kanban { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: var(--s-3); align-items: start; }
+.kanban-col { background: var(--c-surface-2, #F4F6F9); border-radius: 14px; padding: 10px; display: grid; gap: 8px; border-top: 4px solid #CBD5E1; }
+.kanban-col header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; } .kanban-col header strong { flex: 1; white-space: nowrap; }
+.kanban-poor { border-top-color: #C62828; } .kanban-mixed { border-top-color: #D97706; } .kanban-good { border-top-color: #15803D; }
+.kanban-empty { text-align: center; margin: 6px 0; }
+.med-card { background: var(--c-surface, #fff); border: 1px solid var(--c-border); border-radius: 12px; padding: 10px; display: grid; gap: 8px; }
+.ai-summary { line-height: 1.8; }
+.dose-skipped { background: #D97706; border-color: #D97706; } .dose-missed { background: #C62828; border-color: #C62828; }

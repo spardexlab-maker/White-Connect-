@@ -18,6 +18,7 @@ insert into t select 'enc', (public.start_encounter((select id from t where k = 
 insert into t select 'rx', (public.save_prescription_draft((select id from t where k = 'enc'), jsonb_build_array(
   jsonb_build_object('display_name', 'Amoxicillin 500 mg', 'dose', '1', 'dose_unit', 'كبسولة', 'frequency_text', 'كل 8 ساعات',
                      'interval_hours', '8', 'duration_days', '7')), 'idem-prx-rx') ->> 'prescription_id')::uuid;
+select tests.diagnose((select id from t where k = 'enc'));
 select public.approve_prescription((select id from t where k = 'rx'), null);
 
 select tests.login(:U_HASAN);

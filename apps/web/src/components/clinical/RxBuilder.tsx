@@ -21,7 +21,11 @@ export interface EncounterOrders {
   lab_orders: { id: string; order_number: string; status: string; lab: string; items: { name: string; status: string }[] }[];
 }
 
-const emptyRow = (): Row => ({ key: crypto.randomUUID(), medication_id: null, display_name: '', dose: '', dose_unit: '', route: 'فموي',
+const DOSE_UNITS = ['حبة', 'كبسولة', 'ملعقة صغيرة', 'مل', 'بخة', 'قطرة', 'أمبولة', 'كيس'];
+/** times a day → hours between doses */
+const TIMES_PER_DAY: [number, string][] = [[1, '24'], [2, '12'], [3, '8'], [4, '6'], [6, '4']];
+const TIMES_TEXT: Record<string, string> = { '24': 'مرة واحدة يومياً', '12': 'مرتين يومياً', '8': '3 مرات يومياً', '6': '4 مرات يومياً', '4': '6 مرات يومياً' };
+const emptyRow = (): Row => ({ key: crypto.randomUUID(), medication_id: null, display_name: '', dose: '', dose_unit: '', route: 'بالفم',
   frequency_text: '', interval_hours: '', duration_days: '', quantity: '', quantity_unit: '', instructions: '', as_needed: false, max_daily: '' });
 
 function toRow(i: RxItem & { medication_id?: string | null }): Row {
@@ -36,8 +40,8 @@ function toRow(i: RxItem & { medication_id?: string | null }): Row {
  * this is is passed in and the component is keyed by encounter, so the
  * next patient never inherits the previous prescription (§24).
  */
-export function RxBuilder({ encounterId, facilityId, patientName, orders, onChanged, preview }: {
-  encounterId: string; facilityId: string; patientName: string; orders: EncounterOrders | null; onChanged: () => void;
+export function RxBuilder({ encounterId, facilityId, patientName, orders, onChanged, preview, diagnosisMissing }: {
+  encounterId: string; facilityId: string; patientName: string; orders: EncounterOrders | null; onChanged: () => void; diagnosisMissing?: boolean;
   preview: Omit<RxDoc, 'items' | 'rx_number' | 'version_no'>;
 }) {
   const toast = useToast();
@@ -172,9 +176,10 @@ export function RxBuilder({ encounterId, facilityId, patientName, orders, onChan
               </SelectField>
             )}
             {isRevision && <TextField label="سبب التعديل" required value={reason} onChange={(e) => setReason(e.target.value)} />}
+            {diagnosisMissing && <Alert tone="warning" title="اكتب التشخيص أولاً">لا تُعتمد الوصفة بدون تشخيص الحالة — اكتبه في خانة «التشخيص» باللوحة الجانبية.</Alert>}
             <div className="row">
               <Button variant="secondary" loading={busy === 'save'} onClick={() => void saveDraft().then((id) => id && toast('حُفظت المسودة', 'success'))}>حفظ مسودة</Button>
-              <Button icon={sendTo ? <Send size={18} /> : <CheckCircle2 size={18} />} disabled={!items.length || (isRevision && reason.trim().length < 5) || (sendNow && !destination)}
+              <Button icon={sendTo ? <Send size={18} /> : <CheckCircle2 size={18} />} disabled={!items.length || diagnosisMissing || (isRevision && reason.trim().length < 5) || (sendNow && !destination)}
                       onClick={() => setConfirm(true)}>{sendTo ? 'اعتماد وإرسال' : 'اعتماد الوصفة'}</Button>
             </div>
           </div>
@@ -250,24 +255,31 @@ function RxRow({ row, index, onChange, onRemove, pharmacyId }: { row: Row; index
         </div>
       )}
       <div className="rx-grid">
-        <TextField label="الجرعة" inputMode="decimal" ltr value={row.dose} onChange={(e) => set('dose', e.target.value)} />
-        <TextField label="وحدة الجرعة" value={row.dose_unit} onChange={(e) => set('dose_unit', e.target.value)} placeholder="قرص / مل" />
-        <TextField label="الطريق" value={row.route} onChange={(e) => set('route', e.target.value)} />
-        <SelectField label="كل كم ساعة (لتذكير المريض)" value={row.interval_hours} disabled={row.as_needed}
+        <div className="field">
+          <label htmlFor={`amt-${row.key}`}>الكمية بكل جرعة</label>
+          <div className="row" style={{ gap: 6, flexWrap: 'nowrap' }}>
+            <input id={`amt-${row.key}`} className="input" inputMode="decimal" dir="ltr" style={{ width: 80 }} value={row.dose}
+                   placeholder="1" onChange={(e) => set('dose', e.target.value)} />
+            <select className="select" aria-label="الوحدة" value={row.dose_unit} onChange={(e) => set('dose_unit', e.target.value)}>
+              <option value="">—</option>
+              {DOSE_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+              {row.dose_unit && !DOSE_UNITS.includes(row.dose_unit) && <option value={row.dose_unit}>{row.dose_unit}</option>}
+            </select>
+          </div>
+        </div>
+        <SelectField label="كم مرة باليوم" value={row.interval_hours} disabled={row.as_needed}
                      onChange={(e) => {
                        const h = e.target.value;
-                       // fill the printed wording too, unless the doctor already wrote their own
-                       const auto = !row.frequency_text || /^كل \d+ ساعات$|^مرة يومياً$/.test(row.frequency_text);
-                       onChange({ ...row, interval_hours: h, frequency_text: auto ? (h ? (h === '24' ? 'مرة يومياً' : `كل ${h} ساعات`) : '') : row.frequency_text });
+                       // the printed wording follows the choice, unless the doctor wrote their own
+                       const auto = !row.frequency_text || Object.values(TIMES_TEXT).includes(row.frequency_text) || /^كل \d+ ساعات$/.test(row.frequency_text);
+                       onChange({ ...row, interval_hours: h, frequency_text: auto ? (h ? TIMES_TEXT[h] ?? '' : '') : row.frequency_text });
                      }}>
-          <option value="">— بدون تذكير ثابت —</option>
-          {[4, 6, 8, 12, 24].map((h) => <option key={h} value={h}>{h === 24 ? 'مرة يومياً (كل 24 ساعة)' : `كل ${h} ساعات`}</option>)}
+          <option value="">— اختر —</option>
+          {TIMES_PER_DAY.map(([, h]) => <option key={h} value={h}>{TIMES_TEXT[h]} (كل {h} ساعة)</option>)}
         </SelectField>
-        <TextField label="عدد المرات / الفاصل (كما تكتبه)" value={row.frequency_text} onChange={(e) => set('frequency_text', e.target.value)} placeholder="مثال: ثلاث مرات يومياً" />
         <TextField label="المدة (أيام)" inputMode="numeric" ltr value={row.duration_days} onChange={(e) => set('duration_days', e.target.value)} />
-        <TextField label="كمية الصرف" inputMode="decimal" ltr value={row.quantity} onChange={(e) => set('quantity', e.target.value)} />
-        <TextField label="وحدة الكمية" value={row.quantity_unit} onChange={(e) => set('quantity_unit', e.target.value)} placeholder="علبة / قرص" />
-        <TextField label="الحد الأقصى يومياً" optional value={row.max_daily} onChange={(e) => set('max_daily', e.target.value)} />
+        <TextField label="كمية الصرف (عدد)" optional inputMode="decimal" ltr value={row.quantity} onChange={(e) => set('quantity', e.target.value)} placeholder="مثال: 1" />
+        <TextField label="طريقة الاستعمال" optional value={row.route} onChange={(e) => set('route', e.target.value)} />
       </div>
       <TextField label="تعليمات" optional value={row.instructions} onChange={(e) => set('instructions', e.target.value)} />
       <label className="row small" style={{ gap: 8 }}><input type="checkbox" checked={row.as_needed} onChange={(e) => set('as_needed', e.target.checked)} />عند اللزوم</label>

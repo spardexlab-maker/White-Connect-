@@ -11,3 +11,4 @@ export * from './medTimes';
 export * from './aiTriage';
 export * from './dateParts';
 export * from './aiChat';
+export * from './diagnoses';

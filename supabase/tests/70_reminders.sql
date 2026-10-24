@@ -24,6 +24,7 @@ insert into t select 'enc', (public.start_encounter((select id from t where k = 
 insert into t select 'rx', (public.save_prescription_draft((select id from t where k = 'enc'), jsonb_build_array(
   jsonb_build_object('medication_id', (select id from t where k = 'para'), 'frequency_text', 'ثلاث مرات يومياً', 'duration_days', '10', 'quantity', '30'),
   jsonb_build_object('display_name', 'Salbutamol inhaler', 'frequency_text', 'عند اللزوم', 'as_needed', true)), 'idem-rem-rx') ->> 'prescription_id')::uuid;
+select tests.diagnose((select id from t where k = 'enc'));
 select public.approve_prescription((select id from t where k = 'rx'), :PH_A);
 
 -- pharmacist activates with the patient's consent and AGREED times

@@ -161,6 +161,7 @@ export function DoctorToday() {
           </div>
         </aside>
       </div>
+      <RecentSessions tz={tz} />
       <ConfirmDialog open={!!starting} title="التحقق من هوية المريض" confirmLabel="تأكيد الهوية وبدء الجلسة" loading={!!starting && busy === starting.queue_entry_id}
                      onCancel={() => setStarting(null)} onConfirm={start}>
         <p>تأكد أن المريض أمامك هو: <strong>{starting?.patient_name}</strong> (<Ltr>{starting?.patient_code}</Ltr>).</p>
@@ -169,5 +170,35 @@ export function DoctorToday() {
       </ConfirmDialog>
       <MedicalCardSheet patientId={cardFor} onClose={() => setCardFor(null)} />
     </div>
+  );
+}
+
+interface Recent { id: string; status: EncounterStatus; started_at: string; ended_at: string | null; patient_name: string; public_code: string; facility: string; diagnosis: string | null; prescriptions: number; reopen_count: number }
+
+/** Finished sessions of the last 30 days — open one to review it or reopen it for a correction. */
+function RecentSessions({ tz }: { tz: string }) {
+  const [q, setQ] = useState('');
+  const recent = useAsync(async () => (await unwrap(supabase.rpc('my_recent_encounters', { p_days: 30 }))) as unknown as Recent[], []);
+  const rows = (recent.data ?? []).filter((r) => !q.trim() || r.patient_name.includes(q.trim()) || r.public_code.toUpperCase().includes(q.trim().toUpperCase()));
+  if (!recent.data?.length) return null;
+  return (
+    <section className="card card-flush" aria-labelledby="recent-title">
+      <div className="card-header">
+        <h2 id="recent-title" className="row" style={{ gap: 8 }}><ClipboardCheck size={18} aria-hidden />جلسات منتهية (آخر 30 يوماً)</h2>
+        <input className="input" style={{ maxWidth: 220 }} placeholder="بحث بالاسم أو الرقم" value={q} onChange={(e) => setQ(e.target.value)} aria-label="بحث في الجلسات المنتهية" />
+      </div>
+      <ul className="list" style={{ margin: 0, padding: 0, maxHeight: 360, overflow: 'auto' }}>
+        {rows.slice(0, 50).map((r) => (
+          <li key={r.id} className="list-item">
+            <div className="grow" style={{ minWidth: 0 }}>
+              <strong>{r.patient_name}</strong> <span className="small muted"><Ltr>{r.public_code}</Ltr> · {formatDateTime(r.ended_at ?? r.started_at, tz)}</span>
+              <div className="small truncate">{r.diagnosis ? `التشخيص: ${r.diagnosis}` : 'بدون تشخيص مكتوب'}{r.prescriptions ? ` · ${r.prescriptions} وصفة` : ''}{r.reopen_count ? ` · أُعيد فتحها ${r.reopen_count}×` : ''}</div>
+            </div>
+            <Badge tone={encounterStatus[r.status].tone}>{encounterStatus[r.status].label}</Badge>
+            <Link className="btn btn-secondary btn-sm" to={`/workspace/doctor/session/${r.id}`}>فتح</Link>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
