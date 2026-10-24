@@ -176,15 +176,18 @@ await p.getByRole('button', { name: 'دخول' }).click();
 await p.locator('canvas').first().waitFor();
 await p.goto(`${BASE}/patient/journey`);
 await p.getByText(/^وصفة RX/).first().waitFor();
-await p.getByText(/نتائج معتمدة/).first().waitFor();
+await p.getByText(/النتيجة جاهزة/).first().waitFor();
 await p.locator('.card', { hasText: /^وصفة RX/ }).first().getByRole('link', { name: 'التفاصيل' }).click();
 await p.getByText('3 مرات يومياً').first().waitFor();
 step('patient journey shows the approved prescription and released results');
 await p.goto(`${BASE}/patient/meds`);
 await p.getByText('الأوقات: 09:00، 21:00').waitFor();
+await p.getByText(/حددها .* لتغييرها راجع طبيبك/).first().waitFor();
+if (await p.getByRole('button', { name: 'إيقاف مؤقت' }).count()) throw new Error('prescribed plan must not be pausable by the patient');
 await p.getByRole('button', { name: 'أخذت' }).first().click();
 await p.getByText('أخذتها').first().waitFor();
-step('patient sees the medication plan and records a dose');
+if (process.env.SHOTS) await p.screenshot({ path: `${process.env.SHOTS}/patient-meds.png`, fullPage: true });
+step('patient sees the medication plan (locked to the doctor) and records a dose');
 
 await browser.close();
 if (errors.length) { console.log('PAGE ERRORS:\n' + errors.join('\n')); process.exit(1); }

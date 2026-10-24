@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { CalendarCheck2, ChevronLeft, FlaskConical, Pill, Route, Stethoscope } from 'lucide-react-native';
-import { appointmentStatus, encounterStatus, formatDate, formatTime, labStatus, type AppointmentStatus, type EncounterStatus, type LabStatus } from '@app/shared';
+import { appointmentStatus, encounterStatus, formatDate, formatTime, patientLabStatus, type AppointmentStatus, type EncounterStatus, type LabStatus } from '@app/shared';
 import { supabase } from '../../src/lib/supabase';
 import { unwrap, useAsync } from '../../src/lib/useAsync';
 import { useAuth } from '../../src/lib/auth';
@@ -42,7 +42,7 @@ export default function Journey() {
       out.push({ kind: e.event_type, at: e.occurred_at, key: `${e.event_type}${e.ref_id}`, title: e.title, who: e.practitioner_name ?? '', where: e.facility_name,
         patient: e.patient_name, corrected: e.corrected,
         badge: e.event_type === 'visit' ? encounterStatus[e.status as EncounterStatus]
-          : e.event_type === 'lab' ? (e.status === 'released' ? { label: 'نتائج معتمدة', tone: 'success' } : labStatus[e.status as LabStatus])
+          : e.event_type === 'lab' ? patientLabStatus[e.status as LabStatus]
           : e.status === 'active' ? { label: 'معتمدة', tone: 'success' } : { label: 'ملغاة', tone: 'neutral' },
         link: e.event_type === 'prescription' ? `/rx/${e.ref_id}` : e.event_type === 'lab' ? `/lab/${e.ref_id}` : undefined });
     }

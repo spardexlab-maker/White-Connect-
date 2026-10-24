@@ -4,7 +4,8 @@ import { chartDomain, formatDateShort, rangePosition, rangePositionLabel, type N
 import { Text } from './ui';
 import { color } from '../theme';
 
-const posColor = (p: string) => (p === 'within' ? color.success : color.warningText);
+// out of range (high or low) red, normal blue — same as the doctor's view
+const posColor = (p: string) => (p === 'within' ? '#1D4ED8' : '#C62828');
 
 /** Where a value sits against the lab's reference range (low · reference band · high). */
 export function RangeBar({ value, range }: { value: number; range: NumRange }) {
@@ -15,8 +16,8 @@ export function RangeBar({ value, range }: { value: number; range: NumRange }) {
   const b = range.high != null ? pct(range.high) : 100;
   return (
     <View accessible accessibilityLabel={`${value}: ${rangePositionLabel[pos]}`} style={{ gap: 4 }}>
-      <View style={{ height: 10, borderRadius: 999, backgroundColor: color.warningSoft, direction: 'ltr' }}>
-        <View style={{ position: 'absolute', top: 0, bottom: 0, left: `${a}%`, width: `${b - a}%`, backgroundColor: '#BFE3CB', borderRadius: 999 }} />
+      <View style={{ height: 10, borderRadius: 999, backgroundColor: '#FDECEC', direction: 'ltr' }}>
+        <View style={{ position: 'absolute', top: 0, bottom: 0, left: `${a}%`, width: `${b - a}%`, backgroundColor: '#BFD3FB', borderRadius: 999 }} />
         <View style={{ position: 'absolute', top: -4, left: `${pct(value)}%`, marginLeft: -9, width: 18, height: 18, borderRadius: 9,
                        backgroundColor: posColor(pos), borderWidth: 3, borderColor: color.surface }} />
       </View>
@@ -44,7 +45,7 @@ export function TrendChart({ points, range }: { points: Pt[]; range: NumRange | 
   return (
     <View accessible accessibilityLabel={`تطور النتيجة: ${vals.join('، ')}`} style={{ direction: 'ltr' }}>
       <Svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`}>
-        {range && <Rect x={L} y={top} width={W - L - R} height={Math.max(0, bottom - top)} fill="#E3F3E8" />}
+        {range && <Rect x={L} y={top} width={W - L - R} height={Math.max(0, bottom - top)} fill="#E8EFFE" />}
         {[lo, hi].map((v, i) => <SvgText key={i} x={L - 6} y={y(v) + 4} fontSize={10} fill={color.mutedText} textAnchor="end">{String(Math.round(v * 10) / 10)}</SvgText>)}
         <Polyline points={pts.map((p, i) => `${x(i)},${y(Number(p.value_numeric))}`).join(' ')} fill="none" stroke={color.primary} strokeWidth={2} />
         {pts.map((p, i) => {

@@ -1,14 +1,16 @@
-import { Check, Clock, Pause, Pill, Play, SkipForward, Square } from 'lucide-react';
-import { errorMessage, formatDate, formatTime } from '@app/shared';
+import { useState } from 'react';
+import { Check, Clock, Lock, Pause, Pencil, Pill, Play, SkipForward, Square } from 'lucide-react';
+import { errorMessage, formatDate, formatTime, reminderIntervals, timesEvery } from '@app/shared';
 import { supabase } from '../../lib/supabase';
 import { unwrap, useAsync } from '../../lib/useAsync';
 import { useAuth } from '../../lib/auth';
-import { Alert, Badge, Button, EmptyState, ErrorState, SkeletonList, useToast } from '../../components/ui';
+import { Alert, Badge, Button, EmptyState, ErrorState, SkeletonList, TextField, useToast } from '../../components/ui';
 import { SignInPrompt } from './Account';
 
 interface Dose { id: string; scheduled_at: string; status: string; dose_status: string | null; snooze_count: number }
 interface Plan { id: string; display_name: string; instructions: string | null; start_date: string; end_date: string | null; times: string[]; as_needed: boolean;
-  status: string; status_reason: string | null; source: string; patient_name: string; doses: Dose[] }
+  status: string; status_reason: string | null; source: string; patient_name: string; doses: Dose[];
+  prescribed?: boolean; prescribed_by?: string | null; interval_hours: number | null; days?: number | null }
 const statusLabel: Record<string, { l: string; t: 'success' | 'warning' | 'neutral' | 'danger' }> = {
   active: { l: 'فعّالة', t: 'success' }, paused: { l: 'متوقفة مؤقتاً', t: 'warning' }, stopped: { l: 'أوقفتها', t: 'neutral' },
   cancelled: { l: 'أُلغيت (تغيّرت الوصفة)', t: 'danger' }, completed: { l: 'انتهت مدة العلاج', t: 'neutral' },
@@ -19,6 +21,7 @@ export function Meds() {
   const { session } = useAuth();
   const toast = useToast();
   const plans = useAsync(async () => (session ? ((await unwrap(supabase.rpc('my_medication_plans'))) as unknown as Plan[]) : []), [session?.user.id]);
+  const [editing, setEditing] = useState<string | null>(null);
   if (!session) return <SignInPrompt title="خطة الدواء" />;
   const act = async (p: PromiseLike<{ error: unknown }>, ok: string) => { const { error } = await p; if (error) toast(errorMessage(error), 'danger'); else { toast(ok, 'success'); plans.reload(); } };
 
@@ -51,17 +54,59 @@ export function Meds() {
               ))}
             </ul>
           )}
-          {['active', 'paused'].includes(p.status) && (
+          {['active', 'paused'].includes(p.status) && (p.prescribed ?? !!p.prescribed_by) && (
+            <span className="small muted row" style={{ gap: 6 }}><Lock size={14} aria-hidden />مواعيد هذا الدواء حددها {p.prescribed_by ?? 'طبيبك'}؛ لتغييرها راجع طبيبك.</span>
+          )}
+          {['active', 'paused'].includes(p.status) && !(p.prescribed ?? !!p.prescribed_by) && (editing === p.id
+            ? <EditOwnPlan plan={p} onDone={() => { setEditing(null); toast('حُفظ التعديل وتحدّثت التذكيرات', 'success'); plans.reload(); }} onCancel={() => setEditing(null)} />
+            : (
             <div className="row">
+              <Button size="sm" variant="secondary" icon={<Pencil size={14} />} onClick={() => setEditing(p.id)}>تعديل</Button>
               {p.status === 'active'
-                ? <Button size="sm" variant="secondary" icon={<Pause size={14} />} onClick={() => act(supabase.rpc('set_medication_plan_status', { p_plan_id: p.id, p_status: 'paused' }), 'أُوقفت التذكيرات مؤقتاً')}>إيقاف مؤقت</Button>
+                ? <Button size="sm" variant="ghost" icon={<Pause size={14} />} onClick={() => act(supabase.rpc('set_medication_plan_status', { p_plan_id: p.id, p_status: 'paused' }), 'أُوقفت التذكيرات مؤقتاً')}>إيقاف مؤقت</Button>
                 : <Button size="sm" variant="secondary" icon={<Play size={14} />} onClick={() => act(supabase.rpc('set_medication_plan_status', { p_plan_id: p.id, p_status: 'active' }), 'استؤنفت التذكيرات')}>استئناف</Button>}
               <Button size="sm" variant="ghost" icon={<Square size={14} />} onClick={() => act(supabase.rpc('set_medication_plan_status', { p_plan_id: p.id, p_status: 'stopped' }), 'أُوقفت التذكيرات')}>إيقاف التذكيرات</Button>
             </div>
-          )}
+          ))}
         </section>
       ))}
       <Alert tone="info">إذا فاتتك جرعة فلا تضاعف الجرعة التالية؛ اتبع تعليمات طبيبك أو الصيدلي. تسجيلك للجرعات لا يُعتبر إثباتاً طبياً للالتزام.</Alert>
+    </div>
+  );
+}
+
+/** Edit a medicine the patient added for themselves: name, every N hours from a first time, course length. */
+function EditOwnPlan({ plan, onDone, onCancel }: { plan: Plan; onDone: () => void; onCancel: () => void }) {
+  const toast = useToast();
+  const [name, setName] = useState(plan.display_name);
+  const [every, setEvery] = useState(plan.interval_hours ?? 24);
+  const [first, setFirst] = useState((plan.times[0] ?? '08:00').slice(0, 5));
+  const [days, setDays] = useState(plan.days ? String(plan.days) : '');
+  const [busy, setBusy] = useState(false);
+  const times = timesEvery(first, every);
+  const save = async () => {
+    setBusy(true);
+    const { error } = await supabase.rpc('update_own_medication_plan', { p_plan_id: plan.id, p_name: name, p_times: times, p_interval_hours: every,
+      p_days: days ? Number(days) : undefined, p_instructions: plan.instructions ?? undefined });
+    setBusy(false);
+    if (error) toast(errorMessage(error), 'danger'); else onDone();
+  };
+  return (
+    <div className="stack-sm" style={{ borderTop: '1px solid var(--c-border)', paddingTop: 'var(--s-2)' }}>
+      <TextField label="اسم الدواء" value={name} onChange={(e) => setName(e.target.value)} />
+      <strong className="small">كل كم ساعة؟</strong>
+      <div className="row" style={{ gap: 6 }}>
+        {reminderIntervals.map((h) => <button key={h} type="button" className="chip" aria-pressed={every === h} onClick={() => setEvery(h)}>{h === 24 ? 'مرة يومياً' : `كل ${h} ساعات`}</button>)}
+      </div>
+      <div className="row" style={{ gap: 'var(--s-2)' }}>
+        <TextField label="أول جرعة" type="time" ltr value={first} onChange={(e) => setFirst(e.target.value)} />
+        <TextField label="عدد الأيام" optional hint="فارغ = مستمر" type="number" min={1} max={365} ltr value={days} onChange={(e) => setDays(e.target.value)} />
+      </div>
+      {times.length > 0 && <span className="small muted">الأوقات: {times.join('، ')}</span>}
+      <div className="row">
+        <Button size="sm" loading={busy} disabled={!times.length || !name.trim()} onClick={() => void save()}>حفظ التعديل</Button>
+        <Button size="sm" variant="ghost" onClick={onCancel}>إلغاء</Button>
+      </div>
     </div>
   );
 }

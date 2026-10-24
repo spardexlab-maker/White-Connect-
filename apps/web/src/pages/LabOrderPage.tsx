@@ -15,7 +15,7 @@ export function LabOrderPage({ back }: { back: string }) {
       <div className="card">
         {d.status === 'loading' && <SkeletonList />}
         {d.status === 'error' && <ErrorState error={d.error} onRetry={d.reload} />}
-        {d.data && <LabResultView d={d.data} />}
+        {d.data && <LabResultView d={d.data} forPatient={back.startsWith('/patient')} />}
       </div>
     </div>
   );

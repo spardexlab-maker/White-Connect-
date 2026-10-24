@@ -249,16 +249,16 @@
 .lab-card { display: flex; flex-direction: column; gap: var(--s-2); padding: var(--s-4); background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-lg); }
 .lab-value { font-size: var(--f-h3); font-weight: 700; }
 .range-bar { display: flex; flex-direction: column; gap: 4px; }
-.range-track { position: relative; height: 10px; border-radius: 999px; background: color-mix(in srgb, var(--c-warning) 22%, var(--c-surface-sunken)); }
-.range-band { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--c-success) 45%, transparent); border-radius: 999px; }
-.range-marker { position: absolute; top: -4px; width: 18px; height: 18px; margin-left: -9px; border-radius: 50%; border: 3px solid var(--c-surface); box-shadow: 0 1px 3px rgb(0 0 0 / .3); background: var(--c-success); }
-.range-marker.pos-above, .range-marker.pos-below { background: var(--c-warning); }
+.range-track { position: relative; height: 10px; border-radius: 999px; background: #FDECEC; }
+.range-band { position: absolute; top: 0; bottom: 0; background: #BFD3FB; border-radius: 999px; }
+.range-marker { position: absolute; top: -4px; width: 18px; height: 18px; margin-left: -9px; border-radius: 50%; border: 3px solid var(--c-surface); box-shadow: 0 1px 3px rgb(0 0 0 / .3); background: #1D4ED8; }
+.range-marker.pos-above, .range-marker.pos-below { background: #C62828; }
 .range-scale { display: flex; justify-content: space-between; font-size: 12px; color: var(--c-muted); font-variant-numeric: tabular-nums; }
-.range-pos { font-weight: 600; } .range-pos.pos-within { color: var(--c-success); } .range-pos.pos-above, .range-pos.pos-below { color: var(--c-warning); }
+.range-pos { font-weight: 600; } .range-pos.pos-within { color: #1D4ED8; } .range-pos.pos-above, .range-pos.pos-below { color: #C62828; }
 .trend-chart { width: 100%; height: auto; }
-.trend-band { fill: color-mix(in srgb, var(--c-success) 16%, transparent); }
+.trend-band { fill: rgb(29 78 216 / .1); }
 .trend-line { fill: none; stroke: var(--c-primary); stroke-width: 2; }
-.trend-dot { fill: var(--c-success); stroke: var(--c-surface); stroke-width: 2; } .trend-dot.pos-above, .trend-dot.pos-below { fill: var(--c-warning); }
+.trend-dot { fill: #1D4ED8; stroke: var(--c-surface); stroke-width: 2; } .trend-dot.pos-above, .trend-dot.pos-below { fill: #C62828; }
 .trend-axis { font-size: 10px; fill: var(--c-muted); } .trend-val { font-size: 11px; font-weight: 700; fill: var(--c-text); }
 
 .dose-strip { display: flex; flex-wrap: wrap; gap: 4px; }

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { ArrowDown, ArrowUp, ChevronLeft, FileText, FlaskConical, Minus, Pencil, Plus, Share2 } from 'lucide-react-native';
-import { errorMessage, formatDate, labFlag, parseRange } from '@app/shared';
+import { errorMessage, formatDate, labFlag, labState, labStateColor, labStateLabel, parseRange } from '@app/shared';
 import { supabase } from '../../src/lib/supabase';
 import { unwrap, useAsync } from '../../src/lib/useAsync';
 import { useAuth } from '../../src/lib/auth';
@@ -166,14 +166,15 @@ function Tests({ trends }: { trends: Trend[] }) {
         const range = parseRange(t.reference_range);
         const dir = cur.value_numeric != null && prev?.value_numeric != null ? Math.sign(Number(cur.value_numeric) - Number(prev.value_numeric)) : null;
         const Arrow = dir === 1 ? ArrowUp : dir === -1 ? ArrowDown : Minus;
+        const st = labState({ value_numeric: cur.value_numeric, reference_range: t.reference_range, flag: cur.flag });
         return (
           <Card key={t.key}>
             <Row between>
               <Text variant="title" style={{ flex: 1 }}>{t.name}</Text>
-              {cur.flag ? <Badge label={labFlag[cur.flag] ?? cur.flag} tone={cur.flag === 'critical' ? 'danger' : 'warning'} /> : null}
+              {cur.flag === 'critical' ? <Badge label={labFlag[cur.flag]} tone="danger" /> : st ? <StatePill st={st} /> : null}
             </Row>
             <Row gap={space[3]} wrap>
-              <Text variant="h2"><Ltr>{val(cur)}{t.unit ? ` ${t.unit}` : ''}</Ltr></Text>
+              <Text variant="h2" style={st ? { color: labStateColor[st] } : undefined}><Ltr>{val(cur)}{t.unit ? ` ${t.unit}` : ''}</Ltr></Text>
               {prev && <Row gap={4}><Arrow size={16} color={color.mutedText} /><Text variant="small" muted>السابق <Ltr>{val(prev)}</Ltr> ({formatDate(prev.released_at)})</Text></Row>}
             </Row>
             {range && cur.value_numeric != null ? <RangeBar value={Number(cur.value_numeric)} range={range} />
@@ -238,5 +239,13 @@ function ListCard({ title, empty, rows, add }: {
         </Stack>
       )}
     </Card>
+  );
+}
+
+function StatePill({ st }: { st: 'high' | 'low' | 'normal' }) {
+  return (
+    <View style={{ backgroundColor: st === 'normal' ? '#E8EFFE' : '#FDECEC', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 2 }}>
+      <Text variant="small" style={{ color: labStateColor[st], fontWeight: '700' }}>{labStateLabel[st]}</Text>
+    </View>
   );
 }

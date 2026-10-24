@@ -3569,6 +3569,39 @@ isOneToOne: false
 "system_health":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
+"update_own_medication_plan":
+{ Args: { "p_days"?: number,"p_instructions"?: string,"p_interval_hours"?: number,"p_name": string,"p_plan_id": string,"p_times": (string)[] }; Returns: {
+              "as_needed": boolean,
+"consent_at": string,
+"created_at": string,
+"created_by": string,
+"display_name": string,
+"dose": number | null,
+"dose_unit": string | null,
+"end_date": string | null,
+"id": string,
+"instructions": string | null,
+"interval_hours": number | null,
+"line_no": number | null,
+"patient_id": string,
+"prescription_id": string | null,
+"reported_medication_id": string | null,
+"source": string,
+"start_date": string,
+"status": string,
+"status_reason": string | null,
+"times_local": (string)[],
+"timezone": string,
+"updated_at": string,
+"version": number,
+"version_id": string | null
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "medication_plans"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "update_queue_entry":
 { Args: { "p_priority"?: number,"p_priority_reason"?: string,"p_queue_entry_id": string,"p_status"?: Database["public"]['Enums']["queue_status"] }; Returns: {
               "appointment_id": string | null,

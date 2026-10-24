@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowDown, ArrowUp, Droplet, FileText, FlaskConical, HeartPulse, History, Minus, Pill, Ruler, ShieldAlert, Weight } from 'lucide-react';
-import { chartDomain, formatDate, formatDateShort, formatDateTime, formatTime, labFlag, parseRange, rangePosition, rangePositionLabel, type NumRange } from '@app/shared';
+import { chartDomain, formatDate, formatDateShort, formatDateTime, formatTime, labFlag, labState, labStateColor, labStateLabel, parseRange, rangePosition, rangePositionLabel, type NumRange } from '@app/shared';
 import { supabase } from '../../lib/supabase';
 import { unwrap, useAsync } from '../../lib/useAsync';
 import { Badge, EmptyState, Ltr } from '../ui';
@@ -167,14 +167,15 @@ export function LabTrends({ trends, linkBase }: { trends: Trend[]; linkBase?: st
           const [cur, prev] = t.points;
           const range = parseRange(t.reference_range);
           const dir = cur?.value_numeric != null && prev?.value_numeric != null ? Math.sign(Number(cur.value_numeric) - Number(prev.value_numeric)) : null;
+          const st = labState({ value_numeric: cur.value_numeric, reference_range: t.reference_range, flag: cur.flag });
           return (
             <article key={t.key} className="lab-card">
               <header className="row-between">
                 <strong>{t.name}</strong>
-                {cur.flag && <Badge tone={cur.flag === 'critical' ? 'danger' : 'warning'}>{labFlag[cur.flag] ?? cur.flag}</Badge>}
+                {cur.flag === 'critical' ? <Badge tone="danger">{labFlag[cur.flag]}</Badge> : st && <span className={`lab-pill lab-${st}`}>{labStateLabel[st]}</span>}
               </header>
               <div className="row-between" style={{ alignItems: 'baseline' }}>
-                <span className="lab-value"><Ltr>{fmtVal(cur)}</Ltr> <span className="small muted"><Ltr>{t.unit ?? ''}</Ltr></span></span>
+                <span className="lab-value" style={{ color: st ? labStateColor[st] : undefined }}><Ltr>{fmtVal(cur)}</Ltr> <span className="small muted"><Ltr>{t.unit ?? ''}</Ltr></span></span>
                 {prev && (
                   <span className="small muted row" style={{ gap: 4 }}>
                     {dir === 1 ? <ArrowUp size={14} aria-label="ارتفع" /> : dir === -1 ? <ArrowDown size={14} aria-label="انخفض" /> : <Minus size={14} aria-label="ثابت" />}

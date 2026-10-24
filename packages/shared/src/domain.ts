@@ -92,6 +92,13 @@ export const labStatus: Record<LabStatus, { label: string; tone: Tone }> = {
   cancelled: { label: 'ملغى', tone: 'neutral' },
   sample_rejected: { label: 'عينة مرفوضة — يلزم سحب جديد', tone: 'danger' },
 };
+/** what the patient sees: no lab workflow words — the result is simply ready or not yet */
+export const patientLabStatus: Record<LabStatus, { label: string; tone: Tone }> = {
+  ...labStatus,
+  processing: { label: 'قيد التحضير', tone: 'warning' },
+  pending_review: { label: 'قيد التحضير', tone: 'warning' },
+  released: { label: 'النتيجة جاهزة', tone: 'success' },
+};
 
 export const rxDispatchStatus: Record<string, { label: string; tone: Tone }> = {
   sent: { label: 'جديدة', tone: 'info' },

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CalendarCheck2, FlaskConical, Pill, Route, Stethoscope } from 'lucide-react';
-import { appointmentStatus, encounterStatus, formatDate, formatTime, labStatus, type AppointmentStatus, type EncounterStatus, type LabStatus } from '@app/shared';
+import { appointmentStatus, encounterStatus, formatDate, formatTime, patientLabStatus, type AppointmentStatus, type EncounterStatus, type LabStatus } from '@app/shared';
 import { supabase } from '../../lib/supabase';
 import { unwrap, useAsync } from '../../lib/useAsync';
 import { useAuth } from '../../lib/auth';
@@ -33,7 +33,7 @@ export function Journey() {
       out.push({ kind: e.event_type, at: e.occurred_at, key: `${e.event_type}${e.ref_id}`, title: e.title, who: e.practitioner_name ?? '', where: e.facility_name,
         patient: e.patient_name, corrected: e.corrected, group: e.encounter_id,
         badge: e.event_type === 'visit' ? <Badge tone={encounterStatus[e.status as EncounterStatus].tone}>{encounterStatus[e.status as EncounterStatus].label}</Badge>
-          : e.event_type === 'lab' ? <Badge tone={labStatus[e.status as LabStatus].tone}>{e.status === 'released' ? 'نتائج معتمدة' : labStatus[e.status as LabStatus].label}</Badge>
+          : e.event_type === 'lab' ? <Badge tone={patientLabStatus[e.status as LabStatus].tone}>{patientLabStatus[e.status as LabStatus].label}</Badge>
           : <Badge tone={e.status === 'active' ? 'success' : 'neutral'}>{e.status === 'active' ? 'معتمدة' : 'ملغاة'}</Badge>,
         link: e.event_type === 'prescription' ? `/patient/rx/${e.ref_id}` : e.event_type === 'lab' ? `/patient/labs/${e.ref_id}` : undefined });
     }

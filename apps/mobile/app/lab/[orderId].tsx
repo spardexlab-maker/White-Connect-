@@ -3,7 +3,7 @@ import { Linking, View } from 'react-native';
 import { labReportPdf } from '../../src/lib/labPdf';
 import { useLocalSearchParams } from 'expo-router';
 import { AlertOctagon, FileText, FlaskConical, Printer, Share2 } from 'lucide-react-native';
-import { errorMessage, formatDateTime, labFlag, labStatus, type LabStatus } from '@app/shared';
+import { errorMessage, formatDateTime, labFlag, labState, labStateColor, labStateLabel, patientLabStatus, type LabStatus } from '@app/shared';
 import { supabase } from '../../src/lib/supabase';
 import { unwrap, useAsync } from '../../src/lib/useAsync';
 import type { LabDetail } from '../../src/lib/clinical';
@@ -32,7 +32,7 @@ export default function LabScreen() {
   if (d.status === 'loading' && !d.data) return <Screen><Loading /></Screen>;
   if (d.status === 'error') return <Screen><Card><ErrorState error={d.error} onRetry={d.reload} /></Card></Screen>;
   const x = d.data!;
-  const st = labStatus[x.order.status as LabStatus] ?? { label: x.order.status, tone: 'neutral' };
+  const st = patientLabStatus[x.order.status as LabStatus] ?? { label: x.order.status, tone: 'neutral' };
 
   return (
     <Screen refreshing={d.status === 'loading'} onRefresh={() => { d.reload(); files.reload(); }}>
@@ -52,26 +52,30 @@ export default function LabScreen() {
       </Card>
       {x.items.map((it) => {
         const res = it.results.find((r) => r.status === 'released');
+        const ls = res ? labState({ value_numeric: res.value_numeric, reference_range: res.reference_range ?? it.catalog.reference_range_text, flag: res.lab_flag }) : null;
         return (
           <Card key={it.id}>
             <Row between><Text variant="title" ltr style={{ fontSize: 15, flex: 1 }}>{it.name}</Text>
-              {res ? <Badge label="معتمدة" tone="success" /> : <Badge label="لم تُنشر بعد" tone="neutral" />}</Row>
+              {res ? (ls && (
+                <View style={{ backgroundColor: ls === 'normal' ? '#E8EFFE' : '#FDECEC', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 2 }}>
+                  <Text variant="small" style={{ color: labStateColor[ls], fontWeight: '700' }}>{labStateLabel[ls]}</Text>
+                </View>
+              )) : <Badge label="قيد التحضير" tone="neutral" />}</Row>
             {res ? (
               <Stack gap={space[2]}>
                 <Row gap={space[2]} wrap>
-                  <Text variant="h3"><Ltr>{res.value_text ?? (res.value_numeric != null ? String(res.value_numeric) : '—')}</Ltr></Text>
+                  <Text variant="h3" style={ls ? { color: labStateColor[ls] } : undefined}><Ltr>{res.value_text ?? (res.value_numeric != null ? String(res.value_numeric) : '—')}</Ltr></Text>
                   {(res.unit ?? it.catalog.unit) && <Text variant="small" muted><Ltr>{res.unit ?? it.catalog.unit}</Ltr></Text>}
-                  {res.lab_flag && (
-                    <Badge label={labFlag[res.lab_flag] ?? res.lab_flag} tone={res.lab_flag === 'critical' ? 'danger' : 'warning'}
-                           icon={res.lab_flag === 'critical' ? <AlertOctagon size={12} color={color.danger} /> : undefined} />
+                  {res.lab_flag === 'critical' && (
+                    <Badge label={labFlag[res.lab_flag]} tone="danger" icon={<AlertOctagon size={12} color={color.danger} />} />
                   )}
                 </Row>
                 <Text variant="small" muted>المدى المرجعي (كما أدخله المختبر): <Ltr>{res.reference_range ?? it.catalog.reference_range_text ?? '—'}</Ltr></Text>
                 {res.notes && <Text variant="small">ملاحظة المختبر: {res.notes}</Text>}
                 {res.version_no > 1 && <Alert tone="info" title="نتيجة مصححة">{res.correction_reason ?? 'صحّح المختبر هذه النتيجة؛ النسخة السابقة محفوظة في السجل.'}</Alert>}
-                {res.released_at && <Text variant="small" muted>نُشرت: {formatDateTime(res.released_at)}</Text>}
+                {res.released_at && <Text variant="small" muted>صدرت: {formatDateTime(res.released_at)}</Text>}
               </Stack>
-            ) : <Text variant="small" muted>تظهر النتيجة هنا بعد مراجعتها واعتمادها من المختبر.</Text>}
+            ) : <Text variant="small" muted>تظهر النتيجة هنا حال جهوزها من المختبر.</Text>}
           </Card>
         );
       })}

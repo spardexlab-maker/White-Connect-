@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Platform, View } from 'react-native';
-import { Check, Clock, Minus, Pause, Pill, Play, Plus, SkipForward, Square } from 'lucide-react-native';
+import { Check, Clock, Lock, Minus, Pause, Pencil, Pill, Play, Plus, SkipForward, Square } from 'lucide-react-native';
 import { errorMessage, formatDate, formatTime } from '@app/shared';
 import { supabase } from '../src/lib/supabase';
 import { unwrap, useAsync } from '../src/lib/useAsync';
@@ -8,13 +8,15 @@ import { useAuth } from '../src/lib/auth';
 import { doseLabel, remindersEnabled } from '../src/lib/reminders';
 import { resyncDoses } from '../src/lib/doseActions';
 import { PendingRx } from '../src/components/PendingRx';
+import { OwnReminder } from '../src/components/OwnReminder';
 import { SignInPrompt } from '../src/components/SignInPrompt';
 import { Alert, Badge, Button, Card, Divider, EmptyState, ErrorState, Loading, Row, Screen, Stack, Text, type Tone } from '../src/components/ui';
 import { color, space } from '../src/theme';
 
 interface Dose { id: string; scheduled_at: string; status: string; dose_status: string | null; snooze_count: number; dose_amount: number | null; recorded_at: string | null }
 interface Plan { id: string; display_name: string; instructions: string | null; start_date: string; end_date: string | null; times: string[]; as_needed: boolean;
-  status: string; patient_name: string; doses: Dose[]; dose: number | null; dose_unit: string | null; interval_hours: number | null; prescribed_by: string | null }
+  status: string; patient_name: string; doses: Dose[]; dose: number | null; dose_unit: string | null; interval_hours: number | null; prescribed_by: string | null;
+  prescribed?: boolean; days?: number | null }
 const statusLabel: Record<string, { l: string; t: Tone }> = {
   active: { l: 'فعّالة', t: 'success' }, paused: { l: 'متوقفة مؤقتاً', t: 'warning' }, stopped: { l: 'أوقفتها', t: 'neutral' },
   cancelled: { l: 'أُلغيت (تغيّرت الوصفة)', t: 'danger' }, completed: { l: 'انتهت مدة العلاج', t: 'neutral' },
@@ -34,6 +36,7 @@ export default function Meds() {
     void resyncDoses();
   }, [plans.data]);
   const [amounts, setAmounts] = useState<Record<string, number>>({});
+  const [editing, setEditing] = useState<string | null>(null);
 
   if (!session) return <SignInPrompt />;
   const act = async (p: PromiseLike<{ error: unknown }>, ok: string) => {
@@ -91,17 +94,29 @@ export default function Meds() {
                 })()}
               </View>
             ))}
-            {['active', 'paused'].includes(p.status) && (
+            {['active', 'paused'].includes(p.status) && (p.prescribed ?? !!p.prescribed_by) && (
+              <Stack gap={space[2]}>
+                <Divider />
+                <Row gap={space[2]}><Lock size={14} color={color.mutedText} /><Text variant="small" muted style={{ flex: 1 }}>مواعيد هذا الدواء حددها طبيبك؛ لتغييرها راجع طبيبك.</Text></Row>
+              </Stack>
+            )}
+            {['active', 'paused'].includes(p.status) && !(p.prescribed ?? !!p.prescribed_by) && (editing === p.id ? (
+              <OwnReminder patientId="" name={p.display_name}
+                           edit={{ planId: p.id, every: p.interval_hours, first: (p.times[0] ?? '08:00').slice(0, 5), days: p.days ?? null, instructions: p.instructions }}
+                           onDone={() => { setEditing(null); setMsg({ tone: 'success', text: 'حُفظ التعديل وتحدّثت التذكيرات' }); plans.reload(); }}
+                           onCancel={() => setEditing(null)} />
+            ) : (
               <Stack gap={space[2]}>
                 <Divider />
                 <Row wrap>
+                  <Button title="تعديل" small variant="secondary" icon={<Pencil size={14} color={color.primary} />} onPress={() => setEditing(p.id)} />
                   {p.status === 'active'
-                    ? <Button title="إيقاف مؤقت" small variant="secondary" icon={<Pause size={14} color={color.primary} />} onPress={() => act(supabase.rpc('set_medication_plan_status', { p_plan_id: p.id, p_status: 'paused' }), 'أُوقفت التذكيرات مؤقتاً')} />
+                    ? <Button title="إيقاف مؤقت" small variant="ghost" icon={<Pause size={14} color={color.primary} />} onPress={() => act(supabase.rpc('set_medication_plan_status', { p_plan_id: p.id, p_status: 'paused' }), 'أُوقفت التذكيرات مؤقتاً')} />
                     : <Button title="استئناف" small variant="secondary" icon={<Play size={14} color={color.primary} />} onPress={() => act(supabase.rpc('set_medication_plan_status', { p_plan_id: p.id, p_status: 'active' }), 'استؤنفت التذكيرات')} />}
                   <Button title="إيقاف التذكيرات" small variant="ghost" icon={<Square size={14} color={color.primary} />} onPress={() => act(supabase.rpc('set_medication_plan_status', { p_plan_id: p.id, p_status: 'stopped' }), 'أُوقفت التذكيرات')} />
                 </Row>
               </Stack>
-            )}
+            ))}
           </Card>
         );
       })}
