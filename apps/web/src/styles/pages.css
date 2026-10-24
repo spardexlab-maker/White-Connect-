@@ -352,3 +352,16 @@
 .med-card { background: var(--c-surface, #fff); border: 1px solid var(--c-border); border-radius: 12px; padding: 10px; display: grid; gap: 8px; }
 .ai-summary { line-height: 1.8; }
 .dose-skipped { background: #D97706; border-color: #D97706; } .dose-missed { background: #C62828; border-color: #C62828; }
+
+/* home sample collection: progress steps */
+.hl-steps { display: flex; gap: 4px; list-style: none; margin: 0; padding: 0; }
+.hl-steps li { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; color: var(--c-muted); position: relative; }
+.hl-steps li::before { content: ''; position: absolute; top: 11px; inset-inline-start: -50%; width: 100%; height: 2px; background: var(--c-border); z-index: 0; }
+.hl-steps li:first-child::before { display: none; }
+.hl-steps li.done::before, .hl-steps li.now::before { background: var(--c-accent); }
+.hl-dot { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; background: var(--c-surface-sunken); border: 2px solid var(--c-border); z-index: 1; }
+.hl-steps li.done .hl-dot { background: var(--c-accent); border-color: var(--c-accent); color: #fff; }
+.hl-steps li.now .hl-dot { border-color: var(--c-accent); color: var(--c-accent); }
+.hl-steps li.now { color: var(--c-text); font-weight: 600; }
+.home-lab-cta { text-decoration: none; color: inherit; padding: var(--s-3); }
+.home-lab-cta:hover { border-color: var(--c-accent); }

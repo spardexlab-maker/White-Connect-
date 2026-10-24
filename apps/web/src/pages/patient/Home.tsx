@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
+  House,
   Baby, BadgeCheck, Bone, Brain, CalendarClock, Clock, Ear, Eye, FlaskConical, HeartHandshake, HeartPulse, LocateFixed, MapPin,
   QrCode, Search, SearchX, Smile, Sparkles, Stethoscope, Syringe, Users, Droplets, Flower2,
 } from 'lucide-react';
@@ -126,6 +127,11 @@ export function PatientHome() {
       </section>
 
       <AiAssist />
+
+      <Link to="/patient/home-lab" className="card row home-lab-cta" style={{ gap: 'var(--s-3)', alignItems: 'center' }}>
+        <span className="ai-ico" aria-hidden><House size={20} /></span>
+        <span className="grow stack-sm" style={{ gap: 2 }}><strong>تحليل منزلي</strong><span className="small muted">المختبر يجيك للبيت ويسحب العينة، وتتابع الزيارة من هنا</span></span>
+      </Link>
 
       {kind === 'doctor' && (
         <section aria-label="التخصصات" className="stack-sm">

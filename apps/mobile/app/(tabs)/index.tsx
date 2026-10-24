@@ -3,7 +3,7 @@ import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Location from 'expo-location';
 import {
-  Baby, BadgeCheck, Bone, Brain, CalendarClock, Clock, Droplets, Ear, Eye, FlaskConical, Flower2, HeartHandshake, HeartPulse, LocateFixed, MapPin,
+  Baby, BadgeCheck, House, Bone, Brain, CalendarClock, Clock, Droplets, Ear, Eye, FlaskConical, Flower2, HeartHandshake, HeartPulse, LocateFixed, MapPin,
   QrCode, Search, SearchX, Smile, Sparkles, Stethoscope, Syringe, Users,
 } from 'lucide-react-native';
 import { addDays, formatDateShort, formatMoney, formatTime, localDateKey } from '@app/shared';
@@ -121,6 +121,17 @@ export default function Home() {
 
       {session && <PendingRx compact />}
       <AiAssist />
+      <Pressable accessibilityRole="link" onPress={() => router.push('/home-lab')}>
+        <Card style={{ flexDirection: 'row', alignItems: 'center', gap: space[3] }}>
+          <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: color.accentSoft, alignItems: 'center', justifyContent: 'center' }}>
+            <House size={20} color={color.accent} />
+          </View>
+          <View style={{ flex: 1, gap: 2 }}>
+            <Text variant="title">تحليل منزلي</Text>
+            <Text variant="small" muted>المختبر يجيك للبيت ويسحب العينة، وتتابع الزيارة من هنا</Text>
+          </View>
+        </Card>
+      </Pressable>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space[2] }}>
         <Chip label={geo === 'ok' ? 'الأقرب إليك' : geo === 'asking' ? 'جارٍ التحديد…' : 'استخدم موقعي'} selected={geo === 'ok'}

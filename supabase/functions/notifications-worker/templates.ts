@@ -4,6 +4,7 @@ export interface Rendered { title: string; body: string; link: string | null }
 
 export function render(template: string, payload: Record<string, unknown>): Rendered {
   const num = typeof payload.booking_number === 'string' ? payload.booking_number : '';
+  const req = typeof payload.request_number === 'string' ? payload.request_number : '';
   const when = typeof payload.starts_at === 'string' ? baghdad(payload.starts_at) : '';
   switch (template) {
     case 'appointment.requested':
@@ -22,6 +23,18 @@ export function render(template: string, payload: Record<string, unknown>): Rend
       return { title: 'تذكير بموعدك غداً', body: `موعدك${when ? ` ${when}` : ''}. رقم الحجز ${num}.`, link: '/patient/appointments' };
     case 'appointment.reminder_soon':
       return { title: 'موعدك بعد قليل', body: `موعدك${when ? ` ${when}` : ''} — رقم الحجز ${num}.`, link: '/patient/appointments' };
+    case 'homelab.new':
+      return { title: 'طلب سحب منزلي جديد', body: `طلب ${req} — افتح «السحب المنزلي» لتحديد الموعد.`, link: '/workspace/lab/home' };
+    case 'homelab.cancelled':
+      return { title: 'أُلغي طلب سحب منزلي', body: `ألغى المريض الطلب ${req}.`, link: '/workspace/lab/home' };
+    case 'homelab.scheduled':
+      return { title: 'تحدد موعد السحب المنزلي', body: `يزورك المختبر${when ? ` ${when}` : ''}. طلب ${req}.`, link: '/patient/home-lab' };
+    case 'homelab.on_the_way':
+      return { title: 'المختص بالطريق إليك', body: `طلب السحب المنزلي ${req}.`, link: '/patient/home-lab' };
+    case 'homelab.collected':
+      return { title: 'سُحبت العينة', body: 'تظهر النتيجة في التطبيق حال جهوزها.', link: '/patient/home-lab' };
+    case 'homelab.rejected':
+      return { title: 'تعذّر تنفيذ طلب السحب المنزلي', body: `اعتذر المختبر عن الطلب ${req}. افتح التطبيق للتفاصيل.`, link: '/patient/home-lab' };
     case 'medication.reminder':
       return { title: 'تذكير', body: 'حان موعد جرعتك حسب خطتك. افتح التطبيق للتفاصيل.', link: '/patient/meds' };
     case 'prescription.approved':

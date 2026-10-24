@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Linking, View } from 'react-native';
 import { labReportPdf } from '../../src/lib/labPdf';
-import { useLocalSearchParams } from 'expo-router';
-import { AlertOctagon, FileText, FlaskConical, Printer, Share2 } from 'lucide-react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import { AlertOctagon, FileText, FlaskConical, House, Printer, Share2 } from 'lucide-react-native';
 import { errorMessage, formatDateTime, labFlag, labState, labStateColor, labStateLabel, patientLabStatus, type LabStatus } from '@app/shared';
 import { supabase } from '../../src/lib/supabase';
 import { unwrap, useAsync } from '../../src/lib/useAsync';
@@ -17,6 +17,8 @@ export default function LabScreen() {
   // result files (PDF/image) uploaded by the lab — readable once the results are released
   const files = useAsync(async () => ((await unwrap(supabase.rpc('list_attachments', { p_kind: 'lab_result', p_ref_id: orderId }))) ?? []) as
     { id: string; file_name: string; status: string }[], [orderId]);
+  // the doctor's order still waits for the sample and this lab comes home → offer it
+  const homeLabs = useAsync(async () => ((await supabase.rpc('home_collection_labs')).data as { id: string }[] | null) ?? [], []);
   const [pdfBusy, setPdfBusy] = useState<'print' | 'share' | null>(null);
   const [pdfError, setPdfError] = useState<string | null>(null);
   // the lab report as a PDF: print / save from the system dialog, or share the file
@@ -48,6 +50,10 @@ export default function LabScreen() {
           </Row>
         )}
         {pdfError && <Alert tone="danger">{pdfError}</Alert>}
+        {(x.order.status === 'ordered' || x.order.status === 'scheduled') && homeLabs.data?.some((l) => l.id === x.order.lab_facility_id) && (
+          <Button title="سحب منزلي — المختبر يجيك للبيت" small icon={<House size={14} color={color.surface} />}
+                  onPress={() => router.push(`/home-lab?lab=${x.order.lab_facility_id}&order=${x.order.id}`)} />
+        )}
         <Text variant="small" muted>طلب <Ltr>{x.order.order_number}</Ltr> · {x.patient.full_name}{x.ordering_doctor ? ` · الطبيب الطالب: ${x.ordering_doctor}` : ' · زيارة مباشرة للمختبر'}</Text>
       </Card>
       {x.items.map((it) => {

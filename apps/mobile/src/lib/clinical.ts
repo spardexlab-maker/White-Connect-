@@ -30,7 +30,7 @@ export interface LabResult {
   correction_reason: string | null;
 }
 export interface LabDetail {
-  order: { id: string; order_number: string; status: string; created_at: string };
+  order: { id: string; order_number: string; status: string; created_at: string; lab_facility_id: string };
   lab: string; patient: { full_name: string; public_code: string };
   ordering_doctor: string | null;
   items: { id: string; name: string; status: string; released_at: string | null; catalog: { unit: string | null; reference_range_text: string | null };

@@ -15,6 +15,7 @@ import { Notifications } from './pages/patient/Notifications';
 import { Account } from './pages/patient/Account';
 import { PatientRx } from './pages/patient/PatientRx';
 import { Meds } from './pages/patient/Meds';
+import { HomeLab } from './pages/patient/HomeLab';
 import { LabOrderPage } from './pages/LabOrderPage';
 import { PrintLab } from './pages/PrintLab';
 import { MyHealth } from './pages/patient/Health';
@@ -44,6 +45,7 @@ const AdminReports = lazy(() => import('./pages/pro/FacilityReports').then((m) =
 const AdminHealth = lazy(() => import('./pages/admin/Health').then((m) => ({ default: m.AdminHealth })));
 const PrintReceipt = lazy(() => import('./pages/PrintReceipt').then((m) => ({ default: m.PrintReceipt })));
 const ComplexDoctors = lazy(() => import('./pages/pro/ComplexDoctors').then((m) => ({ default: m.ComplexDoctors })));
+const LabHomeRequests = lazy(() => import('./pages/pro/LabHomeRequests').then((m) => ({ default: m.LabHomeRequests })));
 const LabWorkspace = lazy(() => import('./pages/pro/LabWorkspace').then((m) => ({ default: m.LabWorkspace })));
 const PrintRx = lazy(() => import('./pages/PrintRx').then((m) => ({ default: m.PrintRx })));
 const Security = lazy(() => import('./pages/pro/Security').then((m) => ({ default: m.Security })));
@@ -92,6 +94,7 @@ export function App() {
                 <Route path="account" element={<Account />} />
                 <Route path="rx/:id" element={<PatientRx />} />
                 <Route path="meds" element={<Meds />} />
+                <Route path="home-lab" element={<HomeLab />} />
                 <Route path="health" element={<MyHealth />} />
                 <Route path="assistant" element={<AssistantPage />} />
                 <Route path="labs/:orderId" element={<LabOrderPage back="/patient/journey" />} />
@@ -115,6 +118,7 @@ export function App() {
                 <Route path="/workspace/pharmacy/reports" element={<RequireWorkspaceRole roles={['pharmacist']}><PharmacyReports /></RequireWorkspaceRole>} />
                 <Route path="/workspace/lab" element={<RequireWorkspaceRole roles={['lab_technician', 'lab_approver']}><LabWorkspace /></RequireWorkspaceRole>} />
                 <Route path="/workspace/pharmacy/doctors" element={<RequireWorkspaceRole roles={['pharmacist', 'pharmacy_staff']}><ComplexDoctors /></RequireWorkspaceRole>} />
+                <Route path="/workspace/lab/home" element={<RequireWorkspaceRole roles={['lab_technician', 'lab_approver']}><LabHomeRequests /></RequireWorkspaceRole>} />
                 <Route path="/workspace/lab/doctors" element={<RequireWorkspaceRole roles={['lab_technician', 'lab_approver']}><ComplexDoctors /></RequireWorkspaceRole>} />
                 <Route path="/workspace/organization" element={<RequireWorkspaceRole roles={['organization_admin']}><OrganizationAdmin /></RequireWorkspaceRole>} />
                 <Route path="/platform-admin" element={<RequirePlatformAdmin><AdminOverview /></RequirePlatformAdmin>} />

@@ -657,14 +657,14 @@ isOneToOne: false
                   ]
                 },"facilities": {
                   Row: {
-                    "branch_id": string,"created_at": string,"default_lab_id": string | null,"default_pharmacy_id": string | null,"description": string | null,"id": string,"is_public": boolean,"name": string,"opening_hours_note": string | null,"organization_id": string,"phone": string | null,"status": Database["public"]['Enums']["entity_status"],"status_reason": string | null,"type": Database["public"]['Enums']["facility_type"],"updated_at": string,"version": number
+                    "branch_id": string,"created_at": string,"default_lab_id": string | null,"default_pharmacy_id": string | null,"description": string | null,"home_collection": boolean,"home_collection_fee_minor": number | null,"home_collection_note": string | null,"id": string,"is_public": boolean,"name": string,"opening_hours_note": string | null,"organization_id": string,"phone": string | null,"status": Database["public"]['Enums']["entity_status"],"status_reason": string | null,"type": Database["public"]['Enums']["facility_type"],"updated_at": string,"version": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "branch_id": string,"created_at"?: string,"default_lab_id"?: string | null,"default_pharmacy_id"?: string | null,"description"?: string | null,"id"?: string,"is_public"?: boolean,"name": string,"opening_hours_note"?: string | null,"organization_id": string,"phone"?: string | null,"status"?: Database["public"]['Enums']["entity_status"],"status_reason"?: string | null,"type": Database["public"]['Enums']["facility_type"],"updated_at"?: string,"version"?: number
+                    "branch_id": string,"created_at"?: string,"default_lab_id"?: string | null,"default_pharmacy_id"?: string | null,"description"?: string | null,"home_collection"?: boolean,"home_collection_fee_minor"?: number | null,"home_collection_note"?: string | null,"id"?: string,"is_public"?: boolean,"name": string,"opening_hours_note"?: string | null,"organization_id": string,"phone"?: string | null,"status"?: Database["public"]['Enums']["entity_status"],"status_reason"?: string | null,"type": Database["public"]['Enums']["facility_type"],"updated_at"?: string,"version"?: number
                   }
                   Update: {
-                    "branch_id"?: string,"created_at"?: string,"default_lab_id"?: string | null,"default_pharmacy_id"?: string | null,"description"?: string | null,"id"?: string,"is_public"?: boolean,"name"?: string,"opening_hours_note"?: string | null,"organization_id"?: string,"phone"?: string | null,"status"?: Database["public"]['Enums']["entity_status"],"status_reason"?: string | null,"type"?: Database["public"]['Enums']["facility_type"],"updated_at"?: string,"version"?: number
+                    "branch_id"?: string,"created_at"?: string,"default_lab_id"?: string | null,"default_pharmacy_id"?: string | null,"description"?: string | null,"home_collection"?: boolean,"home_collection_fee_minor"?: number | null,"home_collection_note"?: string | null,"id"?: string,"is_public"?: boolean,"name"?: string,"opening_hours_note"?: string | null,"organization_id"?: string,"phone"?: string | null,"status"?: Database["public"]['Enums']["entity_status"],"status_reason"?: string | null,"type"?: Database["public"]['Enums']["facility_type"],"updated_at"?: string,"version"?: number
                   }
                   Relationships: [
                     {
@@ -710,6 +710,70 @@ isOneToOne: false
       columns: ["facility_id"]
 isOneToOne: false
       referencedRelation: "facilities"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"home_lab_request_events": {
+                  Row: {
+                    "at": string,"by_user": string | null,"id": number,"note": string | null,"request_id": string,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "at"?: string,"by_user"?: string | null,"id"?: never,"note"?: string | null,"request_id": string,"status": string
+                  }
+                  Update: {
+                    "at"?: string,"by_user"?: string | null,"id"?: never,"note"?: string | null,"request_id"?: string,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "home_lab_request_events_by_user_fkey"
+      columns: ["by_user"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "home_lab_request_events_request_id_fkey"
+      columns: ["request_id"]
+isOneToOne: false
+      referencedRelation: "home_lab_requests"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"home_lab_requests": {
+                  Row: {
+                    "address": string,"collector_name": string | null,"created_at": string,"created_by": string,"id": string,"lab_facility_id": string,"lab_order_id": string | null,"latitude": number | null,"longitude": number | null,"notes": string | null,"patient_id": string,"phone": string,"preferred_date": string,"preferred_window": string,"request_number": string,"scheduled_at": string | null,"status": string,"status_reason": string | null,"test_ids": (string)[],"tests_text": string | null,"updated_at": string,"version": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "address": string,"collector_name"?: string | null,"created_at"?: string,"created_by": string,"id"?: string,"lab_facility_id": string,"lab_order_id"?: string | null,"latitude"?: number | null,"longitude"?: number | null,"notes"?: string | null,"patient_id": string,"phone": string,"preferred_date": string,"preferred_window": string,"request_number"?: string,"scheduled_at"?: string | null,"status"?: string,"status_reason"?: string | null,"test_ids"?: (string)[],"tests_text"?: string | null,"updated_at"?: string,"version"?: number
+                  }
+                  Update: {
+                    "address"?: string,"collector_name"?: string | null,"created_at"?: string,"created_by"?: string,"id"?: string,"lab_facility_id"?: string,"lab_order_id"?: string | null,"latitude"?: number | null,"longitude"?: number | null,"notes"?: string | null,"patient_id"?: string,"phone"?: string,"preferred_date"?: string,"preferred_window"?: string,"request_number"?: string,"scheduled_at"?: string | null,"status"?: string,"status_reason"?: string | null,"test_ids"?: (string)[],"tests_text"?: string | null,"updated_at"?: string,"version"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "home_lab_requests_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "home_lab_requests_lab_facility_id_fkey"
+      columns: ["lab_facility_id"]
+isOneToOne: false
+      referencedRelation: "facilities"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "home_lab_requests_lab_order_id_fkey"
+      columns: ["lab_order_id"]
+isOneToOne: false
+      referencedRelation: "lab_orders"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "home_lab_requests_patient_id_fkey"
+      columns: ["patient_id"]
+isOneToOne: false
+      referencedRelation: "patients"
       referencedColumns: ["id"]
     }
                   ]
@@ -2259,6 +2323,9 @@ isOneToOne: false
 "default_lab_id": string | null,
 "default_pharmacy_id": string | null,
 "description": string | null,
+"home_collection": boolean,
+"home_collection_fee_minor": number | null,
+"home_collection_note": string | null,
 "id": string,
 "is_public": boolean,
 "name": string,
@@ -2536,6 +2603,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"cancel_home_lab_request":
+{ Args: { "p_reason"?: string,"p_request_id": string }; Returns: undefined
+                           },
 "cancel_prescription":
 { Args: { "p_prescription_id": string,"p_reason": string }; Returns: undefined
                            },
@@ -2844,6 +2914,9 @@ isOneToOne: false
 "health_profile":
 { Args: { "p_patient_id": string }; Returns: Json
                            },
+"home_collection_labs":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
 "invoice_document":
 { Args: { "p_invoice_id": string }; Returns: Json
                            },
@@ -2879,6 +2952,9 @@ isOneToOne: false
               "branch": string,"is_default": boolean,"lab_id": string,"name": string,"tests": Json
             }[]
                            },
+"lab_home_requests":
+{ Args: { "p_lab_facility_id": string }; Returns: Json
+                           },
 "lab_order_detail":
 { Args: { "p_order_id": string }; Returns: Json
                            },
@@ -2909,6 +2985,37 @@ isOneToOne: false
 "lab_report":
 { Args: { "p_order_id": string }; Returns: Json
                            },
+"lab_update_home_request":
+{ Args: { "p_collector_name"?: string,"p_note"?: string,"p_request_id": string,"p_scheduled_at"?: string,"p_status": string }; Returns: {
+              "address": string,
+"collector_name": string | null,
+"created_at": string,
+"created_by": string,
+"id": string,
+"lab_facility_id": string,
+"lab_order_id": string | null,
+"latitude": number | null,
+"longitude": number | null,
+"notes": string | null,
+"patient_id": string,
+"phone": string,
+"preferred_date": string,
+"preferred_window": string,
+"request_number": string,
+"scheduled_at": string | null,
+"status": string,
+"status_reason": string | null,
+"test_ids": (string)[],
+"tests_text": string | null,
+"updated_at": string,
+"version": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "home_lab_requests"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "lab_worklist":
 { Args: { "p_lab_facility_id": string,"p_status"?: Database["public"]['Enums']["lab_status"] }; Returns: {
               "created_at": string,"item_count": number,"latest_barcode": string,"order_id": string,"order_number": string,"ordering_doctor": string,"ordering_facility": string,"patient_code": string,"patient_id": string,"patient_name": string,"released_count": number,"source": string,"status": Database["public"]['Enums']["lab_status"]
@@ -2948,6 +3055,9 @@ isOneToOne: false
 { Args: Record<PropertyKey, never>; Returns: {
               "created_at": string,"encounter_id": string,"has_critical": boolean,"kind": string,"lab_order_id": string,"order_number": string,"patient_code": string,"patient_id": string,"patient_name": string,"task_id": string
             }[]
+                           },
+"my_home_lab_requests":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "my_lab_orders":
 { Args: Record<PropertyKey, never>; Returns: {
@@ -3297,6 +3407,37 @@ isOneToOne: false
 "request_attachment_upload":
 { Args: { "p_file_name": string,"p_kind": string,"p_mime": string,"p_ref_id": string,"p_size": number }; Returns: Json
                            },
+"request_home_lab":
+{ Args: { "p_address": string,"p_date": string,"p_lab_facility_id": string,"p_lab_order_id"?: string,"p_latitude"?: number,"p_longitude"?: number,"p_notes"?: string,"p_patient_id": string,"p_phone": string,"p_test_ids": (string)[],"p_window": string }; Returns: {
+              "address": string,
+"collector_name": string | null,
+"created_at": string,
+"created_by": string,
+"id": string,
+"lab_facility_id": string,
+"lab_order_id": string | null,
+"latitude": number | null,
+"longitude": number | null,
+"notes": string | null,
+"patient_id": string,
+"phone": string,
+"preferred_date": string,
+"preferred_window": string,
+"request_number": string,
+"scheduled_at": string | null,
+"status": string,
+"status_reason": string | null,
+"test_ids": (string)[],
+"tests_text": string | null,
+"updated_at": string,
+"version": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "home_lab_requests"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "reschedule_appointment":
 { Args: { "p_appointment_id": string,"p_idempotency_key": string,"p_new_start": string,"p_reason"?: string }; Returns: {
               "blocked_period": unknown,
@@ -3525,6 +3666,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"set_home_collection":
+{ Args: { "p_enabled": boolean,"p_fee_minor"?: number,"p_lab_facility_id": string,"p_note"?: string }; Returns: undefined
+                           },
 "set_manual_availability":
 { Args: { "p_product_id": string,"p_status": string }; Returns: undefined
                            },

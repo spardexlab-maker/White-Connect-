@@ -1,4 +1,7 @@
 import { Link } from 'react-router-dom';
+import { House } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+import { useAsync } from '../../lib/useAsync';
 import { AlertOctagon, FlaskConical, Printer } from 'lucide-react';
 import { formatDateTime, labFlag, labState, labStateColor, labStateLabel, labStatus, patientLabStatus, type LabStatus } from '@app/shared';
 import { Badge, Ltr } from '../ui';
@@ -23,6 +26,10 @@ export interface LabDetail {
 export function LabResultView({ d, forPatient = false }: { d: LabDetail; forPatient?: boolean }) {
   const released = d.items.filter((i) => i.status === 'released').length;
   const statuses = forPatient ? patientLabStatus : labStatus;
+  // the doctor's order still waits for the sample, and this lab comes home → offer it
+  const waiting = forPatient && (d.order.status === 'ordered' || d.order.status === 'scheduled');
+  const homeLabs = useAsync(async () => (waiting ? ((await supabase.rpc('home_collection_labs')).data as { id: string }[] | null) ?? [] : []), [waiting]);
+  const canHome = !!homeLabs.data?.some((l) => l.id === d.order.lab_facility_id);
   return (
     <div className="stack">
       <div className="row-between">
@@ -31,6 +38,7 @@ export function LabResultView({ d, forPatient = false }: { d: LabDetail; forPati
           <span className="small muted">{d.patient.full_name} · <Ltr>{d.patient.public_code}</Ltr>{d.ordering_doctor ? ` · الطبيب الطالب: ${d.ordering_doctor}` : ' · زيارة مباشرة للمختبر'}</span>
         </div>
         <div className="row" style={{ gap: 'var(--s-2)' }}>
+          {canHome && <Link className="btn btn-primary btn-sm" to={`/patient/home-lab?lab=${d.order.lab_facility_id}&order=${d.order.id}`}><House size={16} aria-hidden />سحب منزلي</Link>}
           {released > 0 && <Link className="btn btn-secondary btn-sm" to={`/print/lab/${d.order.id}`}><Printer size={16} aria-hidden />تقرير PDF / طباعة</Link>}
           <Badge tone={statuses[d.order.status].tone}>{statuses[d.order.status].label}</Badge>
         </div>
