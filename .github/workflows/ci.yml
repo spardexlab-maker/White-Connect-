@@ -6,6 +6,10 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      # CI-only throwaway key for the local send-sms hook (test numbers never reach it);
+      # every supabase command reads config.toml, so it is set for the whole job
+      SEND_SMS_HOOK_SECRET: v1,whsec_Y2ktb25seS1zZW5kLXNtcy1ob29rLXNlY3JldC0wMQ==
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -20,9 +24,6 @@ jobs:
       - run: pnpm --filter @app/shared test
       - run: pnpm typecheck
       - run: supabase start -x studio,imgproxy,logflare,vector,supavisor
-        env:
-          # CI-only throwaway key for the local send-sms hook (test numbers never reach it)
-          SEND_SMS_HOOK_SECRET: v1,whsec_Y2ktb25seS1zZW5kLXNtcy1ob29rLXNlY3JldC0wMQ==
       - name: Serve edge functions (attachment scanner used by integration tests)
         run: |
           printf 'WORKER_SHARED_SECRET=ci-secret\nAPP_ENV=development\nSEND_SMS_HOOK_SECRET=v1,whsec_Y2ktb25seS1zZW5kLXNtcy1ob29rLXNlY3JldC0wMQ==\n' > supabase/functions/.env
