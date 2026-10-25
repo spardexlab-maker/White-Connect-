@@ -4,6 +4,7 @@ import { Download, RefreshCw, Sparkles } from 'lucide-react-native';
 import * as Updates from 'expo-updates';
 import { formatDateTime } from '@app/shared';
 import { checkForUpdate, currentVersion, downloadAndInstall, type AvailableUpdate } from '../lib/appUpdate';
+import { sendTestReport } from '../lib/errorReport';
 import { Alert, Button, Text } from './ui';
 import { color, radius, space } from '../theme';
 
@@ -160,6 +161,8 @@ export function useAppUpdate(): UpdateState {
 /** "Version + check for updates" row for the account screen. */
 export function UpdateCheckRow() {
   const { status, check, update, error, otaReady } = useAppUpdate();
+  const [test, setTest] = useState<string | null>(null);
+  const [testing, setTesting] = useState(false);
   const stamp = !Updates.isEmbeddedLaunch && Updates.createdAt ? ` · تحديث ${formatDateTime(Updates.createdAt.toISOString())}` : '';
   return (
     <View style={{ gap: space[2] }}>
@@ -173,6 +176,11 @@ export function UpdateCheckRow() {
         <Button title="التحقق من التحديثات" small variant="secondary" loading={status === 'checking'} icon={<RefreshCw size={16} color={color.primary} />} onPress={() => void check(true)} />
       </View>
       {error && <Alert tone="warning">{error}</Alert>}
+      {Platform.OS !== 'web' && (
+        <Button title="إرسال تقرير أعطال تجريبي" small variant="ghost" loading={testing}
+                onPress={async () => { setTesting(true); setTest(await sendTestReport()); setTesting(false); }} />
+      )}
+      {test && <Text variant="small" muted style={{ textAlign: 'center' }}>{test}</Text>}
     </View>
   );
 }
