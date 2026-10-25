@@ -6,11 +6,10 @@ import { Alert } from '../../components/ui';
 /** Who runs the platform. Values in [brackets] are still to be filled in by the owner (Spardex Lab). */
 export const COMPANY = {
   brand: 'Spardex Lab',
-  owner: '[اسم المسؤول عن المكتب]',
   registration: '',  // not registered yet — the line hides itself until there is a number
-  address: '[عنوان المكتب — المدينة، العراق]',
-  email: '[بريد الخصوصية والدعم]',
-  phone: '[رقم الدعم]',
+  address: 'كربلاء، العراق',
+  email: 'info@spardexlab.site',
+  phone: '+964 788 317 3489',
   website: 'https://spardexlab.site',
 };
 const UPDATED = '25 تشرين الأول 2026';
@@ -28,7 +27,8 @@ function LegalPage({ title, icon, children }: { title: string; icon: ReactNode; 
       <Link to="/patient" className="small row" style={{ gap: 6 }}><ArrowRight size={16} aria-hidden />الرجوع للمنصة</Link>
       <header className="stack-sm">
         <h1 className="row" style={{ fontSize: 'var(--f-h2)', gap: 10 }}>{icon}{title}</h1>
-        <p className="small muted">آخر تحديث: {UPDATED} · تديرها <C k="brand" /></p>
+        <p className="small muted row" style={{ gap: 6 }}>آخر تحديث: {UPDATED} · تديرها
+          <a href={COMPANY.website} className="row" style={{ gap: 6 }}><img src="/spardexlab-logo.png" alt="" width={22} height={22} style={{ borderRadius: 5 }} /><bdi>{COMPANY.brand}</bdi></a></p>
       </header>
       {pending && <Alert tone="warning">بعض بيانات المكتب قيد الإكمال وتظهر بين قوسين.</Alert>}
       <article className="card stack legal-body">{children}</article>
@@ -40,10 +40,10 @@ function LegalPage({ title, icon, children }: { title: string; icon: ReactNode; 
 function Contact() {
   return (
     <ul>
-      <li>المكتب: <C k="brand" /> — المسؤول: <C k="owner" />{COMPANY.registration && <>، رقم التسجيل: <C k="registration" /></>}</li>
+      <li>المكتب: <C k="brand" />{COMPANY.registration && <>، رقم التسجيل: <C k="registration" /></>}</li>
       <li>العنوان: <C k="address" /></li>
-      <li>البريد: <C k="email" /> · الهاتف: <C k="phone" /></li>
-      <li>الموقع: <C k="website" /></li>
+      <li>البريد: <a href={`mailto:${COMPANY.email}`}><bdi>{COMPANY.email}</bdi></a> · الهاتف وواتساب: <a href={`tel:${COMPANY.phone.replace(/\s/g, '')}`} dir="ltr">{COMPANY.phone}</a></li>
+      <li>الموقع: <a href={COMPANY.website}><bdi>{COMPANY.website.replace('https://', '')}</bdi></a></li>
     </ul>
   );
 }
