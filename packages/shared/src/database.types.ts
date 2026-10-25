@@ -3351,6 +3351,9 @@ isOneToOne: false
 "organization_report":
 { Args: { "p_from": string,"p_organization_id": string,"p_to": string }; Returns: Json
                            },
+"otp_send_allowed":
+{ Args: { "p_phone": string }; Returns: string
+                           },
 "outbox_claim":
 { Args: { "p_lease_seconds"?: number,"p_limit"?: number }; Returns: {
               "attempts": number,
