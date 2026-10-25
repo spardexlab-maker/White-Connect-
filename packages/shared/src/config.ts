@@ -13,6 +13,6 @@ export const productDefaults = {
 /** Sentry projects (crash reports). A DSN is a public address, safe in the app; empty = off.
  *  No patient data is sent: no IP, no user details, no request bodies. */
 export const sentry = {
-  webDsn: '',
+  webDsn: 'https://e0e5deddb6bb4ce0390defab3e7197f0@o4512317041737728.ingest.de.sentry.io/4512317063561296',
   mobileDsn: '',
 } as const;
