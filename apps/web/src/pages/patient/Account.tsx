@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import QRCode from 'qrcode';
-import { Briefcase, KeyRound, LogIn, LogOut, Maximize2, MessageCircle, QrCode, RefreshCw, UserPlus, UserRound } from 'lucide-react';
+import { Briefcase, KeyRound, Trash2, LogIn, LogOut, Maximize2, MessageCircle, QrCode, RefreshCw, UserPlus, UserRound } from 'lucide-react';
 import { errorMessage, fieldErrors, iraqiLocal, patientRegistrationSchema, toIraqiE164 } from '@app/shared';
 import { supabase } from '../../lib/supabase';
 import { unwrap, useAsync } from '../../lib/useAsync';
@@ -70,7 +70,7 @@ function PhoneSignIn({ hold }: { hold: (on: boolean) => void }) {
   if (!c.sentTo) return (
     <>
       <PhoneForm label="رقم الموبايل" button="أرسل الرمز على واتساب" busy={c.busy} error={c.error} onSend={(p) => void c.send(p)} onTyping={() => c.setError(null)} />
-      <p className="otp-consent">نستعمل رقمك فقط لتسجيل دخولك وإرسال رمز التحقق على واتساب.</p>
+      <p className="otp-consent">نستعمل رقمك فقط لتسجيل دخولك وإرسال رمز التحقق على واتساب. بالمتابعة توافق على <Link to="/terms">شروط الاستخدام</Link> و<Link to="/privacy">سياسة الخصوصية</Link>.</p>
     </>
   );
   return (
@@ -287,6 +287,45 @@ function PatientCard({ patientId, relationship }: { patientId: string; relations
   );
 }
 
+/** «احذف حسابي» — closes the account for good; the medical record stays with the clinics. */
+function DeleteAccount() {
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+  const toast = useToast();
+  const [open, setOpen] = useState(false);
+  const [typed, setTyped] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const close = () => { setOpen(false); setTyped(''); setError(null); };
+  const remove = async () => {
+    if (typed.trim() !== 'حذف') { setError('اكتب كلمة «حذف» للتأكيد.'); return; }
+    setBusy(true); setError(null);
+    const { error } = await supabase.functions.invoke('delete-account', { body: { confirm: 'DELETE' } });
+    if (error) {
+      const code = await (error as { context?: Response }).context?.json?.().then((b: { error?: string }) => b.error).catch(() => null);
+      setBusy(false);
+      setError(errorMessage({ message: `app:${code ?? 'delete_failed'}` }));
+      return;
+    }
+    await signOut();
+    toast('حُذف حسابك. نتمنى لك دوام الصحة.', 'success');
+    navigate('/patient', { replace: true });
+  };
+  return (
+    <section className="card stack-sm" aria-labelledby="delete-h">
+      <h2 id="delete-h" className="section-title row"><Trash2 size={20} aria-hidden />حذف الحساب</h2>
+      <p className="small muted">يحذف حسابك وطرق دخولك (الرقم والبريد وGoogle) ويوقف التذكيرات والإشعارات. <Link to="/account-deletion">شنو يصير ببياناتي؟</Link></p>
+      <div><Button variant="danger" size="sm" icon={<Trash2 size={16} />} onClick={() => setOpen(true)}>احذف حسابي</Button></div>
+      <ConfirmDialog open={open} title="حذف الحساب نهائياً؟" confirmLabel="احذف حسابي" tone="danger" loading={busy} onCancel={close} onConfirm={() => void remove()}>
+        <p>ما تكدر ترجع الحساب بعد الحذف. حجوزاتك القادمة تُلغى، والتذكيرات تتوقف.</p>
+        <p className="small muted">السجل الطبي (الزيارات والوصفات والتحاليل) يبقى محفوظاً عند الجهات اللي عالجتك كما يفرض القانون، بس ما يرتبط بأي حساب.</p>
+        <TextField label="للتأكيد اكتب: حذف" value={typed} onChange={(e) => { setTyped(e.target.value); setError(null); }} />
+        {error && <Alert tone="danger">{error}</Alert>}
+      </ConfirmDialog>
+    </section>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 export function Account() {
   const { session, access, refreshAccess, signOut, loading } = useAuth();
@@ -337,6 +376,9 @@ export function Account() {
           {access.patient_ids.map((p) => <PatientCard key={p.patient_id} patientId={p.patient_id} relationship={p.relationship} />)}
         </div>
       )}
+
+      {workspaces.length === 0 && <DeleteAccount />}
+      <p className="small muted legal-links"><Link to="/privacy">سياسة الخصوصية</Link> · <Link to="/terms">شروط الاستخدام</Link></p>
     </div>
   );
 }

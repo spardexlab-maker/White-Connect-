@@ -28,7 +28,8 @@
     "e2e:join": "node scripts/e2e-join.mjs",
     "e2e:openlab": "node scripts/e2e-open-lab.mjs",
     "film": "bash docs/film/build.sh",
-    "e2e:otp": "node scripts/e2e-phone-otp.mjs"
+    "e2e:otp": "node scripts/e2e-phone-otp.mjs",
+    "e2e:delete": "node scripts/e2e-account-deletion.mjs"
   },
   "devDependencies": {
     "@supabase/supabase-js": "^2.45.0",

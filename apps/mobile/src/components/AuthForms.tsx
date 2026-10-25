@@ -67,7 +67,7 @@ function PhoneSignIn() {
   if (!c.sentTo) return (
     <Stack gap={6}>
       <PhoneForm label="رقم الموبايل" button="أرسل الرمز على واتساب" busy={c.busy} error={c.error} onSend={(p) => void c.send(p)} onTyping={() => c.setError(null)} />
-      <Text variant="small" muted>نستعمل رقمك فقط لتسجيل دخولك وإرسال رمز التحقق على واتساب.</Text>
+      <Text variant="small" muted>نستعمل رقمك فقط لتسجيل دخولك وإرسال رمز التحقق على واتساب. بالمتابعة توافق على شروط الاستخدام وسياسة الخصوصية (أسفل الصفحة).</Text>
     </Stack>
   );
   return (

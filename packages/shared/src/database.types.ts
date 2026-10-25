@@ -3101,6 +3101,9 @@ isOneToOne: false
 "encounter_orders":
 { Args: { "p_encounter_id": string }; Returns: Json
                            },
+"erase_account":
+{ Args: { "p_user": string }; Returns: string
+                           },
 "expire_pending_appointments":
 { Args: Record<PropertyKey, never>; Returns: number
                            },

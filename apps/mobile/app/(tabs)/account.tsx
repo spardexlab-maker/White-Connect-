@@ -10,6 +10,7 @@ import { reportLocalReminders } from '../../src/lib/push';
 import { resyncDoses } from '../../src/lib/doseActions';
 import { AuthForm, PhoneLink, RegisterSelf, useAuthHold } from '../../src/components/AuthForms';
 import { PatientCard } from '../../src/components/PatientCard';
+import { DeleteAccount, LegalLinks } from '../../src/components/DeleteAccount';
 import { UpdateCheckRow } from '../../src/components/UpdatePrompt';
 import { Alert, Button, Card, Loading, Ltr, Row, Screen, SectionTitle, Stack, Text } from '../../src/components/ui';
 import { color } from '../../src/theme';
@@ -29,6 +30,7 @@ export default function Account() {
         <Card><AuthForm /></Card>
         <Text variant="small" muted>البحث والاطلاع على الأطباء متاح دون حساب. الحجوزات والرحلة الطبية تحتاج حساباً لحماية بياناتك.</Text>
         <Card><UpdateCheckRow /></Card>
+        <LegalLinks />
       </Screen>
     );
   }
@@ -66,6 +68,8 @@ export default function Account() {
           <Button title="فتح بوابة المهنيين" variant="secondary" icon={<Briefcase size={16} color={color.primary} />} onPress={() => void Linking.openURL(`${webUrl}/login`)} />
         </Card>
       )}
+      {!isStaff && <Card><DeleteAccount /></Card>}
+      <LegalLinks />
     </Screen>
   );
 }
