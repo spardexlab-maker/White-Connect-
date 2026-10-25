@@ -50,5 +50,18 @@
         }
       ]
     }
+  ],
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "white-connect.vercel.app"
+        }
+      ],
+      "destination": "https://white.spardexlab.site/$1",
+      "permanent": true
+    }
   ]
 }
