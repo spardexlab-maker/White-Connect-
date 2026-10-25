@@ -9,7 +9,7 @@ const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const key = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
 export const configMissing = !url || !key;
-export const webUrl = process.env.EXPO_PUBLIC_WEB_URL ?? 'https://white-connect.vercel.app';
+export const webUrl = process.env.EXPO_PUBLIC_WEB_URL ?? 'https://white.spardexlab.site';
 export const productName = productDefaults.name;
 
 /**
