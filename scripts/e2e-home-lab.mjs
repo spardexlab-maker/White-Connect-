@@ -39,7 +39,7 @@ step('lab switches home collection on');
 const p = await (await browser.newContext(ctxOpts)).newPage();
 p.on('pageerror', (e) => errors.push(e.message));
 await p.goto(`${BASE}/patient/account`);
-await p.getByRole('button', { name: /طرق دخول أخرى/ }).click();
+await p.getByRole('button', { name: /الدخول بالبريد الإلكتروني/ }).click();
 await p.getByLabel('البريد الإلكتروني').fill('hasan@demo.test');
 await p.getByLabel('كلمة المرور').fill(PASSWORD);
 await p.getByRole('button', { name: 'دخول', exact: true }).click();

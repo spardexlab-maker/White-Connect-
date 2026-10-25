@@ -46,8 +46,8 @@ function usePhoneCode(mode: 'signin' | 'link') {
   return { sentTo, setSentTo, busy, error, setError, wait, send, verify };
 }
 
-function PhoneForm({ label, button, busy, error, onSend, onTyping }: {
-  label: string; button: string; busy: boolean; error: string | null; onSend: (phone: string) => void; onTyping: () => void;
+function PhoneForm({ label, button, busy, error, onSend, onTyping, secondary }: {
+  label: string; button: string; busy: boolean; error: string | null; onSend: (phone: string) => void; onTyping: () => void; secondary?: boolean;
 }) {
   const [phone, setPhone] = useState('');
   return (
@@ -55,18 +55,19 @@ function PhoneForm({ label, button, busy, error, onSend, onTyping }: {
       <Field label={label} ltr keyboardType="phone-pad" autoComplete="tel" textContentType="telephoneNumber" placeholder="0770 123 4567"
              hint="نبعث لك رمز دخول على واتساب" value={phone} onChangeText={(t) => { setPhone(t); onTyping(); }} onSubmitEditing={() => onSend(phone)} />
       {error && <Alert tone="danger">{error}</Alert>}
-      <Button title={button} loading={busy} disabled={phone.replace(/\D/g, '').length < 10} onPress={() => onSend(phone)}
-              icon={<MessageCircle size={18} color={color.surface} />} />
+      <Button title={button} variant={secondary ? 'secondary' : 'primary'} loading={busy} disabled={phone.replace(/\D/g, '').length < 10} onPress={() => onSend(phone)}
+              icon={<MessageCircle size={18} color={secondary ? color.primary : color.surface} />} />
     </Stack>
   );
 }
 
 /** Phone number → 6-digit code on WhatsApp (the send-sms hook delivers it). */
-function PhoneSignIn() {
+function PhoneSignIn({ onCodeScreen }: { onCodeScreen: (on: boolean) => void }) {
   const c = usePhoneCode('signin');
+  useEffect(() => onCodeScreen(!!c.sentTo), [c.sentTo, onCodeScreen]);
   if (!c.sentTo) return (
     <Stack gap={6}>
-      <PhoneForm label="رقم الموبايل" button="أرسل الرمز على واتساب" busy={c.busy} error={c.error} onSend={(p) => void c.send(p)} onTyping={() => c.setError(null)} />
+      <PhoneForm label="رقم الموبايل" button="أرسل الرمز على واتساب" secondary busy={c.busy} error={c.error} onSend={(p) => void c.send(p)} onTyping={() => c.setError(null)} />
       <Text variant="small" muted>نستعمل رقمك فقط لتسجيل دخولك وإرسال رمز التحقق على واتساب. بالمتابعة توافق على شروط الاستخدام وسياسة الخصوصية (أسفل الصفحة).</Text>
     </Stack>
   );
@@ -114,7 +115,7 @@ export function PhoneLink() {
   );
 }
 
-/** WhatsApp code first; Google and email + password under «طرق دخول أخرى». */
+/** Google first (free for us, one tap), then a WhatsApp code; email + password under «الدخول بالبريد الإلكتروني». */
 export function AuthForm() {
   const [more, setMore] = useState(false);
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
@@ -124,6 +125,7 @@ export function AuthForm() {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [googleBusy, setGoogleBusy] = useState(false);
+  const [codeScreen, setCodeScreen] = useState(false);
 
   const submit = async () => {
     setBusy(true); setError(null); setInfo(null);
@@ -141,15 +143,18 @@ export function AuthForm() {
 
   return (
     <Stack>
-      <PhoneSignIn />
-      {!more && <Button title="طرق دخول أخرى (Google أو البريد الإلكتروني)" variant="ghost" onPress={() => setMore(true)} />}
-      {more && <>
+      {!codeScreen && <>
+      <GoogleButton loading={googleBusy} onPress={google} />
+      {error && !more && <Alert tone="danger">{error}</Alert>}
       <Row gap={8} style={{ alignItems: 'center' }}>
         <View style={{ flex: 1, height: 1, backgroundColor: color.border }} />
-        <Text variant="small" muted>أو</Text>
+        <Text variant="small" muted>أو برقم الموبايل</Text>
         <View style={{ flex: 1, height: 1, backgroundColor: color.border }} />
       </Row>
-      <GoogleButton loading={googleBusy} onPress={google} />
+      </>}
+      <PhoneSignIn onCodeScreen={setCodeScreen} />
+      {!more && !codeScreen && <Button title="الدخول بالبريد الإلكتروني" variant="ghost" onPress={() => setMore(true)} />}
+      {more && <>
       <Row gap={8} style={{ alignItems: 'center' }}>
         <View style={{ flex: 1, height: 1, backgroundColor: color.border }} />
         <Text variant="small" muted>أو بالبريد الإلكتروني</Text>
@@ -175,7 +180,7 @@ export function AuthForm() {
 function GoogleButton({ loading, onPress }: { loading: boolean; onPress: () => void }) {
   return (
     <Pressable onPress={onPress} disabled={loading} accessibilityRole="button" accessibilityLabel="المتابعة باستخدام Google"
-               style={({ pressed }) => ({ minHeight: 50, borderRadius: 12, borderWidth: 1, borderColor: '#DADCE0', backgroundColor: pressed ? '#F8F9FA' : '#fff',
+               style={({ pressed }) => ({ minHeight: 56, borderRadius: 12, borderWidth: 1.5, borderColor: '#DADCE0', elevation: 2, shadowColor: '#0F172A', shadowOpacity: 0.08, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, backgroundColor: pressed ? '#F8F9FA' : '#fff',
                                           flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 })}>
       {loading ? <ActivityIndicator color={color.primary} /> : (
         <Svg width={20} height={20} viewBox="0 0 48 48">
@@ -185,7 +190,7 @@ function GoogleButton({ loading, onPress }: { loading: boolean; onPress: () => v
           <Path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.7c-2.1 1.4-4.8 2.2-8.5 2.2-6.2 0-11.5-4.1-13.4-9.8l-7.9 6.1C6.6 42.6 14.6 48 24 48z" />
         </Svg>
       )}
-      <Text weight="semibold" style={{ color: '#1F1F1F' }}>المتابعة باستخدام Google</Text>
+      <Text weight="semibold" style={{ color: '#1F1F1F', fontSize: 16 }}>المتابعة باستخدام Google</Text>
     </Pressable>
   );
 }

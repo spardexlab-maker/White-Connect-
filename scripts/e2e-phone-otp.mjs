@@ -75,7 +75,7 @@ step('signing in again with the same number opens the same account');
 
 // 3) an email account links a number, then signs in by phone into the same account
 const h = await page();
-await h.getByRole('button', { name: /طرق دخول أخرى/ }).click();
+await h.getByRole('button', { name: /الدخول بالبريد الإلكتروني/ }).click();
 await h.getByLabel('البريد الإلكتروني').fill('hasan@demo.test');
 await h.getByLabel('كلمة المرور').fill('Demo-Pass-2026!');
 await h.getByRole('button', { name: 'دخول', exact: true }).click();

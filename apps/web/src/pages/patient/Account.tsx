@@ -50,8 +50,8 @@ function usePhoneCode(mode: 'signin' | 'link') {
   return { sentTo, setSentTo, busy, error, setError, wait, send, verify };
 }
 
-function PhoneForm({ label, button, busy, error, onSend, onTyping }: {
-  label: string; button: string; busy: boolean; error: string | null; onSend: (phone: string) => void; onTyping: () => void;
+function PhoneForm({ label, button, busy, error, onSend, onTyping, secondary }: {
+  label: string; button: string; busy: boolean; error: string | null; onSend: (phone: string) => void; onTyping: () => void; secondary?: boolean;
 }) {
   const [phone, setPhone] = useState('');
   return (
@@ -59,17 +59,18 @@ function PhoneForm({ label, button, busy, error, onSend, onTyping }: {
       <TextField label={label} type="tel" inputMode="tel" autoComplete="tel" ltr placeholder="0770 123 4567"
                  hint="نبعث لك رمز دخول على واتساب" value={phone} onChange={(e) => { setPhone(e.target.value); onTyping(); }} />
       {error && <Alert tone="danger">{error}</Alert>}
-      <Button type="submit" loading={busy} disabled={phone.replace(/\D/g, '').length < 10} icon={<MessageCircle size={18} />}>{button}</Button>
+      <Button type="submit" variant={secondary ? 'secondary' : 'primary'} loading={busy} disabled={phone.replace(/\D/g, '').length < 10} icon={<MessageCircle size={18} />}>{button}</Button>
     </form>
   );
 }
 
 /** Phone number → 6-digit code on WhatsApp (the send-sms hook delivers it). `hold` keeps this screen up until the check mark has played. */
-function PhoneSignIn({ hold }: { hold: (on: boolean) => void }) {
+function PhoneSignIn({ hold, onCodeScreen }: { hold: (on: boolean) => void; onCodeScreen: (on: boolean) => void }) {
   const c = usePhoneCode('signin');
+  useEffect(() => onCodeScreen(!!c.sentTo), [c.sentTo, onCodeScreen]);
   if (!c.sentTo) return (
     <>
-      <PhoneForm label="رقم الموبايل" button="أرسل الرمز على واتساب" busy={c.busy} error={c.error} onSend={(p) => void c.send(p)} onTyping={() => c.setError(null)} />
+      <PhoneForm label="رقم الموبايل" button="أرسل الرمز على واتساب" secondary busy={c.busy} error={c.error} onSend={(p) => void c.send(p)} onTyping={() => c.setError(null)} />
       <p className="otp-consent">نستعمل رقمك فقط لتسجيل دخولك وإرسال رمز التحقق على واتساب. بالمتابعة توافق على <Link to="/terms">شروط الاستخدام</Link> و<Link to="/privacy">سياسة الخصوصية</Link>.</p>
     </>
   );
@@ -125,6 +126,7 @@ function AuthForms({ hold }: { hold: (on: boolean) => void }) {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [googleBusy, setGoogleBusy] = useState(false);
+  const [codeScreen, setCodeScreen] = useState(false);
 
   const google = async () => {
     setGoogleBusy(true); setError(null);
@@ -148,12 +150,10 @@ function AuthForms({ hold }: { hold: (on: boolean) => void }) {
   };
 
   return (
-    <div className="card stack" style={{ maxWidth: 480 }}>
-      <PhoneSignIn hold={hold} />
-      {!more && <button type="button" className="auth-more" aria-expanded={false} onClick={() => setMore(true)}>طرق دخول أخرى (Google أو البريد الإلكتروني)</button>}
-      {more && (
+    <div className="card stack auth-card" style={{ maxWidth: 480 }}>
+      {/* Google first: free for us and one tap for most people; WhatsApp codes cost per message */}
+      {!codeScreen && (
         <>
-          <div className="or-sep"><span>أو</span></div>
           <button type="button" className="btn btn-google" onClick={google} disabled={googleBusy} aria-busy={googleBusy}>
             <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden>
               <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.9 6.1C12.5 13.6 17.8 9.5 24 9.5z" />
@@ -163,6 +163,14 @@ function AuthForms({ hold }: { hold: (on: boolean) => void }) {
             </svg>
             {googleBusy ? 'جارٍ التحويل إلى Google…' : 'المتابعة باستخدام Google'}
           </button>
+          {error && !more && <Alert tone="danger">{error}</Alert>}
+          <div className="or-sep"><span>أو برقم الموبايل</span></div>
+        </>
+      )}
+      <PhoneSignIn hold={hold} onCodeScreen={setCodeScreen} />
+      {!more && !codeScreen && <button type="button" className="auth-more" aria-expanded={false} onClick={() => setMore(true)}>الدخول بالبريد الإلكتروني</button>}
+      {more && (
+        <>
           <div className="or-sep"><span>أو بالبريد الإلكتروني</span></div>
           <Tabs label="الدخول" value={mode} onChange={(m) => { setMode(m); setError(null); }}
                 tabs={[{ id: 'signin', label: 'تسجيل الدخول' }, { id: 'signup', label: 'حساب جديد' }]} />

@@ -189,7 +189,7 @@ step('doctor got a review task and sees the released value (no automatic interpr
 // 6) patient journey
 const p = await (await browser.newContext(ctxOpts)).newPage();
 await p.goto(`${BASE}/patient/account`);
-await p.getByRole('button', { name: /طرق دخول أخرى/ }).click();
+await p.getByRole('button', { name: /الدخول بالبريد الإلكتروني/ }).click();
 await p.getByLabel('البريد الإلكتروني').fill('hasan@demo.test');
 await p.getByLabel('كلمة المرور').fill(PASSWORD);
 await p.getByRole('button', { name: 'دخول', exact: true }).click();

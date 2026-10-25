@@ -15,7 +15,7 @@ const ctxOpts = { viewport: { width: 1280, height: 900 }, locale: 'ar-IQ', timez
 // 1) Patient books via the web
 const p = await (await browser.newContext(ctxOpts)).newPage();
 await p.goto(`${BASE}/patient/account`);
-await p.getByRole('button', { name: /طرق دخول أخرى/ }).click();
+await p.getByRole('button', { name: /الدخول بالبريد الإلكتروني/ }).click();
 await p.getByLabel('البريد الإلكتروني').fill('hasan@demo.test');
 await p.getByLabel('كلمة المرور').fill(PASSWORD);
 await p.getByRole('button', { name: 'دخول', exact: true }).click();

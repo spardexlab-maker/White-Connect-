@@ -93,7 +93,7 @@ async function proLogin(page, email) {
 }
 async function patientLogin(page) {
   await page.goto(`${BASE}/patient/account`);
-  await page.getByRole('button', { name: /طرق دخول أخرى/ }).click();
+  await page.getByRole('button', { name: /الدخول بالبريد الإلكتروني/ }).click();
   await page.getByLabel('البريد الإلكتروني').fill('hasan@demo.test');
   await page.getByLabel('كلمة المرور').fill(PASSWORD);
   await page.getByRole('button', { name: 'دخول', exact: true }).click();
