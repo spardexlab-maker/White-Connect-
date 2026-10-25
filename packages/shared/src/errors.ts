@@ -70,6 +70,10 @@ const messages: Record<string, string> = {
   invalid_lab: 'المختبر المختار غير متاح.',
   invalid_test: 'فحص غير متاح في هذا المختبر.',
   nothing_to_release: 'لا توجد نتائج مسودة محددة للاعتماد.',
+  phone_invalid: 'اكتب رقم موبايل عراقي صحيح من 11 رقماً يبدأ بـ 07.',
+  otp_rate_limited: 'طلبت رموزاً كثيرة لهذا الرقم. انتظر قليلاً ثم أعد المحاولة.',
+  otp_send_failed: 'تعذّر إرسال الرمز على واتساب. تأكد أن الرقم عليه واتساب ثم أعد المحاولة.',
+  otp_unavailable: 'الدخول برقم الهاتف غير متاح حالياً. استخدم Google أو البريد الإلكتروني.',
 };
 
 export function errorCode(err: unknown): string | null {
@@ -83,5 +87,11 @@ export function errorMessage(err: unknown): string {
   const msg = typeof err === 'object' && err && 'message' in err ? String((err as { message: unknown }).message) : '';
   if (/fetch|network|Failed to fetch/i.test(msg)) return 'تعذّر الاتصال بالخادم. تحقق من الشبكة ثم أعد المحاولة.';
   if (/Invalid login credentials/i.test(msg)) return 'بيانات الدخول غير صحيحة.';
+  const hook = msg.match(/app:([a-z_]+)/);           // codes from the send-SMS hook arrive inside the auth error text
+  if (hook && messages[hook[1]]) return messages[hook[1]];
+  if (/token has expired|otp.*(expired|invalid)|invalid.*otp/i.test(msg)) return 'الرمز غير صحيح أو انتهت صلاحيته. اطلب رمزاً جديداً.';
+  if (/for security purposes|request this after|over_sms_send_rate_limit|sms.*rate limit/i.test(msg)) return 'انتظر دقيقة قبل طلب رمز جديد.';
+  if (/phone.*(invalid|not valid)|invalid phone/i.test(msg)) return messages.phone_invalid;
+  if (/(sms|phone).*(provider|disabled|not enabled)|unsupported phone provider/i.test(msg)) return messages.otp_unavailable;
   return 'حدث خطأ غير متوقع. أعد المحاولة.';
 }

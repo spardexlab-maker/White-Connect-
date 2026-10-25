@@ -3,6 +3,7 @@ import { color, contrastPairs, contrastRatio } from '../src/tokens';
 import { errorMessage } from '../src/errors';
 import { addDays, formatMoney, localDateKey, weekdayOf } from '../src/format';
 import { quickBookingSchema } from '../src/validation';
+import { iraqiLocal, toIraqiE164 } from '../src/phone';
 
 describe('design tokens', () => {
   it.each(contrastPairs)('%s on %s reaches WCAG AA 4.5:1', (fg, bg) => {
@@ -33,4 +34,14 @@ describe('errors and formatting', () => {
     expect(addDays('2026-10-31', 1)).toBe('2026-11-01');
     expect(weekdayOf('2026-10-18')).toBe(0);
   });
+});
+
+describe('Iraqi phone numbers', () => {
+  it.each([
+    ['07701234567', '+9647701234567'], ['0770 123 4567', '+9647701234567'], ['+964 770 123 4567', '+9647701234567'],
+    ['009647801234567', '+9647801234567'], ['7501234567', '+9647501234567'], ['٠٧٧٠١٢٣٤٥٦٧', '+9647701234567'],
+  ])('%s → %s', (input, out) => expect(toIraqiE164(input)).toBe(out));
+  it.each(['0770123456', '0612345678', '+15551234567', '', 'abc'])('rejects %s', (input) => expect(toIraqiE164(input)).toBeNull());
+  it('reads back in local form', () => expect(iraqiLocal('+9647701234567')).toBe('0770 123 4567'));
+  it('maps hook codes inside auth errors', () => expect(errorMessage({ message: 'Error running hook URI: app:otp_rate_limited' })).toContain('انتظر'));
 });

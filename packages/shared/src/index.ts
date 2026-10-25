@@ -13,3 +13,4 @@ export * from './dateParts';
 export * from './aiChat';
 export * from './diagnoses';
 export * from './homeLab';
+export * from './phone';

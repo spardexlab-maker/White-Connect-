@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import QRCode from 'qrcode';
-import { Briefcase, KeyRound, LogIn, LogOut, Maximize2, QrCode, RefreshCw, UserPlus, UserRound } from 'lucide-react';
-import { errorMessage, fieldErrors, patientRegistrationSchema } from '@app/shared';
+import { Briefcase, KeyRound, LogIn, LogOut, Maximize2, MessageCircle, QrCode, RefreshCw, UserPlus, UserRound } from 'lucide-react';
+import { errorMessage, fieldErrors, iraqiLocal, patientRegistrationSchema, toIraqiE164 } from '@app/shared';
 import { supabase } from '../../lib/supabase';
 import { unwrap, useAsync } from '../../lib/useAsync';
 import { useAuth } from '../../lib/auth';
@@ -22,6 +22,60 @@ export function SignInPrompt({ title }: { title: string }) {
         </EmptyState>
       </div>
     </div>
+  );
+}
+
+/** Phone number → 6-digit code on WhatsApp (the send-sms hook delivers it). */
+function PhoneSignIn() {
+  const [phone, setPhone] = useState('');
+  const [sentTo, setSentTo] = useState<string | null>(null);
+  const [code, setCode] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [wait, setWait] = useState(0);
+  useEffect(() => { if (!wait) return; const t = window.setTimeout(() => setWait(wait - 1), 1000); return () => window.clearTimeout(t); }, [wait]);
+
+  const send = async (e?: FormEvent) => {
+    e?.preventDefault();
+    const e164 = toIraqiE164(phone);
+    if (!e164) { setError(errorMessage({ message: 'app:phone_invalid' })); return; }
+    setBusy(true); setError(null);
+    const { error } = await supabase.auth.signInWithOtp({ phone: e164 });
+    setBusy(false);
+    if (error) { setError(errorMessage(error)); return; }
+    setSentTo(e164); setCode(''); setWait(60);
+  };
+  const verify = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!sentTo) return;
+    setBusy(true); setError(null);
+    const { error } = await supabase.auth.verifyOtp({ phone: sentTo, token: code.trim(), type: 'sms' });
+    setBusy(false);
+    if (error) setError(errorMessage(error));
+  };
+
+  if (!sentTo) return (
+    <form className="stack" onSubmit={send} noValidate>
+      <TextField label="رقم الموبايل" type="tel" inputMode="tel" autoComplete="tel" ltr placeholder="0770 123 4567"
+                 hint="نبعث لك رمز دخول على واتساب" value={phone} onChange={(e) => { setPhone(e.target.value); setError(null); }} />
+      {error && <Alert tone="danger">{error}</Alert>}
+      <Button type="submit" loading={busy} disabled={phone.replace(/\D/g, '').length < 10} icon={<MessageCircle size={18} />}>أرسل الرمز على واتساب</Button>
+    </form>
+  );
+  return (
+    <form className="stack" onSubmit={verify} noValidate>
+      <Alert tone="info">بعثنا رمزاً من 6 أرقام على واتساب الرقم <Ltr>{iraqiLocal(sentTo)}</Ltr></Alert>
+      <TextField label="رمز الدخول" inputMode="numeric" autoComplete="one-time-code" ltr maxLength={6} autoFocus
+                 value={code} onChange={(e) => { setCode(e.target.value.replace(/\D/g, '').slice(0, 6)); setError(null); }} />
+      {error && <Alert tone="danger">{error}</Alert>}
+      <Button type="submit" loading={busy} disabled={code.length !== 6} icon={<LogIn size={18} />}>دخول</Button>
+      <div className="row-between">
+        <Button type="button" variant="ghost" size="sm" onClick={() => { setSentTo(null); setError(null); }}>تغيير الرقم</Button>
+        <Button type="button" variant="ghost" size="sm" disabled={wait > 0 || busy} onClick={() => void send()}>
+          {wait > 0 ? `إعادة الإرسال بعد ${wait} ث` : 'أعد إرسال الرمز'}
+        </Button>
+      </div>
+    </form>
   );
 }
 
@@ -57,6 +111,8 @@ function AuthForms() {
 
   return (
     <div className="card stack" style={{ maxWidth: 480 }}>
+      <PhoneSignIn />
+      <div className="or-sep"><span>أو</span></div>
       <button type="button" className="btn btn-google" onClick={google} disabled={googleBusy} aria-busy={googleBusy}>
         <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden>
           <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.9 6.1C12.5 13.6 17.8 9.5 24 9.5z" />
@@ -78,7 +134,6 @@ function AuthForms() {
         <Button type="submit" loading={busy} icon={mode === 'signin' ? <LogIn size={18} /> : <UserPlus size={18} />}>
           {mode === 'signin' ? 'دخول' : 'إنشاء الحساب'}
         </Button>
-        <p className="small muted">الدخول برقم الهاتف ورمز SMS يتطلب ربط مزود رسائل مدفوع؛ لم يُفعّل في هذه البيئة بعد.</p>
       </form>
     </div>
   );
@@ -88,7 +143,7 @@ function AuthForms() {
 function RegisterSelf({ onDone }: { onDone: () => void }) {
   const { session } = useAuth();
   const googleName = (session?.user.user_metadata?.full_name ?? session?.user.user_metadata?.name ?? '') as string;
-  const [form, setForm] = useState({ fullName: googleName, sex: '', birthDate: '', phone: '' });
+  const [form, setForm] = useState({ fullName: googleName, sex: '', birthDate: '', phone: iraqiLocal(session?.user.phone).replace(/\s/g, '') });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);

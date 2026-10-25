@@ -1,15 +1,67 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { LogIn, UserPlus } from 'lucide-react-native';
-import { errorMessage, fieldErrors, patientRegistrationSchema } from '@app/shared';
+import { LogIn, MessageCircle, UserPlus } from 'lucide-react-native';
+import { errorMessage, fieldErrors, iraqiLocal, patientRegistrationSchema, toIraqiE164 } from '@app/shared';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../lib/auth';
 import { signInWithGoogle } from '../lib/googleAuth';
 import { BirthDateField } from './BirthDateField';
 import { Alert, Button, Chip, Field, Row, Segmented, Stack, Text } from './ui';
 import { color } from '../theme';
 
-/** Email + password sign-in / sign-up (SMS OTP needs a paid provider — not enabled yet). */
+/** Phone number → 6-digit code on WhatsApp (the send-sms hook delivers it). */
+function PhoneSignIn() {
+  const [phone, setPhone] = useState('');
+  const [sentTo, setSentTo] = useState<string | null>(null);
+  const [code, setCode] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [wait, setWait] = useState(0);
+  useEffect(() => { if (!wait) return; const t = setTimeout(() => setWait(wait - 1), 1000); return () => clearTimeout(t); }, [wait]);
+
+  const send = async () => {
+    const e164 = toIraqiE164(phone);
+    if (!e164) { setError(errorMessage({ message: 'app:phone_invalid' })); return; }
+    setBusy(true); setError(null);
+    const { error } = await supabase.auth.signInWithOtp({ phone: e164 });
+    setBusy(false);
+    if (error) { setError(errorMessage(error)); return; }
+    setSentTo(e164); setCode(''); setWait(60);
+  };
+  const verify = async () => {
+    if (!sentTo) return;
+    setBusy(true); setError(null);
+    const { error } = await supabase.auth.verifyOtp({ phone: sentTo, token: code.trim(), type: 'sms' });
+    setBusy(false);
+    if (error) setError(errorMessage(error));
+  };
+
+  if (!sentTo) return (
+    <Stack>
+      <Field label="رقم الموبايل" ltr keyboardType="phone-pad" autoComplete="tel" textContentType="telephoneNumber" placeholder="0770 123 4567"
+             hint="نبعث لك رمز دخول على واتساب" value={phone} onChangeText={(t) => { setPhone(t); setError(null); }} onSubmitEditing={send} />
+      {error && <Alert tone="danger">{error}</Alert>}
+      <Button title="أرسل الرمز على واتساب" loading={busy} disabled={phone.replace(/\D/g, '').length < 10} onPress={send}
+              icon={<MessageCircle size={18} color={color.surface} />} />
+    </Stack>
+  );
+  return (
+    <Stack>
+      <Alert tone="info">بعثنا رمزاً من 6 أرقام على واتساب الرقم {iraqiLocal(sentTo)}</Alert>
+      <Field label="رمز الدخول" ltr keyboardType="number-pad" autoComplete="sms-otp" textContentType="oneTimeCode" maxLength={6} autoFocus
+             value={code} onChangeText={(t) => { setCode(t.replace(/\D/g, '').slice(0, 6)); setError(null); }} onSubmitEditing={verify} />
+      {error && <Alert tone="danger">{error}</Alert>}
+      <Button title="دخول" loading={busy} disabled={code.length !== 6} onPress={verify} icon={<LogIn size={18} color={color.surface} />} />
+      <Row between>
+        <Button title="تغيير الرقم" variant="ghost" small onPress={() => { setSentTo(null); setError(null); }} />
+        <Button title={wait > 0 ? `إعادة الإرسال بعد ${wait} ث` : 'أعد إرسال الرمز'} variant="ghost" small disabled={wait > 0 || busy} onPress={send} />
+      </Row>
+    </Stack>
+  );
+}
+
+/** WhatsApp code first, then Google, then email + password. */
 export function AuthForm() {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
@@ -35,6 +87,12 @@ export function AuthForm() {
 
   return (
     <Stack>
+      <PhoneSignIn />
+      <Row gap={8} style={{ alignItems: 'center' }}>
+        <View style={{ flex: 1, height: 1, backgroundColor: color.border }} />
+        <Text variant="small" muted>أو</Text>
+        <View style={{ flex: 1, height: 1, backgroundColor: color.border }} />
+      </Row>
       <GoogleButton loading={googleBusy} onPress={google} />
       <Row gap={8} style={{ alignItems: 'center' }}>
         <View style={{ flex: 1, height: 1, backgroundColor: color.border }} />
@@ -52,7 +110,6 @@ export function AuthForm() {
       {info && <Alert tone="success">{info}</Alert>}
       <Button title={mode === 'signin' ? 'دخول' : 'إنشاء الحساب'} loading={busy} disabled={!email || password.length < 8} onPress={submit}
               icon={mode === 'signin' ? <LogIn size={18} color={color.surface} /> : <UserPlus size={18} color={color.surface} />} />
-      <Text variant="small" muted>الدخول برقم الهاتف ورمز SMS يتطلب ربط مزود رسائل؛ لم يُفعّل في هذه البيئة بعد.</Text>
     </Stack>
   );
 }
@@ -78,7 +135,8 @@ function GoogleButton({ loading, onPress }: { loading: boolean; onPress: () => v
 
 /** Patient profile for the signed-in account — only the name is required. */
 export function RegisterSelf({ onDone }: { onDone: () => void }) {
-  const [form, setForm] = useState({ fullName: '', sex: '', birthDate: '', phone: '' });
+  const { session } = useAuth();
+  const [form, setForm] = useState({ fullName: '', sex: '', birthDate: '', phone: iraqiLocal(session?.user.phone).replace(/\s/g, '') });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
