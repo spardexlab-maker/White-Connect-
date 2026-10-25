@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { CheckCircle2, KeyRound } from 'lucide-react';
 import { errorMessage } from '@app/shared';
 import { productName, supabase } from '../lib/supabase';
@@ -9,6 +9,9 @@ import { Alert, Button, SkeletonList, TextField } from '../components/ui';
 /** Choose a new password: opened from the reset email link, or while signed in (e.g. with Google). */
 export function ResetPassword() {
   const { session, loading } = useAuth();
+  const [params] = useSearchParams();
+  const next = params.get('next');
+  const back = next && /^\/(patient|workspace)\b/.test(next) ? next : '/workspace';   // patients come back to «حسابي»
   const [pw, setPw] = useState('');
   const [pw2, setPw2] = useState('');
   const [busy, setBusy] = useState(false);
@@ -28,7 +31,7 @@ export function ResetPassword() {
         <strong className="row" style={{ gap: 8 }}><KeyRound size={18} aria-hidden />{productName} — كلمة مرور جديدة</strong>
         {loading && <SkeletonList rows={2} />}
         {!loading && !session && (
-          <Alert tone="warning">الرابط منتهي أو غير صالح. ارجع إلى <Link to="/login">صفحة الدخول</Link> واضغط «نسيت كلمة المرور؟» من جديد، أو ادخل بحساب Google.</Alert>
+          <Alert tone="warning">الرابط منتهي أو غير صالح. ارجع إلى <Link to={back.startsWith('/patient') ? '/patient/account' : '/login'}>صفحة الدخول</Link> واضغط «نسيت كلمة المرور؟» من جديد، أو ادخل بحساب Google.</Alert>
         )}
         {session && !done && (
           <>
@@ -45,7 +48,7 @@ export function ResetPassword() {
           <>
             <div className="row" style={{ gap: 8 }}><CheckCircle2 color="var(--c-success)" aria-hidden /><strong>تم حفظ كلمة المرور الجديدة</strong></div>
             <span className="small">صار تكدر تدخل بالبريد وكلمة المرور، أو بحساب Google — الاثنين لنفس الحساب.</span>
-            <Link to="/workspace" className="btn btn-primary btn-block">متابعة</Link>
+            <Link to={back} className="btn btn-primary btn-block">متابعة</Link>
           </>
         )}
       </form>

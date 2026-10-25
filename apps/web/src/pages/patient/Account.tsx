@@ -138,6 +138,15 @@ function AuthForms({ hold }: { hold: (on: boolean) => void }) {
     if (error) { setGoogleBusy(false); setError(errorMessage(error)); }
   };
 
+  // the email link signs them in and opens /reset-password, then back to «حسابي»
+  const sendReset = async () => {
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) { setError('اكتب بريدك الإلكتروني أولاً، بعدين دوس «نسيت كلمة المرور؟».'); return; }
+    setBusy(true); setError(null); setInfo(null);
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${window.location.origin}/reset-password?next=/patient/account` });
+    setBusy(false);
+    if (error) setError(errorMessage(error)); else setInfo('أرسلنا رابطاً إلى بريدك — افتحه واختر كلمة مرور جديدة. (تحقق من الرسائل غير المرغوبة إن لم يصل.)');
+  };
+
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     setBusy(true); setError(null); setInfo(null);
@@ -183,6 +192,7 @@ function AuthForms({ hold }: { hold: (on: boolean) => void }) {
             <Button type="submit" loading={busy} icon={mode === 'signin' ? <LogIn size={18} /> : <UserPlus size={18} />}>
               {mode === 'signin' ? 'دخول' : 'إنشاء الحساب'}
             </Button>
+            {mode === 'signin' && <Button type="button" variant="ghost" size="sm" onClick={() => void sendReset()}>نسيت كلمة المرور؟</Button>}
           </form>
         </>
       )}

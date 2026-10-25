@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { LogIn, MessageCircle, UserPlus } from 'lucide-react-native';
 import { errorMessage, fieldErrors, iraqiLocal, patientRegistrationSchema, toIraqiE164 } from '@app/shared';
-import { supabase } from '../lib/supabase';
+import { supabase, webUrl } from '../lib/supabase';
 import { useAuth } from '../lib/auth';
 import { OtpVerify } from './OtpVerify';
 import { signInWithGoogle } from '../lib/googleAuth';
@@ -136,6 +136,15 @@ export function AuthForm() {
     if (mode === 'signup' && !res.data.session) setInfo('تم إنشاء الحساب. افتح رسالة التأكيد في بريدك ثم سجّل الدخول.');
   };
 
+  // the email link opens the website to choose a new password, then the app signs in with it
+  const sendReset = async () => {
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) { setError('اكتب بريدك الإلكتروني أولاً، بعدين دوس «نسيت كلمة المرور؟».'); return; }
+    setBusy(true); setError(null); setInfo(null);
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${webUrl}/reset-password?next=/patient/account` });
+    setBusy(false);
+    if (error) setError(errorMessage(error)); else setInfo('أرسلنا رابطاً إلى بريدك — افتحه واختر كلمة مرور جديدة، وبعدها ادخل هنا بكلمة المرور الجديدة.');
+  };
+
   const google = async () => {
     setGoogleBusy(true); setError(null); setInfo(null);
     try { await signInWithGoogle(); } catch (e) { setError(errorMessage(e)); } finally { setGoogleBusy(false); }
@@ -171,6 +180,7 @@ export function AuthForm() {
       {info && <Alert tone="success">{info}</Alert>}
       <Button title={mode === 'signin' ? 'دخول' : 'إنشاء الحساب'} loading={busy} disabled={!email || password.length < 8} onPress={submit}
               icon={mode === 'signin' ? <LogIn size={18} color={color.surface} /> : <UserPlus size={18} color={color.surface} />} />
+      {mode === 'signin' && <Button title="نسيت كلمة المرور؟" variant="ghost" small onPress={() => void sendReset()} />}
       </>}
     </Stack>
   );
