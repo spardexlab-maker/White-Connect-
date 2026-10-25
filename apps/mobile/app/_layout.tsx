@@ -13,7 +13,7 @@ import { UpdateProvider } from '../src/components/UpdatePrompt';
 import { handleDoseResponse, resyncDoses } from '../src/lib/doseActions';
 import { watchPushToken } from '../src/lib/push';
 import { configMissing } from '../src/lib/supabase';
-import { installErrorReporting, reportError } from '../src/lib/errorReport';
+import { installErrorReporting, reportError, withCrashReporting } from '../src/lib/errorReport';
 import { Alert, Button, Screen, Text } from '../src/components/ui';
 import { color, family } from '../src/theme';
 
@@ -41,7 +41,9 @@ export function ErrorBoundary({ error, retry }: { error: Error; retry: () => Pro
   );
 }
 
-export default function RootLayout() {
+export default withCrashReporting(RootLayout);
+
+function RootLayout() {
   const [loaded] = useFonts({ IBMPlexSansArabic_400Regular, IBMPlexSansArabic_500Medium, IBMPlexSansArabic_600SemiBold, IBMPlexSansArabic_700Bold });
 
   useEffect(() => { if (loaded) void SplashScreen.hideAsync().catch(() => undefined); }, [loaded]);

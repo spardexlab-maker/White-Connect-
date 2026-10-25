@@ -75,6 +75,11 @@ jobs:
         working-directory: apps/mobile/android
         env:
           NODE_ENV: production
+          # crash reports with readable stacks: uploads source maps only when the token is set
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_MOBILE_PROJECT }}
+          SENTRY_DISABLE_AUTO_UPLOAD: ${{ secrets.SENTRY_AUTH_TOKEN == '' && 'true' || 'false' }}
         run: ./gradlew assembleRelease --no-daemon
 
       - name: Publish release

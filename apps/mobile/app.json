@@ -3,8 +3,8 @@
     "name": "منصة الرعاية",
     "slug": "white-connect",
     "scheme": "whiteconnect",
-    "version": "0.7.0",
-    "runtimeVersion": "2",
+    "version": "0.8.0",
+    "runtimeVersion": "3",
     "updates": {
       "url": "https://utuwjykgubsqqescpiwz.supabase.co/functions/v1/app-update",
       "enabled": true,
@@ -44,7 +44,7 @@
         "ACCESS_BACKGROUND_LOCATION",
         "READ_CONTACTS"
       ],
-      "versionCode": 10,
+      "versionCode": 11,
       "googleServicesFile": "./google-services.json"
     },
     "web": {
@@ -91,7 +91,8 @@
         {
           "microphonePermission": "يُستخدم المايكروفون فقط عندما تضغط زر المايك للتحدث مع المساعد الذكي، ولا يُحفظ التسجيل."
         }
-      ]
+      ],
+      "@sentry/react-native"
     ],
     "experiments": {
       "typedRoutes": false

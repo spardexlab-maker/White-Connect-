@@ -1,5 +1,8 @@
+import type { ComponentType } from 'react';
 import { Platform } from 'react-native';
 import * as Updates from 'expo-updates';
+import * as Sentry from '@sentry/react-native';
+import { sentry } from '@app/shared';
 import { supabase } from './supabase';
 
 // Unexpected errors go to «صحة النظام» (report_client_error): message, screen and app version only.
@@ -9,6 +12,7 @@ const version = () => `${require('../../app.json').expo.version}${Updates.update
 export function reportError(err: unknown, screen?: string) {
   if (Platform.OS === 'web') return;   // the web build reports through the website's own path
   const e = err instanceof Error ? err : new Error(typeof err === 'string' ? err : String(err));
+  if (sentryOn) Sentry.captureException(e);
   const message = `${e.name}: ${e.message}`.slice(0, 500);
   if (seen.has(message) || seen.size >= 10) return;
   seen.add(message);
@@ -16,6 +20,27 @@ export function reportError(err: unknown, screen?: string) {
     p_source: Platform.OS === 'ios' ? 'ios' : 'android', p_message: message, p_stack: e.stack?.slice(0, 4000), p_url: screen, p_app_version: version(),
   }).then(() => undefined, () => undefined);
 }
+
+// Sentry also catches native crashes (the app closing before JavaScript can report).
+// Privacy first: no IP or user details, no screenshots / view trees, no request bodies, no tracing.
+const sentryOn = !!sentry.mobileDsn && Platform.OS !== 'web';
+if (sentryOn) {
+  Sentry.init({
+    dsn: sentry.mobileDsn,
+    release: `patient-app@${require('../../app.json').expo.version}`,
+    dist: Updates.updateId ?? undefined,
+    environment: __DEV__ ? 'development' : 'production',
+    sendDefaultPii: false,
+    attachScreenshot: false,
+    attachViewHierarchy: false,
+    reportAccessibilityIdentifier: false,
+    tracesSampleRate: 0,
+    beforeSend(event) { delete event.user; if (event.request) { delete event.request.data; delete event.request.cookies; } return event; },
+    beforeBreadcrumb: (b) => (b.category === 'console' || b.category === 'touch' ? null : b),
+  });
+}
+/** The root component wrapped by Sentry when it is on (touch/navigation context for crashes). */
+export const withCrashReporting = (C: ComponentType<Record<string, unknown>>) => (sentryOn ? Sentry.wrap(C) : C);
 
 /** Errors outside a screen (timers, promises): report, then let React Native handle them as before. */
 export function installErrorReporting() {

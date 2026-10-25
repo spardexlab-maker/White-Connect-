@@ -22,6 +22,8 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      HAS_SENTRY: ${{ secrets.SENTRY_AUTH_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -41,6 +43,15 @@ jobs:
           cp .env.example .env
           npx expo export -p ios -p android --output-dir dist-ota
           npx expo config --type public --json > expo-config.json
+
+      - name: Upload source maps to Sentry
+        if: env.HAS_SENTRY == 'true'
+        working-directory: apps/mobile
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_MOBILE_PROJECT }}
+        run: npx sentry-expo-upload-sourcemaps dist-ota
 
       - name: Build manifests
         id: m

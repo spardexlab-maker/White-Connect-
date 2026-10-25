@@ -9,3 +9,10 @@ export const productDefaults = {
   defaultCurrency: 'IQD',
   defaultLocale: 'ar',
 } as const;
+
+/** Sentry projects (crash reports). A DSN is a public address, safe in the app; empty = off.
+ *  No patient data is sent: no IP, no user details, no request bodies. */
+export const sentry = {
+  webDsn: '',
+  mobileDsn: '',
+} as const;
