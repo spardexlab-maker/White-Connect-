@@ -47,6 +47,6 @@ Deno.serve(async (req) => {
   const r = await deliver(phone, otp);
   // identifiers only — never the code; the number is cut to its last 3 digits
   console.log(JSON.stringify({ event: 'otp_send', provider: r.provider, ok: r.ok, error: r.error ?? null, to: `…${phone.slice(-3)}` }));
-  if (!r.ok) return fail(r.status ?? 502, r.code ?? 'otp_send_failed');
+  if (!r.ok) return fail(r.status ?? 400, r.code ?? 'otp_send_failed');   // 4xx: Auth does not retry (a retry is another paid send)
   return new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } });
 });
