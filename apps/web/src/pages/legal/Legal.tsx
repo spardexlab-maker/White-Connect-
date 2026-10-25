@@ -6,9 +6,9 @@ import { Alert } from '../../components/ui';
 /** Who runs the platform. Values in [brackets] are still to be filled in by the owner (Spardex Lab). */
 export const COMPANY = {
   brand: 'Spardex Lab',
-  legalName: '[الاسم القانوني لشركة Spardex Lab]',
-  registration: '[رقم تسجيل الشركة]',
-  address: '[عنوان الشركة — المدينة، العراق]',
+  owner: '[اسم المسؤول عن المكتب]',
+  registration: '',  // not registered yet — the line hides itself until there is a number
+  address: '[عنوان المكتب — المدينة، العراق]',
   email: '[بريد الخصوصية والدعم]',
   phone: '[رقم الدعم]',
   website: 'https://spardexlab.site',
@@ -30,7 +30,7 @@ function LegalPage({ title, icon, children }: { title: string; icon: ReactNode; 
         <h1 className="row" style={{ fontSize: 'var(--f-h2)', gap: 10 }}>{icon}{title}</h1>
         <p className="small muted">آخر تحديث: {UPDATED} · تديرها <C k="brand" /></p>
       </header>
-      {pending && <Alert tone="warning">بعض بيانات الشركة قيد الإكمال وتظهر بين قوسين.</Alert>}
+      {pending && <Alert tone="warning">بعض بيانات المكتب قيد الإكمال وتظهر بين قوسين.</Alert>}
       <article className="card stack legal-body">{children}</article>
       <nav className="small muted"><Link to="/privacy">سياسة الخصوصية</Link> · <Link to="/terms">شروط الاستخدام</Link> · <Link to="/account-deletion">حذف الحساب</Link></nav>
     </main>
@@ -40,7 +40,7 @@ function LegalPage({ title, icon, children }: { title: string; icon: ReactNode; 
 function Contact() {
   return (
     <ul>
-      <li>الشركة: <C k="legalName" /> (<C k="brand" />)، رقم التسجيل: <C k="registration" /></li>
+      <li>المكتب: <C k="brand" /> — المسؤول: <C k="owner" />{COMPANY.registration && <>، رقم التسجيل: <C k="registration" /></>}</li>
       <li>العنوان: <C k="address" /></li>
       <li>البريد: <C k="email" /> · الهاتف: <C k="phone" /></li>
       <li>الموقع: <C k="website" /></li>
