@@ -2591,6 +2591,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"admin_monitor":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
 "admin_move_facility":
 { Args: { "p_branch_id"?: string,"p_facility_id": string,"p_organization_id": string }; Returns: {
               "branch_id": string,
@@ -3697,6 +3700,9 @@ isOneToOne: false
       } },
 "reply_pharmacy_note":
 { Args: { "p_note_id": string,"p_reply": string }; Returns: undefined
+                           },
+"report_client_error":
+{ Args: { "p_app_version"?: string,"p_message": string,"p_source": string,"p_stack"?: string,"p_url"?: string }; Returns: undefined
                            },
 "request_attachment_upload":
 { Args: { "p_file_name": string,"p_kind": string,"p_mime": string,"p_ref_id": string,"p_size": number }; Returns: Json

@@ -472,3 +472,14 @@
 .org-doc { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; padding: 3px 10px; border-radius: 999px; background: color-mix(in srgb, var(--c-primary, #12395B) 8%, transparent); }
 .org-loose { border-style: dashed; }
 .chip[aria-pressed="true"] { background: var(--c-primary); color: #fff; border-color: var(--c-primary); }
+
+/* «صحة النظام»: uptime cards and app errors */
+.monitor-grid { display: grid; gap: var(--s-3); grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.monitor-card { display: grid; gap: 8px; padding: var(--s-3) var(--s-4); border: 1px solid var(--c-border); border-radius: var(--r-md, 10px); }
+.monitor-card.is-up { border-color: color-mix(in srgb, var(--c-success) 40%, var(--c-border)); }
+.monitor-card.is-down { border-color: var(--c-danger); background: color-mix(in srgb, var(--c-danger) 6%, transparent); }
+.monitor-error { border: 1px solid var(--c-border); border-radius: var(--r-md, 10px); padding: var(--s-2) var(--s-3); }
+.monitor-error > summary { display: flex; align-items: center; gap: var(--s-2); cursor: pointer; list-style: none; }
+.monitor-error > summary::-webkit-details-marker { display: none; }
+.monitor-msg { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.monitor-stack { font-size: 11.5px; background: var(--c-surface-raised, #F8FAFC); border-radius: 8px; padding: 8px; overflow-x: auto; white-space: pre-wrap; max-height: 220px; }

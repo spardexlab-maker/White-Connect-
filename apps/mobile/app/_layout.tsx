@@ -13,7 +13,8 @@ import { UpdateProvider } from '../src/components/UpdatePrompt';
 import { handleDoseResponse, resyncDoses } from '../src/lib/doseActions';
 import { watchPushToken } from '../src/lib/push';
 import { configMissing } from '../src/lib/supabase';
-import { Alert, Screen } from '../src/components/ui';
+import { installErrorReporting, reportError } from '../src/lib/errorReport';
+import { Alert, Button, Screen, Text } from '../src/components/ui';
 import { color, family } from '../src/theme';
 
 // Arabic-first: the whole app is right-to-left.
@@ -26,6 +27,19 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
   document.documentElement.lang = 'ar';
 }
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
+installErrorReporting();
+
+/** A screen that crashed shows a way out (and is reported) instead of a red or blank screen. */
+export function ErrorBoundary({ error, retry }: { error: Error; retry: () => Promise<void> }) {
+  useEffect(() => { reportError(error, 'screen'); }, [error]);
+  return (
+    <Screen>
+      <Alert tone="danger" title="صار خلل بهاي الشاشة">وصلنا تنبيه بالمشكلة وراح نصلحها.</Alert>
+      <Text variant="small" muted>جرّب مرة ثانية، وإذا تكرر سكّر التطبيق وافتحه.</Text>
+      <Button title="حاول مرة ثانية" onPress={() => void retry()} />
+    </Screen>
+  );
+}
 
 export default function RootLayout() {
   const [loaded] = useFonts({ IBMPlexSansArabic_400Regular, IBMPlexSansArabic_500Medium, IBMPlexSansArabic_600SemiBold, IBMPlexSansArabic_700Bold });

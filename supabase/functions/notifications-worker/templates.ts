@@ -37,6 +37,12 @@ export function render(template: string, payload: Record<string, unknown>): Rend
       return { title: 'تعذّر تنفيذ طلب السحب المنزلي', body: `اعتذر المختبر عن الطلب ${req}. افتح التطبيق للتفاصيل.`, link: '/patient/home-lab' };
     case 'application.new':
       return { title: 'طلب انضمام جديد', body: `استمارة ${typeof payload.application_number === 'string' ? payload.application_number : ''} بانتظار المراجعة.`, link: '/platform-admin/applications' };
+    case 'monitor.down':
+      return { title: '⚠️ الخدمة متوقفة', body: `${typeof payload.target === 'string' ? payload.target : 'المنصة'} ما يستجيب منذ فحصين متتاليين.`, link: '/platform-admin/health' };
+    case 'monitor.up':
+      return { title: '✅ رجعت الخدمة', body: `${typeof payload.target === 'string' ? payload.target : 'المنصة'} يشتغل من جديد.`, link: '/platform-admin/health' };
+    case 'monitor.error':
+      return { title: 'عطل جديد بالتطبيق', body: `ظهر خطأ جديد ${payload.source === 'web' ? 'بالموقع' : 'بتطبيق الموبايل'}. افتح «صحة النظام» للتفاصيل.`, link: '/platform-admin/health' };
     case 'queue.called':
       return { title: 'حان دورك 🔔', body: `تفضّل إلى غرفة الطبيب${typeof payload.doctor === 'string' && payload.doctor ? ` — ${payload.doctor}` : ''}.`, link: '/patient/appointments' };
     case 'medication.reminder':
