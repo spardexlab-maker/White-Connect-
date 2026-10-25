@@ -75,6 +75,7 @@ const messages: Record<string, string> = {
   otp_send_failed: 'تعذّر إرسال الرمز على واتساب. تأكد أن الرقم عليه واتساب ثم أعد المحاولة.',
   otp_unavailable: 'الدخول برقم الهاتف غير متاح حالياً. استخدم Google أو البريد الإلكتروني.',
   phone_taken: 'هذا الرقم مربوط بحساب ثاني. ادخل بالرقم نفسه لذاك الحساب، أو اختر رقماً آخر.',
+  invalid_location: 'الموقع غير صحيح. الصق رابط الموقع من الخرائط مرة ثانية.',
 };
 
 export function errorCode(err: unknown): string | null {

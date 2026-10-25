@@ -1,11 +1,12 @@
 import { Image, Linking, Pressable, ScrollView, View } from 'react-native';
 import { Stack as RouterStack, router, useLocalSearchParams } from 'expo-router';
-import { BadgeCheck, CalendarPlus, Clock, ExternalLink, MapPin, Phone, ShieldAlert, Wallet } from 'lucide-react-native';
+import { BadgeCheck, CalendarPlus, Clock, MapPin, Phone, ShieldAlert, Wallet } from 'lucide-react-native';
 import { formatMoney, weekdayLabel } from '@app/shared';
 import { groupHours, useProviderProfile } from '../../src/lib/provider';
 import { bookHref } from '../../src/lib/routes';
 import { mediaUrl, useProviderMedia, type MediaItem } from '../../src/lib/media';
 import { Alert, Avatar, Badge, Button, Card, Divider, EmptyState, ErrorState, Loading, Ltr, Row, Screen, SectionTitle, Stack, Summary, Text } from '../../src/components/ui';
+import { ClinicMap } from '../../src/components/ClinicMap';
 import { color, space } from '../../src/theme';
 
 export default function ProviderScreen() {
@@ -99,9 +100,8 @@ export default function ProviderScreen() {
         {p.facility.phone && (
           <Button title={p.facility.phone} variant="secondary" icon={<Phone size={16} color={color.primary} />} onPress={() => void Linking.openURL(`tel:${p.facility.phone}`)} accessibilityLabel={`اتصال ${p.facility.phone}`} />
         )}
-        {p.facility.latitude != null && (
-          <Button title="فتح الموقع على الخريطة" variant="secondary" icon={<ExternalLink size={16} color={color.primary} />}
-                  onPress={() => void Linking.openURL(`https://www.openstreetmap.org/?mlat=${p.facility.latitude}&mlon=${p.facility.longitude}#map=17/${p.facility.latitude}/${p.facility.longitude}`)} />
+        {p.facility.latitude != null && p.facility.longitude != null && (
+          <ClinicMap where={{ lat: p.facility.latitude, lng: p.facility.longitude }} name={p.practitioner?.full_name ?? p.facility.name} />
         )}
       </Card>
     </Screen>

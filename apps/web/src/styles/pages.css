@@ -443,3 +443,8 @@
 .auth-more { background: none; border: 0; color: var(--c-primary); font-weight: 600; font-size: var(--f-small); cursor: pointer; padding: 6px 0; }
 @media (max-width: 380px) { .otp-box { width: 40px; height: 50px; font-size: 21px; } .otp-boxes { gap: 6px; } }
 @media (prefers-reduced-motion: reduce) { .otp-scatter .otp-box, .otp-shake, .otp-pulse, .otp-check, .otp-pill { animation: none; } }
+
+/* map preview (admin location) and the clinic map (patient) */
+.map-preview iframe, .clinic-map iframe { width: 100%; height: 200px; border: 0; border-radius: var(--r-md); background: var(--c-surface-raised, #EEF3F6); display: block; }
+.clinic-map iframe { height: 240px; }
+.map-attrib { font-size: var(--f-micro); color: var(--c-muted); }

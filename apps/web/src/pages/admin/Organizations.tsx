@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Building2, Plus } from 'lucide-react';
-import { errorMessage, facilityTypeLabel, reasonSchema, type FacilityType } from '@app/shared';
+import { Building2, MapPin, Plus } from 'lucide-react';
+import { errorMessage, facilityTypeLabel, reasonSchema, type FacilityType, type LatLng } from '@app/shared';
 import { supabase } from '../../lib/supabase';
 import { unwrap, useAsync } from '../../lib/useAsync';
-import { Badge, Button, ConfirmDialog, EmptyState, ErrorState, PageHead, SelectField, SkeletonList, TextField, TextareaField, useToast } from '../../components/ui';
+import { Badge, Button, ConfirmDialog, EmptyState, ErrorState, PageHead, SelectField, Sheet, SkeletonList, TextField, TextareaField, useToast } from '../../components/ui';
+import { MapLinkField } from '../../components/MapLinkField';
 
 type Status = 'pending' | 'active' | 'suspended' | 'closed';
 const statusLabel: Record<Status, { label: string; tone: 'warning' | 'success' | 'danger' | 'neutral' }> = {
@@ -16,7 +17,7 @@ export function AdminOrganizations() {
   const data = useAsync(async () => {
     const [orgs, branches, facs, cities] = await Promise.all([
       unwrap(supabase.from('organizations').select('id, name, status, kind').order('name')),
-      unwrap(supabase.from('branches').select('id, organization_id, name, area')),
+      unwrap(supabase.from('branches').select('id, organization_id, name, area, latitude, longitude')),
       unwrap(supabase.from('facilities').select('id, organization_id, branch_id, name, type, status').order('name')),
       unwrap(supabase.from('cities').select('id, name_ar')),
     ]);
@@ -25,6 +26,8 @@ export function AdminOrganizations() {
   const [statusChange, setStatusChange] = useState<{ entity: 'organization' | 'facility'; id: string; name: string; to: Status } | null>(null);
   const [reason, setReason] = useState('');
   const [reasonErr, setReasonErr] = useState<string>();
+  const [locFor, setLocFor] = useState<{ branchId: string; name: string; value: LatLng | null } | null>(null);
+  const [locBusy, setLocBusy] = useState(false);
 
   const run = async (p: PromiseLike<{ error: unknown }>, ok: string) => {
     const { error } = await p;
@@ -58,19 +61,40 @@ export function AdminOrganizations() {
                   <Badge tone={statusLabel[o.status as Status].tone}>{statusLabel[o.status as Status].label}</Badge>
                   <StatusMenu current={o.status as Status} onPick={(to) => setStatusChange({ entity: 'organization', id: o.id, name: o.name, to })} />
                 </div>
-                {data.data!.facs.filter((f) => f.organization_id === o.id).map((f) => (
+                {data.data!.facs.filter((f) => f.organization_id === o.id).map((f) => {
+                  const br = data.data!.branches.find((b) => b.id === f.branch_id);
+                  const where = br && br.latitude != null && br.longitude != null ? { lat: br.latitude, lng: br.longitude } : null;
+                  return (
                   <div key={f.id} className="list-item" style={{ paddingInlineStart: 'var(--s-10)', borderBlockEnd: 0 }}>
-                    <span className="grow small">{f.name} <span className="muted">· {facilityTypeLabel[f.type as FacilityType]} · {data.data!.branches.find((b) => b.id === f.branch_id)?.name}</span></span>
+                    <span className="grow small">{f.name} <span className="muted">· {facilityTypeLabel[f.type as FacilityType]} · {br?.name}</span></span>
+                    {br && <Button size="sm" variant={where ? 'ghost' : 'secondary'} icon={<MapPin size={14} />} onClick={() => setLocFor({ branchId: br.id, name: f.name, value: where })}>
+                      {where ? 'الموقع' : 'بلا موقع'}
+                    </Button>}
                     <Badge tone={statusLabel[f.status as Status].tone}>{statusLabel[f.status as Status].label}</Badge>
                     <StatusMenu current={f.status as Status} onPick={(to) => setStatusChange({ entity: 'facility', id: f.id, name: f.name, to })} />
                   </div>
-                ))}
+                  );
+                })}
               </div>
             ))}
           </section>
           <NewFacilityForm orgs={data.data.orgs} branches={data.data.branches} cities={data.data.cities} onDone={data.reload} />
         </div>
       )}
+      <Sheet open={!!locFor} onClose={() => setLocFor(null)} title={`موقع «${locFor?.name ?? ''}» على الخريطة`}>
+        {locFor && (
+          <div className="stack">
+            <MapLinkField value={locFor.value} onChange={(v) => setLocFor({ ...locFor, value: v })} />
+            <p className="small muted">يظهر للمرضى كخريطة مع زر «الاتجاهات»، ويُستعمل لترتيب «الأقرب إليك». يشمل كل الجهات بنفس الموقع.</p>
+            <Button loading={locBusy} disabled={!locFor.value} onClick={async () => {
+              setLocBusy(true);
+              const ok = await run(supabase.rpc('admin_set_branch_location', { p_branch_id: locFor.branchId, p_latitude: locFor.value!.lat, p_longitude: locFor.value!.lng }), 'حُفظ الموقع');
+              setLocBusy(false);
+              if (ok) setLocFor(null);
+            }}>حفظ الموقع</Button>
+          </div>
+        )}
+      </Sheet>
       <ConfirmDialog open={!!statusChange} title={`تغيير حالة «${statusChange?.name}» إلى: ${statusChange ? statusLabel[statusChange.to].label : ''}`}
                      confirmLabel="تأكيد" tone={statusChange?.to === 'active' ? 'primary' : 'danger'} onCancel={() => setStatusChange(null)} onConfirm={applyStatus}>
         <p className="small">{statusChange?.to === 'suspended' ? 'يفقد أعضاء الجهة الوصول فوراً ويختفي ملفها من البحث العام. لا تُحذف سجلات المرضى، والمواعيد المستقبلية تحتاج معالجة وفق سياسة المشغّل.' : 'يُسجَّل التغيير وسببه في سجل التدقيق.'}</p>
@@ -98,7 +122,7 @@ function NewFacilityForm({ orgs, branches, cities, onDone }: {
   orgs: Org[]; branches: { id: string; organization_id: string; name: string; area: string | null }[]; cities: { id: string; name_ar: string }[]; onDone: () => void;
 }) {
   const toast = useToast();
-  const empty = { type: 'clinic' as FacilityType, name: '', phone: '', org: NONE, orgName: '', branch: NEW, city: '', area: '', address: '', lat: '', lng: '', activate: true };
+  const empty = { type: 'clinic' as FacilityType, name: '', phone: '', org: NONE, orgName: '', branch: NEW, city: '', area: '', address: '', loc: null as LatLng | null, activate: true };
   const [f, setF] = useState(empty);
   const [busy, setBusy] = useState(false);
   const complexes = orgs.filter((o) => o.kind !== 'independent');
@@ -121,7 +145,7 @@ function NewFacilityForm({ orgs, branches, cities, onDone }: {
       if (needsLocation) {
         const { data, error } = await supabase.rpc('admin_create_branch', {
           p_organization_id: orgId, p_name: f.area.trim() || 'الموقع الرئيسي', p_city_id: f.city || undefined, p_area: f.area || undefined,
-          p_address: f.address || undefined, p_latitude: f.lat ? Number(f.lat) : undefined, p_longitude: f.lng ? Number(f.lng) : undefined,
+          p_address: f.address || undefined, p_latitude: f.loc?.lat, p_longitude: f.loc?.lng,
         });
         if (error) throw error;
         branchId = (data as { id: string }).id;
@@ -168,10 +192,7 @@ function NewFacilityForm({ orgs, branches, cities, onDone }: {
           </SelectField>
           <TextField label="المنطقة" optional value={f.area} onChange={(e) => setF({ ...f, area: e.target.value })} placeholder="مثال: الكرادة" />
           <TextField label="العنوان" optional value={f.address} onChange={(e) => setF({ ...f, address: e.target.value })} />
-          <div className="row" style={{ alignItems: 'flex-start' }}>
-            <div className="grow"><TextField label="خط العرض" optional ltr inputMode="decimal" value={f.lat} onChange={(e) => setF({ ...f, lat: e.target.value })} /></div>
-            <div className="grow"><TextField label="خط الطول" optional ltr inputMode="decimal" value={f.lng} onChange={(e) => setF({ ...f, lng: e.target.value })} /></div>
-          </div>
+          <MapLinkField value={f.loc} onChange={(loc) => setF({ ...f, loc })} />
         </div>
       )}
       <label className="check small"><input type="checkbox" checked={f.activate} onChange={(e) => setF({ ...f, activate: e.target.checked })} />تحققت منها — تفعيل مباشرة (تظهر للمرضى)</label>

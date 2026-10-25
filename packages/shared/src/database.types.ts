@@ -2597,6 +2597,28 @@ isOneToOne: false
 "admin_set_account_status":
 { Args: { "p_reason": string,"p_status": Database["public"]['Enums']["account_status"],"p_user_id": string }; Returns: undefined
                            },
+"admin_set_branch_location":
+{ Args: { "p_address"?: string,"p_branch_id": string,"p_latitude": number,"p_longitude": number }; Returns: {
+              "address": string | null,
+"area": string | null,
+"city_id": string | null,
+"created_at": string,
+"id": string,
+"latitude": number | null,
+"longitude": number | null,
+"name": string,
+"organization_id": string,
+"status": Database["public"]['Enums']["entity_status"],
+"timezone": string,
+"updated_at": string,
+"version": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "branches"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "admin_set_entity_status":
 { Args: { "p_entity": string,"p_id": string,"p_reason": string,"p_status": Database["public"]['Enums']["entity_status"] }; Returns: undefined
                            },

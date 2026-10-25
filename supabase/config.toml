@@ -438,3 +438,6 @@ verify_jwt = true
 
 [functions.app-update]
 verify_jwt = false
+
+[functions.map-link]
+verify_jwt = true

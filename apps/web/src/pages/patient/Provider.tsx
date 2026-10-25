@@ -1,7 +1,7 @@
 import { Fragment, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { BadgeCheck, CalendarPlus, Clock, ExternalLink, MapPin, Phone, ShieldAlert, Wallet } from 'lucide-react';
-import { formatMoney, weekdayLabel } from '@app/shared';
+import { BadgeCheck, CalendarPlus, Clock, MapPin, Navigation, Phone, ShieldAlert, Wallet } from 'lucide-react';
+import { directionsUrl, formatMoney, mapEmbedUrl, wazeUrl, weekdayLabel } from '@app/shared';
 import { supabase } from '../../lib/supabase';
 import { unwrap, useAsync } from '../../lib/useAsync';
 import { fetchProviderMedia, mediaUrl } from '../../lib/media';
@@ -42,7 +42,7 @@ export function ProviderPage() {
 
   const name = p.practitioner?.full_name ?? p.facility.name;
   const bookHref = `/patient/book/${p.facility.id}${p.practitioner ? `/${p.practitioner.id}` : ''}`;
-  const mapHref = p.facility.latitude != null ? `https://www.openstreetmap.org/?mlat=${p.facility.latitude}&mlon=${p.facility.longitude}#map=17/${p.facility.latitude}/${p.facility.longitude}` : null;
+  const where = p.facility.latitude != null && p.facility.longitude != null ? { lat: p.facility.latitude, lng: p.facility.longitude } : null;
   const hoursByDay = groupHours(p.weekly_hours);
 
   return (
@@ -124,7 +124,16 @@ export function ProviderPage() {
             <div className="stack-sm">
               <div className="row"><MapPin size={18} aria-hidden /><span>{[p.facility.address, p.facility.area, p.facility.city].filter(Boolean).join('، ')}</span></div>
               {p.facility.phone && <div className="row"><Phone size={18} aria-hidden /><a href={`tel:${p.facility.phone}`}><Ltr>{p.facility.phone}</Ltr></a></div>}
-              {mapHref && <a className="btn btn-secondary" href={mapHref} target="_blank" rel="noreferrer noopener"><ExternalLink size={16} aria-hidden />فتح الموقع على الخريطة</a>}
+              {where && (
+                <div className="clinic-map stack-sm">
+                  <iframe title={`موقع ${p.facility.name} على الخريطة`} src={mapEmbedUrl(where)} loading="lazy" />
+                  <div className="row" style={{ gap: 'var(--s-2)', flexWrap: 'wrap' }}>
+                    <a className="btn btn-primary" href={directionsUrl(where)} target="_blank" rel="noreferrer noopener"><Navigation size={16} aria-hidden />الاتجاهات (خرائط Google)</a>
+                    <a className="btn btn-secondary" href={wazeUrl(where)} target="_blank" rel="noreferrer noopener">Waze</a>
+                  </div>
+                  <span className="map-attrib">الخريطة © مساهمو OpenStreetMap</span>
+                </div>
+              )}
             </div>
           )}
         </div>
