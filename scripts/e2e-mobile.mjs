@@ -51,6 +51,7 @@ try {
   await p.getByText('راجع تفاصيل الحجز').waitFor();
   step('service + slot chosen, review shown');
 
+  await p.getByRole('button', { name: /طرق دخول أخرى/ }).click();
   await p.getByLabel('البريد الإلكتروني').fill('mona@demo.test');
   await p.getByLabel('كلمة المرور').fill('Demo-Pass-2026!');
   await shot(p, 'm04-review-signin');

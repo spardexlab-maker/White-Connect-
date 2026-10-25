@@ -43,5 +43,6 @@ describe('Iraqi phone numbers', () => {
   ])('%s → %s', (input, out) => expect(toIraqiE164(input)).toBe(out));
   it.each(['0770123456', '0612345678', '+15551234567', '', 'abc'])('rejects %s', (input) => expect(toIraqiE164(input)).toBeNull());
   it('reads back in local form', () => expect(iraqiLocal('+9647701234567')).toBe('0770 123 4567'));
+  it('explains a number that already belongs to another account', () => expect(errorMessage({ message: 'A user with this phone number has already been registered' })).toContain('مربوط بحساب ثاني'));
   it('maps hook codes inside auth errors', () => expect(errorMessage({ message: 'Error running hook URI: app:otp_rate_limited' })).toContain('انتظر'));
 });

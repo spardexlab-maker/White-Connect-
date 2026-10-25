@@ -64,6 +64,7 @@ for (const width of WIDTHS) {
   if (width === 390 || width === 1440) {
     const { ctx, page } = await newPage(width);
     await page.goto(`${BASE}/patient/account`);
+    await page.getByRole('button', { name: /طرق دخول أخرى/ }).click();
     await page.getByLabel('البريد الإلكتروني').fill('hasan@demo.test');
     await page.getByLabel('كلمة المرور').fill(PASSWORD);
     await page.getByRole('button', { name: 'دخول', exact: true }).click();

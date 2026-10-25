@@ -65,6 +65,7 @@ for (const width of [390, 1440]) {
   await shot(lab, '21-lab-order', width);
   const pt = await page(width);
   await pt.goto(`${BASE}/patient/account`);
+  await pt.getByRole('button', { name: /طرق دخول أخرى/ }).click();
   await pt.getByLabel('البريد الإلكتروني').fill('hasan@demo.test');
   await pt.getByLabel('كلمة المرور').fill(PASSWORD);
   await pt.getByRole('button', { name: 'دخول', exact: true }).click();

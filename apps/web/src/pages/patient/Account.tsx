@@ -8,6 +8,7 @@ import { unwrap, useAsync } from '../../lib/useAsync';
 import { useAuth } from '../../lib/auth';
 import { useWorkspace } from '../../lib/workspace';
 import { BirthDateSelect } from '../../components/BirthDateSelect';
+import { OtpVerify } from '../../components/OtpVerify';
 import { Alert, Button, ConfirmDialog, EmptyState, ErrorState, Ltr, SelectField, SkeletonList, Tabs, TextField, useToast } from '../../components/ui';
 
 /* ------------------------------------------------------------------ */
@@ -25,61 +26,98 @@ export function SignInPrompt({ title }: { title: string }) {
   );
 }
 
-/** Phone number → 6-digit code on WhatsApp (the send-sms hook delivers it). */
-function PhoneSignIn() {
-  const [phone, setPhone] = useState('');
+/** Ask for a number, send the code; `mode` sign-in starts a session, link adds the number to this account. */
+function usePhoneCode(mode: 'signin' | 'link') {
   const [sentTo, setSentTo] = useState<string | null>(null);
-  const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [wait, setWait] = useState(0);
   useEffect(() => { if (!wait) return; const t = window.setTimeout(() => setWait(wait - 1), 1000); return () => window.clearTimeout(t); }, [wait]);
-
-  const send = async (e?: FormEvent) => {
-    e?.preventDefault();
-    const e164 = toIraqiE164(phone);
+  const send = async (raw: string) => {
+    const e164 = toIraqiE164(raw);
     if (!e164) { setError(errorMessage({ message: 'app:phone_invalid' })); return; }
     setBusy(true); setError(null);
-    const { error } = await supabase.auth.signInWithOtp({ phone: e164 });
+    const { error } = mode === 'signin' ? await supabase.auth.signInWithOtp({ phone: e164 }) : await supabase.auth.updateUser({ phone: e164 });
     setBusy(false);
     if (error) { setError(errorMessage(error)); return; }
-    setSentTo(e164); setCode(''); setWait(60);
+    setSentTo(e164); setWait(60);
   };
-  const verify = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!sentTo) return;
-    setBusy(true); setError(null);
-    const { error } = await supabase.auth.verifyOtp({ phone: sentTo, token: code.trim(), type: 'sms' });
-    setBusy(false);
-    if (error) setError(errorMessage(error));
+  const verify = async (code: string) => {
+    if (!sentTo) return 'no number';
+    const { error } = await supabase.auth.verifyOtp({ phone: sentTo, token: code, type: mode === 'signin' ? 'sms' : 'phone_change' });
+    return error ? errorMessage(error) : null;
   };
+  return { sentTo, setSentTo, busy, error, setError, wait, send, verify };
+}
 
-  if (!sentTo) return (
-    <form className="stack" onSubmit={send} noValidate>
-      <TextField label="رقم الموبايل" type="tel" inputMode="tel" autoComplete="tel" ltr placeholder="0770 123 4567"
-                 hint="نبعث لك رمز دخول على واتساب" value={phone} onChange={(e) => { setPhone(e.target.value); setError(null); }} />
-      {error && <Alert tone="danger">{error}</Alert>}
-      <Button type="submit" loading={busy} disabled={phone.replace(/\D/g, '').length < 10} icon={<MessageCircle size={18} />}>أرسل الرمز على واتساب</Button>
-    </form>
-  );
+function PhoneForm({ label, button, busy, error, onSend, onTyping }: {
+  label: string; button: string; busy: boolean; error: string | null; onSend: (phone: string) => void; onTyping: () => void;
+}) {
+  const [phone, setPhone] = useState('');
   return (
-    <form className="stack" onSubmit={verify} noValidate>
-      <Alert tone="info">بعثنا رمزاً من 6 أرقام على واتساب الرقم <Ltr>{iraqiLocal(sentTo)}</Ltr></Alert>
-      <TextField label="رمز الدخول" inputMode="numeric" autoComplete="one-time-code" ltr maxLength={6} autoFocus
-                 value={code} onChange={(e) => { setCode(e.target.value.replace(/\D/g, '').slice(0, 6)); setError(null); }} />
+    <form className="stack" noValidate onSubmit={(e) => { e.preventDefault(); onSend(phone); }}>
+      <TextField label={label} type="tel" inputMode="tel" autoComplete="tel" ltr placeholder="0770 123 4567"
+                 hint="نبعث لك رمز دخول على واتساب" value={phone} onChange={(e) => { setPhone(e.target.value); onTyping(); }} />
       {error && <Alert tone="danger">{error}</Alert>}
-      <Button type="submit" loading={busy} disabled={code.length !== 6} icon={<LogIn size={18} />}>دخول</Button>
-      <div className="row-between">
-        <Button type="button" variant="ghost" size="sm" onClick={() => { setSentTo(null); setError(null); }}>تغيير الرقم</Button>
-        <Button type="button" variant="ghost" size="sm" disabled={wait > 0 || busy} onClick={() => void send()}>
-          {wait > 0 ? `إعادة الإرسال بعد ${wait} ث` : 'أعد إرسال الرمز'}
-        </Button>
-      </div>
+      <Button type="submit" loading={busy} disabled={phone.replace(/\D/g, '').length < 10} icon={<MessageCircle size={18} />}>{button}</Button>
     </form>
   );
 }
 
-function AuthForms() {
+/** Phone number → 6-digit code on WhatsApp (the send-sms hook delivers it). `hold` keeps this screen up until the check mark has played. */
+function PhoneSignIn({ hold }: { hold: (on: boolean) => void }) {
+  const c = usePhoneCode('signin');
+  if (!c.sentTo) return (
+    <>
+      <PhoneForm label="رقم الموبايل" button="أرسل الرمز على واتساب" busy={c.busy} error={c.error} onSend={(p) => void c.send(p)} onTyping={() => c.setError(null)} />
+      <p className="otp-consent">نستعمل رقمك فقط لتسجيل دخولك وإرسال رمز التحقق على واتساب.</p>
+    </>
+  );
+  return (
+    <OtpVerify phone={c.sentTo} resendIn={c.wait} onResend={() => void c.send(c.sentTo!)} onChangeNumber={() => c.setSentTo(null)}
+               submit={async (code) => { hold(true); const err = await c.verify(code); if (err) hold(false); return err; }}
+               onDone={() => hold(false)} />
+  );
+}
+
+/** Add (or change) the number this account signs in with — verified by a WhatsApp code, then it is the same account by phone. */
+function PhoneLink() {
+  const { session } = useAuth();
+  const toast = useToast();
+  const [open, setOpen] = useState(false);
+  const c = usePhoneCode('link');
+  const current = session?.user.phone ? `+${session.user.phone.replace(/^\+/, '')}` : null;
+  return (
+    <section className="card stack-sm" aria-labelledby="phone-link-h">
+      <div className="row-between">
+        <h2 id="phone-link-h" className="section-title row"><MessageCircle size={20} aria-hidden />الدخول برقم الموبايل</h2>
+        {current && !open && <Button variant="ghost" size="sm" onClick={() => setOpen(true)}>تغيير الرقم</Button>}
+      </div>
+      {current && !open && <p className="small">مربوط بالرقم <Ltr>{iraqiLocal(current)}</Ltr> — تكدر تدخل بيه برمز على واتساب.</p>}
+      {!current && !open && (
+        <>
+          <p className="small muted">اربط رقمك حتى تدخل لنفس هذا الحساب برمز على واتساب، بدون كلمة مرور.</p>
+          <Button variant="secondary" icon={<MessageCircle size={18} />} onClick={() => setOpen(true)}>ربط رقم الموبايل</Button>
+        </>
+      )}
+      {open && !c.sentTo && (
+        <>
+          <PhoneForm label={current ? 'الرقم الجديد' : 'رقم الموبايل'} button="أرسل رمز التأكيد على واتساب" busy={c.busy} error={c.error}
+                     onSend={(p) => void c.send(p)} onTyping={() => c.setError(null)} />
+          <Button variant="ghost" size="sm" onClick={() => { setOpen(false); c.setError(null); }}>إلغاء</Button>
+        </>
+      )}
+      {open && c.sentTo && (
+        <OtpVerify phone={c.sentTo} resendIn={c.wait} onResend={() => void c.send(c.sentTo!)} onChangeNumber={() => c.setSentTo(null)}
+                   submit={async (code) => { const err = await c.verify(code); if (!err) await supabase.auth.refreshSession(); return err; }}
+                   onDone={() => { setOpen(false); c.setSentTo(null); toast('رُبط الرقم بحسابك — تكدر تدخل بيه من هسه', 'success'); }} />
+      )}
+    </section>
+  );
+}
+
+function AuthForms({ hold }: { hold: (on: boolean) => void }) {
+  const [more, setMore] = useState(false);
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -111,30 +149,35 @@ function AuthForms() {
 
   return (
     <div className="card stack" style={{ maxWidth: 480 }}>
-      <PhoneSignIn />
-      <div className="or-sep"><span>أو</span></div>
-      <button type="button" className="btn btn-google" onClick={google} disabled={googleBusy} aria-busy={googleBusy}>
-        <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden>
-          <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.9 6.1C12.5 13.6 17.8 9.5 24 9.5z" />
-          <path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.7c4.3-4 6.9-9.9 6.9-17z" />
-          <path fill="#FBBC05" d="M10.6 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.9-6.1z" />
-          <path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.7c-2.1 1.4-4.8 2.2-8.5 2.2-6.2 0-11.5-4.1-13.4-9.8l-7.9 6.1C6.6 42.6 14.6 48 24 48z" />
-        </svg>
-        {googleBusy ? 'جارٍ التحويل إلى Google…' : 'المتابعة باستخدام Google'}
-      </button>
-      <div className="or-sep"><span>أو بالبريد الإلكتروني</span></div>
-      <Tabs label="الدخول" value={mode} onChange={(m) => { setMode(m); setError(null); }}
-            tabs={[{ id: 'signin', label: 'تسجيل الدخول' }, { id: 'signup', label: 'حساب جديد' }]} />
-      <form className="stack" onSubmit={submit} noValidate role="tabpanel" id={`panel-${mode}`} aria-labelledby={`tab-${mode}`}>
-        <TextField label="البريد الإلكتروني" type="email" autoComplete="email" ltr required value={email} onChange={(e) => setEmail(e.target.value)} />
-        <TextField label="كلمة المرور" type="password" autoComplete={mode === 'signin' ? 'current-password' : 'new-password'} ltr required minLength={8}
-                   hint={mode === 'signup' ? '8 أحرف على الأقل' : undefined} value={password} onChange={(e) => setPassword(e.target.value)} />
-        {error && <Alert tone="danger">{error}</Alert>}
-        {info && <Alert tone="success">{info}</Alert>}
-        <Button type="submit" loading={busy} icon={mode === 'signin' ? <LogIn size={18} /> : <UserPlus size={18} />}>
-          {mode === 'signin' ? 'دخول' : 'إنشاء الحساب'}
-        </Button>
-      </form>
+      <PhoneSignIn hold={hold} />
+      {!more && <button type="button" className="auth-more" aria-expanded={false} onClick={() => setMore(true)}>طرق دخول أخرى (Google أو البريد الإلكتروني)</button>}
+      {more && (
+        <>
+          <div className="or-sep"><span>أو</span></div>
+          <button type="button" className="btn btn-google" onClick={google} disabled={googleBusy} aria-busy={googleBusy}>
+            <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden>
+              <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.9 6.1C12.5 13.6 17.8 9.5 24 9.5z" />
+              <path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.7c4.3-4 6.9-9.9 6.9-17z" />
+              <path fill="#FBBC05" d="M10.6 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.9-6.1z" />
+              <path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.7c-2.1 1.4-4.8 2.2-8.5 2.2-6.2 0-11.5-4.1-13.4-9.8l-7.9 6.1C6.6 42.6 14.6 48 24 48z" />
+            </svg>
+            {googleBusy ? 'جارٍ التحويل إلى Google…' : 'المتابعة باستخدام Google'}
+          </button>
+          <div className="or-sep"><span>أو بالبريد الإلكتروني</span></div>
+          <Tabs label="الدخول" value={mode} onChange={(m) => { setMode(m); setError(null); }}
+                tabs={[{ id: 'signin', label: 'تسجيل الدخول' }, { id: 'signup', label: 'حساب جديد' }]} />
+          <form className="stack" onSubmit={submit} noValidate role="tabpanel" id={`panel-${mode}`} aria-labelledby={`tab-${mode}`}>
+            <TextField label="البريد الإلكتروني" type="email" autoComplete="email" ltr required value={email} onChange={(e) => setEmail(e.target.value)} />
+            <TextField label="كلمة المرور" type="password" autoComplete={mode === 'signin' ? 'current-password' : 'new-password'} ltr required minLength={8}
+                       hint={mode === 'signup' ? '8 أحرف على الأقل' : undefined} value={password} onChange={(e) => setPassword(e.target.value)} />
+            {error && <Alert tone="danger">{error}</Alert>}
+            {info && <Alert tone="success">{info}</Alert>}
+            <Button type="submit" loading={busy} icon={mode === 'signin' ? <LogIn size={18} /> : <UserPlus size={18} />}>
+              {mode === 'signin' ? 'دخول' : 'إنشاء الحساب'}
+            </Button>
+          </form>
+        </>
+      )}
     </div>
   );
 }
@@ -251,6 +294,7 @@ export function Account() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const next = params.get('next');
+  const [holding, setHolding] = useState(false);   // the WhatsApp check mark plays before the signed-in page appears
 
   useEffect(() => {
     if (session && access?.patient_ids?.length && next) navigate(next, { replace: true });
@@ -261,11 +305,11 @@ export function Account() {
   }, [access]);
 
   if (loading) return <SkeletonList />;
-  if (!session) {
+  if (!session || holding) {
     return (
       <div className="stack">
         <h1 style={{ fontSize: 'var(--f-h2)' }}>حسابي</h1>
-        <AuthForms />
+        <AuthForms hold={setHolding} />
       </div>
     );
   }
@@ -275,7 +319,7 @@ export function Account() {
       <div className="row-between">
         <div>
           <h1 style={{ fontSize: 'var(--f-h2)' }}>حسابي</h1>
-          <span className="muted small"><Ltr>{session.user.email}</Ltr></span>
+          <span className="muted small"><Ltr>{session.user.email || iraqiLocal(session.user.phone)}</Ltr></span>
         </div>
         <div className="row">
           {workspaces.length > 0 && <Link to="/workspace" className="btn btn-secondary btn-sm"><Briefcase size={16} aria-hidden />مساحة العمل المهنية</Link>}
@@ -284,6 +328,8 @@ export function Account() {
       </div>
 
       {access && access.patient_ids.length === 0 && <RegisterSelf onDone={() => void refreshAccess()} />}
+
+      {access && access.patient_ids.length > 0 && <PhoneLink />}
 
       {access && access.patient_ids.length > 0 && (
         <div id="cards" className="stack">

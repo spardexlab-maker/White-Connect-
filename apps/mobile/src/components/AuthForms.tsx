@@ -5,64 +5,118 @@ import { LogIn, MessageCircle, UserPlus } from 'lucide-react-native';
 import { errorMessage, fieldErrors, iraqiLocal, patientRegistrationSchema, toIraqiE164 } from '@app/shared';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../lib/auth';
+import { OtpVerify } from './OtpVerify';
 import { signInWithGoogle } from '../lib/googleAuth';
 import { BirthDateField } from './BirthDateField';
 import { Alert, Button, Chip, Field, Row, Segmented, Stack, Text } from './ui';
 import { color } from '../theme';
 
-/** Phone number → 6-digit code on WhatsApp (the send-sms hook delivers it). */
-function PhoneSignIn() {
-  const [phone, setPhone] = useState('');
+// While the WhatsApp check mark plays, screens keep showing the sign-in form (the session
+// arrives first); `useAuthHold` lets them wait for it.
+let held = false;
+const holdSubs = new Set<() => void>();
+const setHeld = (v: boolean) => { held = v; holdSubs.forEach((f) => f()); };
+export function useAuthHold(): boolean {
+  const [, bump] = useState(0);
+  useEffect(() => { const f = () => bump((n) => n + 1); holdSubs.add(f); return () => { holdSubs.delete(f); }; }, []);
+  return held;
+}
+
+/** Ask for a number and send the code; sign-in starts a session, link adds the number to this account. */
+function usePhoneCode(mode: 'signin' | 'link') {
   const [sentTo, setSentTo] = useState<string | null>(null);
-  const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [wait, setWait] = useState(0);
   useEffect(() => { if (!wait) return; const t = setTimeout(() => setWait(wait - 1), 1000); return () => clearTimeout(t); }, [wait]);
-
-  const send = async () => {
-    const e164 = toIraqiE164(phone);
+  const send = async (raw: string) => {
+    const e164 = toIraqiE164(raw);
     if (!e164) { setError(errorMessage({ message: 'app:phone_invalid' })); return; }
     setBusy(true); setError(null);
-    const { error } = await supabase.auth.signInWithOtp({ phone: e164 });
+    const { error } = mode === 'signin' ? await supabase.auth.signInWithOtp({ phone: e164 }) : await supabase.auth.updateUser({ phone: e164 });
     setBusy(false);
     if (error) { setError(errorMessage(error)); return; }
-    setSentTo(e164); setCode(''); setWait(60);
+    setSentTo(e164); setWait(60);
   };
-  const verify = async () => {
-    if (!sentTo) return;
-    setBusy(true); setError(null);
-    const { error } = await supabase.auth.verifyOtp({ phone: sentTo, token: code.trim(), type: 'sms' });
-    setBusy(false);
-    if (error) setError(errorMessage(error));
+  const verify = async (code: string) => {
+    if (!sentTo) return 'no number';
+    const { error } = await supabase.auth.verifyOtp({ phone: sentTo, token: code, type: mode === 'signin' ? 'sms' : 'phone_change' });
+    return error ? errorMessage(error) : null;
   };
+  return { sentTo, setSentTo, busy, error, setError, wait, send, verify };
+}
 
-  if (!sentTo) return (
-    <Stack>
-      <Field label="رقم الموبايل" ltr keyboardType="phone-pad" autoComplete="tel" textContentType="telephoneNumber" placeholder="0770 123 4567"
-             hint="نبعث لك رمز دخول على واتساب" value={phone} onChangeText={(t) => { setPhone(t); setError(null); }} onSubmitEditing={send} />
-      {error && <Alert tone="danger">{error}</Alert>}
-      <Button title="أرسل الرمز على واتساب" loading={busy} disabled={phone.replace(/\D/g, '').length < 10} onPress={send}
-              icon={<MessageCircle size={18} color={color.surface} />} />
-    </Stack>
-  );
+function PhoneForm({ label, button, busy, error, onSend, onTyping }: {
+  label: string; button: string; busy: boolean; error: string | null; onSend: (phone: string) => void; onTyping: () => void;
+}) {
+  const [phone, setPhone] = useState('');
   return (
     <Stack>
-      <Alert tone="info">بعثنا رمزاً من 6 أرقام على واتساب الرقم {iraqiLocal(sentTo)}</Alert>
-      <Field label="رمز الدخول" ltr keyboardType="number-pad" autoComplete="sms-otp" textContentType="oneTimeCode" maxLength={6} autoFocus
-             value={code} onChangeText={(t) => { setCode(t.replace(/\D/g, '').slice(0, 6)); setError(null); }} onSubmitEditing={verify} />
+      <Field label={label} ltr keyboardType="phone-pad" autoComplete="tel" textContentType="telephoneNumber" placeholder="0770 123 4567"
+             hint="نبعث لك رمز دخول على واتساب" value={phone} onChangeText={(t) => { setPhone(t); onTyping(); }} onSubmitEditing={() => onSend(phone)} />
       {error && <Alert tone="danger">{error}</Alert>}
-      <Button title="دخول" loading={busy} disabled={code.length !== 6} onPress={verify} icon={<LogIn size={18} color={color.surface} />} />
-      <Row between>
-        <Button title="تغيير الرقم" variant="ghost" small onPress={() => { setSentTo(null); setError(null); }} />
-        <Button title={wait > 0 ? `إعادة الإرسال بعد ${wait} ث` : 'أعد إرسال الرمز'} variant="ghost" small disabled={wait > 0 || busy} onPress={send} />
-      </Row>
+      <Button title={button} loading={busy} disabled={phone.replace(/\D/g, '').length < 10} onPress={() => onSend(phone)}
+              icon={<MessageCircle size={18} color={color.surface} />} />
     </Stack>
   );
 }
 
-/** WhatsApp code first, then Google, then email + password. */
+/** Phone number → 6-digit code on WhatsApp (the send-sms hook delivers it). */
+function PhoneSignIn() {
+  const c = usePhoneCode('signin');
+  if (!c.sentTo) return (
+    <Stack gap={6}>
+      <PhoneForm label="رقم الموبايل" button="أرسل الرمز على واتساب" busy={c.busy} error={c.error} onSend={(p) => void c.send(p)} onTyping={() => c.setError(null)} />
+      <Text variant="small" muted>نستعمل رقمك فقط لتسجيل دخولك وإرسال رمز التحقق على واتساب.</Text>
+    </Stack>
+  );
+  return (
+    <OtpVerify phone={c.sentTo} resendIn={c.wait} onResend={() => void c.send(c.sentTo!)} onChangeNumber={() => c.setSentTo(null)}
+               submit={async (code) => { setHeld(true); const err = await c.verify(code); if (err) setHeld(false); return err; }}
+               onDone={() => setHeld(false)} />
+  );
+}
+
+/** Add (or change) the number this account signs in with — verified by a WhatsApp code to the new number. */
+export function PhoneLink() {
+  const { session } = useAuth();
+  const [open, setOpen] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const c = usePhoneCode('link');
+  const current = session?.user.phone ? `+${session.user.phone.replace(/^\+/, '')}` : null;
+  return (
+    <Stack>
+      <Row between>
+        <Text variant="title" style={{ flex: 1 }}>الدخول برقم الموبايل</Text>
+        {current && !open && <Button title="تغيير الرقم" variant="ghost" small onPress={() => { setOpen(true); setMsg(null); }} />}
+      </Row>
+      {msg && <Alert tone="success">{msg}</Alert>}
+      {current && !open && <Text variant="small">مربوط بالرقم {'\u2066'}{iraqiLocal(current)}{'\u2069'} — تكدر تدخل بيه برمز على واتساب.</Text>}
+      {!current && !open && (
+        <>
+          <Text variant="small" muted>اربط رقمك حتى تدخل لنفس هذا الحساب برمز على واتساب، بدون كلمة مرور.</Text>
+          <Button title="ربط رقم الموبايل" variant="secondary" icon={<MessageCircle size={18} color={color.primary} />} onPress={() => { setOpen(true); setMsg(null); }} />
+        </>
+      )}
+      {open && !c.sentTo && (
+        <>
+          <PhoneForm label={current ? 'الرقم الجديد' : 'رقم الموبايل'} button="أرسل رمز التأكيد على واتساب" busy={c.busy} error={c.error}
+                     onSend={(p) => void c.send(p)} onTyping={() => c.setError(null)} />
+          <Button title="إلغاء" variant="ghost" small onPress={() => { setOpen(false); c.setError(null); }} />
+        </>
+      )}
+      {open && c.sentTo && (
+        <OtpVerify phone={c.sentTo} resendIn={c.wait} onResend={() => void c.send(c.sentTo!)} onChangeNumber={() => c.setSentTo(null)}
+                   submit={async (code) => { const err = await c.verify(code); if (!err) await supabase.auth.refreshSession(); return err; }}
+                   onDone={() => { setOpen(false); c.setSentTo(null); setMsg('رُبط الرقم بحسابك — تكدر تدخل بيه من هسه'); }} />
+      )}
+    </Stack>
+  );
+}
+
+/** WhatsApp code first; Google and email + password under «طرق دخول أخرى». */
 export function AuthForm() {
+  const [more, setMore] = useState(false);
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -88,6 +142,8 @@ export function AuthForm() {
   return (
     <Stack>
       <PhoneSignIn />
+      {!more && <Button title="طرق دخول أخرى (Google أو البريد الإلكتروني)" variant="ghost" onPress={() => setMore(true)} />}
+      {more && <>
       <Row gap={8} style={{ alignItems: 'center' }}>
         <View style={{ flex: 1, height: 1, backgroundColor: color.border }} />
         <Text variant="small" muted>أو</Text>
@@ -110,6 +166,7 @@ export function AuthForm() {
       {info && <Alert tone="success">{info}</Alert>}
       <Button title={mode === 'signin' ? 'دخول' : 'إنشاء الحساب'} loading={busy} disabled={!email || password.length < 8} onPress={submit}
               icon={mode === 'signin' ? <LogIn size={18} color={color.surface} /> : <UserPlus size={18} color={color.surface} />} />
+      </>}
     </Stack>
   );
 }

@@ -32,8 +32,9 @@ Deno.serve(async (req) => {
   if (!(await verified(req, body))) return new Response('{}', { status: 401 });
   let phone = '', otp = '';
   try {
-    const p = JSON.parse(body) as { user?: { phone?: string }; sms?: { otp?: string } };
-    phone = (p.user?.phone ?? '').replace(/\D/g, ''); otp = p.sms?.otp ?? '';
+    const p = JSON.parse(body) as { user?: { phone?: string; new_phone?: string }; sms?: { otp?: string } };
+    // adding / changing a number on an existing account: the code goes to the NEW number
+    phone = (p.user?.new_phone || p.user?.phone || '').replace(/\D/g, ''); otp = p.sms?.otp ?? '';
   } catch { return fail(400, 'otp_send_failed'); }
 
   const check = await fetch(`${URL_}/rest/v1/rpc/otp_send_allowed`, {

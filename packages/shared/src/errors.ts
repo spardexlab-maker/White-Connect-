@@ -74,6 +74,7 @@ const messages: Record<string, string> = {
   otp_rate_limited: 'طلبت رموزاً كثيرة لهذا الرقم. انتظر قليلاً ثم أعد المحاولة.',
   otp_send_failed: 'تعذّر إرسال الرمز على واتساب. تأكد أن الرقم عليه واتساب ثم أعد المحاولة.',
   otp_unavailable: 'الدخول برقم الهاتف غير متاح حالياً. استخدم Google أو البريد الإلكتروني.',
+  phone_taken: 'هذا الرقم مربوط بحساب ثاني. ادخل بالرقم نفسه لذاك الحساب، أو اختر رقماً آخر.',
 };
 
 export function errorCode(err: unknown): string | null {
@@ -87,6 +88,7 @@ export function errorMessage(err: unknown): string {
   const msg = typeof err === 'object' && err && 'message' in err ? String((err as { message: unknown }).message) : '';
   if (/fetch|network|Failed to fetch/i.test(msg)) return 'تعذّر الاتصال بالخادم. تحقق من الشبكة ثم أعد المحاولة.';
   if (/Invalid login credentials/i.test(msg)) return 'بيانات الدخول غير صحيحة.';
+  if (/phone.*already.*(registered|exists|in use)|phone_exists/i.test(msg)) return messages.phone_taken;
   const hook = msg.match(/app:([a-z_]+)/);           // codes from the send-SMS hook arrive inside the auth error text
   if (hook && messages[hook[1]]) return messages[hook[1]];
   if (/token has expired|otp.*(expired|invalid)|invalid.*otp/i.test(msg)) return 'الرمز غير صحيح أو انتهت صلاحيته. اطلب رمزاً جديداً.';

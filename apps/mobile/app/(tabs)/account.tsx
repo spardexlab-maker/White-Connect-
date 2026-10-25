@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Linking, Platform, Switch } from 'react-native';
 import { Briefcase, LogOut, QrCode } from 'lucide-react-native';
+import { iraqiLocal } from '@app/shared';
 import { useAuth } from '../../src/lib/auth';
 import { supabase, webUrl } from '../../src/lib/supabase';
 import { useAsync } from '../../src/lib/useAsync';
 import { disableReminders, enableReminders, remindersEnabled } from '../../src/lib/reminders';
 import { reportLocalReminders } from '../../src/lib/push';
 import { resyncDoses } from '../../src/lib/doseActions';
-import { AuthForm, RegisterSelf } from '../../src/components/AuthForms';
+import { AuthForm, PhoneLink, RegisterSelf, useAuthHold } from '../../src/components/AuthForms';
 import { PatientCard } from '../../src/components/PatientCard';
 import { UpdateCheckRow } from '../../src/components/UpdatePrompt';
 import { Alert, Button, Card, Loading, Ltr, Row, Screen, SectionTitle, Stack, Text } from '../../src/components/ui';
@@ -20,8 +21,9 @@ export default function Account() {
     const { data } = await supabase.rpc('my_workspaces');
     return Array.isArray(data) ? data.length : 0;
   }, [session?.user.id]);
+  const holding = useAuthHold();   // the WhatsApp check mark plays before the signed-in page appears
   if (loading) return <Screen><Loading /></Screen>;
-  if (!session) {
+  if (!session || holding) {
     return (
       <Screen>
         <Card><AuthForm /></Card>
@@ -38,7 +40,7 @@ export default function Account() {
         <Row between>
           <Stack gap={2} style={{ flex: 1 }}>
             <Text variant="label" muted>الحساب</Text>
-            <Text variant="small" weight="medium"><Ltr>{session.user.email}</Ltr></Text>
+            <Text variant="small" weight="medium"><Ltr>{session.user.email || iraqiLocal(session.user.phone)}</Ltr></Text>
           </Stack>
           <Button title="خروج" variant="ghost" small icon={<LogOut size={16} color={color.primary} />} onPress={() => void signOut()} />
         </Row>
@@ -46,6 +48,7 @@ export default function Account() {
 
       {!access && <Card><Loading /></Card>}
       {access && access.patient_ids.length === 0 && <Card><RegisterSelf onDone={() => void refreshAccess()} /></Card>}
+      {access && access.patient_ids.length > 0 && <Card><PhoneLink /></Card>}
       {access && access.patient_ids.length > 0 && (
         <Stack>
           <SectionTitle action={<QrCode size={20} color={color.mutedText} />}>بطاقة التعريف</SectionTitle>
