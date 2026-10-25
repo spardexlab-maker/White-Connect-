@@ -159,7 +159,7 @@ select tests.logout();
 -- clear seeded bookings in this window so the fixture does not depend on the time of day (rolled back)
 update public.appointments set status = 'cancelled', status_reason = 'test fixture'
  where practitioner_id = :AHMED and blocked_period && tstzrange(now() + interval '20 minutes', now() + interval '35 minutes', '[)')
-   and status in ('awaiting_confirmation', 'confirmed');
+   and holds_slot;  -- any booking that blocks the slot (incl. checked-in / seen ones)
 insert into public.appointments (patient_id, facility_id, practitioner_id, service_id, status, period, blocked_period,
   duration_minutes, timezone, source, created_by, idempotency_key)
 values (:P_ALI1, :A1, :AHMED, :SVC_A15, 'confirmed',

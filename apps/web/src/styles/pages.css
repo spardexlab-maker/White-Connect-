@@ -457,3 +457,18 @@
 .legal-body p, .legal-body li { line-height: 1.9; }
 .legal mark { background: color-mix(in srgb, var(--c-warning, #f59e0b) 22%, transparent); color: inherit; border-radius: 4px; padding: 0 4px; }
 .legal-links { text-align: center; }
+
+/* super admin structure: complex cards with doctors / pharmacies / labs */
+.org-card { border: 1px solid var(--c-border); border-radius: var(--r-lg, 14px); background: var(--c-surface); overflow: hidden; }
+.org-card > summary { list-style: none; display: flex; align-items: center; gap: var(--s-2); padding: var(--s-3) var(--s-4); cursor: pointer; flex-wrap: wrap; background: var(--c-surface-raised, #F8FAFC); }
+.org-card > summary::-webkit-details-marker { display: none; }
+.org-card[open] .org-chev { transform: rotate(180deg); }
+.org-chev { transition: transform var(--dur-1, .15s); color: var(--c-muted); }
+.org-body { display: grid; gap: var(--s-3); padding: var(--s-3) var(--s-4) var(--s-4); }
+.org-group { display: grid; gap: var(--s-2); }
+.org-group-title { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: var(--f-small); color: var(--c-text); }
+.org-fac { display: grid; gap: 6px; padding: var(--s-2) var(--s-3); border: 1px solid var(--c-border); border-radius: var(--r-md, 10px); }
+.org-docs { display: flex; flex-wrap: wrap; gap: 6px; }
+.org-doc { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; padding: 3px 10px; border-radius: 999px; background: color-mix(in srgb, var(--c-primary, #12395B) 8%, transparent); }
+.org-loose { border-style: dashed; }
+.chip[aria-pressed="true"] { background: var(--c-primary); color: #fff; border-color: var(--c-primary); }

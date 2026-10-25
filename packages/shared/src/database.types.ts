@@ -2591,6 +2591,34 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"admin_move_facility":
+{ Args: { "p_branch_id"?: string,"p_facility_id": string,"p_organization_id": string }; Returns: {
+              "branch_id": string,
+"created_at": string,
+"default_lab_id": string | null,
+"default_pharmacy_id": string | null,
+"description": string | null,
+"home_collection": boolean,
+"home_collection_fee_minor": number | null,
+"home_collection_note": string | null,
+"id": string,
+"is_public": boolean,
+"name": string,
+"opening_hours_note": string | null,
+"organization_id": string,
+"phone": string | null,
+"status": Database["public"]['Enums']["entity_status"],
+"status_reason": string | null,
+"type": Database["public"]['Enums']["facility_type"],
+"updated_at": string,
+"version": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "facilities"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "admin_retry_dead_notification":
 { Args: { "p_id": string }; Returns: undefined
                            },
@@ -2621,6 +2649,11 @@ isOneToOne: false
       } },
 "admin_set_entity_status":
 { Args: { "p_entity": string,"p_id": string,"p_reason": string,"p_status": Database["public"]['Enums']["entity_status"] }; Returns: undefined
+                           },
+"admin_structure":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "doctors": Json,"facility_id": string,"staff_count": number
+            }[]
                            },
 "admin_upsert_practitioner":
 { Args: { "p_full_name": string,"p_license_number"?: string,"p_mark_license_verified"?: boolean,"p_specialty_id"?: string,"p_title"?: string,"p_user_id": string }; Returns: {
