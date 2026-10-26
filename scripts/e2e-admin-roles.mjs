@@ -23,7 +23,7 @@ try {
   await a.getByRole('button', { name: 'إضافة الجهة' }).click();
   await a.getByText('أُضيفت الجهة وفُعّلت').waitFor();
   await a.getByText('عيادة مستقلة للاختبار').first().waitFor();
-  await a.getByText('جهة مستقلة').first().waitFor();
+  await a.getByText('غير تابعة لمجمع').first().waitFor();
   step('super admin added a clinic without a complex (independent, active)');
   if (out) await a.screenshot({ path: `${out}/admin-orgs.png`, fullPage: true });
   // 2) invitations offer staff roles only; staff list with suspend

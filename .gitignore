@@ -27,3 +27,4 @@ apps/mobile/dist/
 apps/mobile/android/
 apps/mobile/ios/
 apps/mobile/dist-apk/
+apps/mobile/dist-local/

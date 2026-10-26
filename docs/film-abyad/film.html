@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>أبيض — الفيلم</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+:root {
+  --ink: #081726; --ink2: #102B43; --navy: #123B5D; --care: #14B8A6; --care-d: #0F766E; --glow: #5EEAD4; --pulse: #FF6B4A;
+  --mist: #EEF3F6; --paper: #FFFFFF; --line: #DCE5EC; --muted: #5B6F82; --fg: #12263A; --normal: #1D5FD1; --high: #C62828;
+  --fd: "Alexandria", "IBM Plex Sans Arabic", sans-serif; --fb: "IBM Plex Sans Arabic", sans-serif; --fe: "Inter", sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--ink); font-family: var(--fb); color: #fff; }
+#stage { position: absolute; inset: 0; overflow: hidden; }
+
+/* living background: aurora + particles + grain + vignette */
+.bg { position: absolute; inset: 0; background: radial-gradient(1400px 900px at 50% 40%, #0E2A44 0%, var(--ink) 70%); }
+.aur { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .55; }
+#a1 { width: 1100px; height: 900px; background: radial-gradient(circle, rgba(20,184,166,.55), transparent 65%); }
+#a2 { width: 1000px; height: 800px; background: radial-gradient(circle, rgba(29,95,209,.45), transparent 65%); }
+#a3 { width: 800px; height: 700px; background: radial-gradient(circle, rgba(94,234,212,.30), transparent 65%); }
+#parts { position: absolute; inset: 0; }
+#parts i { position: absolute; border-radius: 50%; background: #BFF7EE; }
+.grain { position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,.03) 1px, transparent 1px); background-size: 5px 5px; }
+.vig { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.55) 100%); pointer-events: none; }
+#sweep { position: absolute; top: -300px; width: 520px; height: 1700px; transform: rotate(18deg); background: linear-gradient(90deg, transparent, rgba(94,234,212,.0) 20%, rgba(94,234,212,.28) 50%, rgba(255,255,255,.0) 80%, transparent); mix-blend-mode: screen; opacity: 0; pointer-events: none; }
+#mark { position: absolute; left: 70px; top: 54px; display: flex; align-items: center; gap: 14px; opacity: 0; }
+#mark img { width: 58px; height: 48px; object-fit: contain; }
+#mark span { font-family: var(--fd); font-weight: 700; font-size: 30px; color: rgba(255,255,255,.88); }
+
+.scene { position: absolute; inset: 0; display: none; }
+.a { will-change: transform, opacity, filter; }
+.copy { position: absolute; right: 150px; top: 230px; width: 720px; display: flex; flex-direction: column; gap: 26px; }
+.kicker { font-family: var(--fd); font-weight: 500; font-size: 28px; color: var(--glow); display: flex; align-items: center; gap: 14px; letter-spacing: .02em; }
+.kicker i { width: 54px; height: 4px; border-radius: 4px; background: linear-gradient(90deg, var(--care), var(--glow)); display: inline-block; }
+h1 { font-family: var(--fd); font-weight: 800; font-size: 92px; line-height: 1.18; letter-spacing: -0.01em; text-shadow: 0 10px 40px rgba(0,0,0,.35); }
+h1 em { font-style: normal; background: linear-gradient(100deg, #5EEAD4, #14B8A6 55%, #7FD8FF); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.sub { font-size: 36px; line-height: 1.6; color: rgba(255,255,255,.80); font-weight: 500; }
+.pts { display: flex; flex-direction: column; gap: 16px; margin-top: 8px; }
+.pt { display: flex; align-items: center; gap: 16px; font-size: 32px; font-weight: 600; }
+.pt b { width: 48px; height: 48px; border-radius: 14px; background: rgba(20,184,166,.16); border: 1px solid rgba(94,234,212,.28); color: var(--glow); display: grid; place-items: center; font-size: 24px; flex: none; }
+
+#cap { position: absolute; left: 50%; bottom: 50px; transform: translateX(-50%); max-width: 1500px; text-align: center;
+  font-size: 38px; font-weight: 600; line-height: 1.5; padding: 12px 36px; border-radius: 20px; background: rgba(4,12,22,.66); color: #fff;
+  border: 1px solid rgba(255,255,255,.08); backdrop-filter: blur(10px); }
+#cap:empty { display: none; }
+
+/* device mockups */
+.phone { position: absolute; width: 400px; height: 820px; border-radius: 60px; background: linear-gradient(160deg, #1A2B3C, #03080E); padding: 14px; box-shadow: 0 60px 140px rgba(0,0,0,.6), 0 0 0 2px rgba(255,255,255,.10), inset 0 0 0 2px rgba(255,255,255,.06); }
+.screen { width: 100%; height: 100%; border-radius: 47px; background: var(--mist); overflow: hidden; position: relative; color: var(--fg); }
+.notch { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: 120px; height: 32px; border-radius: 20px; background: #03080E; z-index: 5; }
+.sbar { height: 58px; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 30px 6px; font-size: 16px; font-weight: 600; color: var(--fg); direction: ltr; font-family: var(--fe); }
+.appbar { padding: 10px 22px; display: flex; align-items: center; justify-content: space-between; }
+.appbar strong { font-family: var(--fd); font-size: 22px; color: var(--navy); }
+.logo-i { width: 38px; height: 32px; object-fit: contain; }
+.pbody { padding: 6px 18px; display: flex; flex-direction: column; gap: 12px; }
+.search { background: #fff; border-radius: 16px; padding: 14px 16px; font-size: 18px; color: var(--muted); box-shadow: 0 2px 10px rgba(18,38,58,.06); min-height: 52px; }
+.search span { color: var(--fg); font-weight: 600; }
+.card { background: #fff; border-radius: 18px; padding: 14px 16px; box-shadow: 0 2px 12px rgba(18,38,58,.07); display: flex; flex-direction: column; gap: 6px; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.av { width: 52px; height: 52px; border-radius: 16px; background: linear-gradient(135deg, #CFE7F5, #9FD6CF); flex: none; display: grid; place-items: center; font-family: var(--fd); font-weight: 700; color: var(--navy); font-size: 20px; }
+.nm { font-weight: 700; font-size: 18px; }
+.mu { color: var(--muted); font-size: 15px; }
+.chip { font-size: 14px; font-weight: 600; padding: 4px 12px; border-radius: 99px; background: #E6F4F1; color: var(--care-d); white-space: nowrap; }
+.chip.red { background: #FCE4E4; color: var(--high); }
+.chip.blue { background: #E3ECFB; color: var(--normal); }
+.chip.gray { background: #EDF1F4; color: var(--muted); }
+.slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.slot { text-align: center; padding: 10px 0; border-radius: 12px; background: #fff; border: 1.5px solid var(--line); font-weight: 600; font-size: 17px; direction: ltr; font-family: var(--fe); }
+.slot.on { background: var(--care-d); border-color: var(--care-d); color: #fff; }
+.btn { text-align: center; padding: 15px; border-radius: 16px; background: var(--navy); color: #fff; font-weight: 700; font-size: 19px; }
+.btn.care { background: var(--care-d); }
+.notif { position: absolute; top: 56px; left: 12px; right: 12px; background: rgba(255,255,255,.97); border-radius: 22px; padding: 14px 16px; display: flex; gap: 12px; align-items: center; box-shadow: 0 16px 40px rgba(0,0,0,.25); z-index: 6; }
+.notif .ic { width: 46px; height: 46px; border-radius: 14px; background: #fff; border: 1px solid var(--line); display: grid; place-items: center; flex: none; }
+.notif .ic img { width: 34px; height: 28px; object-fit: contain; }
+.notif strong { font-size: 17px; display: block; }
+.notif span { font-size: 15px; color: var(--muted); }
+.desk { position: absolute; width: 960px; height: 620px; border-radius: 22px; background: var(--mist); overflow: hidden; color: var(--fg); box-shadow: 0 60px 140px rgba(0,0,0,.55), 0 0 0 2px rgba(255,255,255,.10); }
+.dtop { height: 46px; background: #fff; display: flex; align-items: center; gap: 8px; padding: 0 18px; border-bottom: 1px solid var(--line); direction: ltr; }
+.dtop i { width: 13px; height: 13px; border-radius: 50%; background: #E2E8EE; display: inline-block; }
+.dtop span { margin-left: 18px; font-size: 14px; color: var(--muted); direction: rtl; }
+.dwrap { display: flex; height: calc(100% - 46px); }
+.dside { width: 200px; background: #fff; border-left: 1px solid var(--line); padding: 18px 14px; display: flex; flex-direction: column; gap: 8px; }
+.dside .it { padding: 10px 12px; border-radius: 10px; font-size: 16px; font-weight: 600; color: var(--muted); }
+.dside .it.on { background: #E6F4F1; color: var(--care-d); }
+.dmain { flex: 1; padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+.dh { font-family: var(--fd); font-weight: 700; font-size: 26px; color: var(--navy); }
+.lane { background: #fff; border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; border-right: 6px solid var(--line); }
+.lane .nm { flex: 1; }
+.lane.wait { border-right-color: #F0B429; } .lane.in { border-right-color: var(--care-d); } .lane.done { border-right-color: #9AA9B7; }
+.callbtn { padding: 9px 18px; border-radius: 12px; background: var(--pulse); color: #fff; font-weight: 700; font-size: 16px; }
+.paper { position: absolute; width: 250px; height: 320px; background: #F7F4EC; border-radius: 10px; box-shadow: 0 30px 60px rgba(0,0,0,.4); color: #4A4A4A; padding: 24px; display: flex; flex-direction: column; gap: 14px; }
+.paper b { font-family: var(--fd); font-size: 24px; color: #2C2C2C; }
+.paper i { display: block; height: 10px; border-radius: 6px; background: #DDD6C6; }
+.big-badge { position: absolute; font-family: var(--fd); font-weight: 800; color: #fff; }
+.qr { width: 230px; height: 230px; background: #fff; border-radius: 18px; padding: 16px; position: relative; overflow: hidden; }
+.qr canvas { width: 100%; height: 100%; image-rendering: pixelated; }
+.scanline { position: absolute; left: 10px; right: 10px; height: 4px; border-radius: 4px; background: var(--care); box-shadow: 0 0 18px var(--care); }
+.code { font-family: var(--fe); font-weight: 700; font-size: 32px; letter-spacing: 4px; direction: ltr; color: var(--navy); text-align: center; }
+.res { display: flex; align-items: center; justify-content: space-between; background: #fff; border-radius: 14px; padding: 12px 16px; }
+.res .v { font-family: var(--fe); font-weight: 700; font-size: 30px; direction: ltr; }
+.bubble { position: absolute; max-width: 470px; padding: 18px 22px; border-radius: 22px; font-size: 25px; line-height: 1.55; font-weight: 500; box-shadow: 0 20px 50px rgba(0,0,0,.3); }
+.bubble small { display: block; font-size: 17px; font-weight: 700; margin-bottom: 4px; opacity: .8; }
+.b1 { background: #fff; color: var(--fg); border-bottom-right-radius: 6px; }
+.b2 { background: var(--care-d); color: #fff; border-bottom-left-radius: 6px; }
+.ring-pulse { position: absolute; border-radius: 50%; border: 4px solid var(--pulse); }
+.benefit { position: absolute; width: 470px; height: 260px; border-radius: 30px; background: linear-gradient(160deg, rgba(255,255,255,.08), rgba(255,255,255,.03)); border: 1.5px solid rgba(255,255,255,.12); padding: 34px; display: flex; flex-direction: column; gap: 14px; backdrop-filter: blur(6px); }
+.benefit .who { font-family: var(--fd); font-weight: 800; font-size: 40px; color: var(--glow); }
+.benefit p { font-size: 30px; line-height: 1.55; color: rgba(255,255,255,.88); font-weight: 500; }
+.steps4 { display: flex; flex-direction: column; gap: 14px; }
+.step { display: flex; align-items: center; gap: 14px; font-size: 19px; font-weight: 600; color: var(--muted); }
+.step .d { width: 30px; height: 30px; border-radius: 50%; border: 3px solid var(--line); background: #fff; flex: none; display: grid; place-items: center; color: #fff; font-size: 16px; }
+.step.on { color: var(--fg); } .step.on .d { background: var(--care-d); border-color: var(--care-d); }
+.bars { display: flex; align-items: flex-end; gap: 10px; height: 150px; }
+.bars div { flex: 1; border-radius: 8px 8px 4px 4px; background: var(--care-d); }
+.bars div.miss { background: #F2C6BC; }
+.wave { display: flex; align-items: center; justify-content: center; gap: 6px; height: 70px; }
+.wave i { width: 7px; border-radius: 6px; background: var(--care-d); display: block; }
+.mic { width: 110px; height: 110px; border-radius: 50%; background: linear-gradient(145deg, #14B8A6, #0F766E); display: grid; place-items: center; box-shadow: 0 0 0 10px rgba(20,184,166,.15), 0 18px 40px rgba(15,118,110,.45); margin: 0 auto; }
+.glass { position: absolute; border-radius: 28px; background: linear-gradient(160deg, rgba(255,255,255,.10), rgba(255,255,255,.04)); border: 1.5px solid rgba(255,255,255,.14); backdrop-filter: blur(8px); padding: 28px 30px; display: flex; flex-direction: column; gap: 10px; }
+.glass .t { font-family: var(--fd); font-weight: 700; font-size: 32px; color: #fff; }
+.glass p { font-size: 25px; line-height: 1.5; color: rgba(255,255,255,.8); }
+.glass .ico { width: 56px; height: 56px; border-radius: 16px; background: rgba(20,184,166,.18); border: 1px solid rgba(94,234,212,.3); display: grid; place-items: center; font-size: 28px; }
+.log { font-family: var(--fe); font-size: 18px; color: rgba(255,255,255,.75); direction: ltr; text-align: left; display: flex; gap: 14px; }
+.log b { color: var(--glow); font-weight: 700; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="bg"></div>
+  <div class="aur" id="a1"></div><div class="aur" id="a2"></div><div class="aur" id="a3"></div>
+  <div id="parts"></div>
+  <div class="grain"></div>
+
+  <!-- 1 · hook -->
+  <section class="scene" data-id="hook">
+    <div class="copy" style="top:300px">
+      <div class="kicker a" data-t="0.1" data-fx="up"><i></i>كل زيارة نفس القصة</div>
+      <h1 class="a" data-t="0.4" data-fx="blur">الأوراق تضيع<br><em>والصحة تنتظر</em></h1>
+    </div>
+    <div class="paper a" data-t="0.2" data-fx="drop" data-fn="drift" data-dx="-60" data-r="-9" style="left:200px;top:180px"><b>طلب تحاليل</b><i></i><i style="width:70%"></i><i></i><i style="width:50%"></i></div>
+    <div class="paper a" data-t="1.6" data-fx="drop" data-fn="drift" data-dx="70" data-r="7" style="left:470px;top:330px"><b>وصفة طبية</b><i></i><i style="width:80%"></i><i style="width:60%"></i><i></i></div>
+    <div class="paper a" data-t="3.0" data-fx="drop" data-fn="drift" data-dx="-30" data-r="-3" style="left:310px;top:560px;height:260px"><b>نتيجة قديمة</b><i></i><i style="width:40%"></i><i style="width:90%"></i></div>
+    <div class="big-badge a" data-t="p0.72" data-fx="pop" style="left:690px;top:240px;font-size:44px;background:var(--pulse);padding:10px 26px;border-radius:16px">من الصفر… مرة ثانية</div>
+  </section>
+
+  <!-- 2 · brand reveal -->
+  <section class="scene" data-id="reveal">
+    <div data-fn="converge" data-t="0" data-d="1.8" style="position:absolute;left:960px;top:430px;width:0;height:0"></div>
+    <div data-fn="shock" data-t="1.5" style="position:absolute;left:960px;top:430px;width:0;height:0"></div>
+    <div data-fn="halo" data-t="1.2" style="position:absolute;left:560px;top:30px;width:800px;height:800px;border-radius:50%;background:radial-gradient(circle, rgba(94,234,212,.32), rgba(20,184,166,.08) 45%, transparent 70%)"></div>
+    <img class="a" data-t="1.2" data-fx="rise" src="assets/symbol.png" alt="" style="position:absolute;left:710px;top:180px;width:500px;height:407px;object-fit:contain;filter:drop-shadow(0 30px 60px rgba(20,184,166,.35))">
+    <div data-fn="shine" data-t="2.6" style="position:absolute;left:700px;top:170px;width:520px;height:430px;overflow:hidden;-webkit-mask:url(assets/symbol.png) center/contain no-repeat;mask:url(assets/symbol.png) center/contain no-repeat"><i style="position:absolute;top:-60px;width:140px;height:560px;transform:rotate(18deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.75),transparent)"></i></div>
+    <div data-fn="wipe" data-t="2.2" data-d="1.1" style="position:absolute;left:760px;top:625px;width:400px;height:200px"><img src="assets/wordmark-light.png" alt="" style="width:400px;height:200px;object-fit:contain"></div>
+    <div class="a" data-t="p0.55" data-fx="up" style="position:absolute;left:0;right:0;top:860px;text-align:center;font-family:var(--fd);font-weight:500;font-size:44px;color:rgba(255,255,255,.9)">طبيبك ومختبرك وصيدليتك… <span style="color:var(--glow)">بمكان واحد</span></div>
+  </section>
+
+  <!-- 3 · the loop -->
+  <section class="scene" data-id="loop">
+    <svg width="820" height="820" viewBox="0 0 820 820" style="position:absolute;left:120px;top:130px">
+      <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5EEAD4"/><stop offset="1" stop-color="#0F766E"/></linearGradient></defs>
+      <circle cx="410" cy="410" r="300" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="22"/>
+      <circle data-fn="draw" data-t="0.2" data-d="3.2" cx="410" cy="410" r="300" fill="none" stroke="url(#lg)" stroke-width="22" stroke-linecap="round" pathLength="1" stroke-dasharray="1 1" transform="rotate(-90 410 410)" style="filter:drop-shadow(0 0 18px rgba(20,184,166,.6))"/>
+      <g class="a" data-t="1.0" data-fx="pop" style="transform-origin:410px 110px"><circle cx="410" cy="110" r="46" fill="#0B1E33" stroke="#5EEAD4" stroke-width="10"/></g>
+      <g class="a" data-t="1.8" data-fx="pop" style="transform-origin:710px 410px"><circle cx="710" cy="410" r="46" fill="#0B1E33" stroke="#14B8A6" stroke-width="10"/></g>
+      <g class="a" data-t="2.6" data-fx="pop" style="transform-origin:410px 710px"><circle cx="410" cy="710" r="46" fill="#0B1E33" stroke="#14B8A6" stroke-width="10"/></g>
+      <g class="a" data-t="3.4" data-fx="pop" style="transform-origin:110px 410px"><circle cx="110" cy="410" r="46" fill="#0B1E33" stroke="#14B8A6" stroke-width="10"/></g>
+      <text class="a" data-t="p0.42" data-fx="fade" x="410" y="205" text-anchor="middle" style="font-family:var(--fd);font-weight:700;font-size:34px;fill:#fff">المريض</text>
+      <text class="a" data-t="p0.50" data-fx="fade" x="598" y="422" text-anchor="middle" style="font-family:var(--fd);font-weight:700;font-size:34px;fill:#fff">الطبيب</text>
+      <text class="a" data-t="p0.58" data-fx="fade" x="410" y="640" text-anchor="middle" style="font-family:var(--fd);font-weight:700;font-size:34px;fill:#fff">المختبر</text>
+      <text class="a" data-t="p0.66" data-fx="fade" x="228" y="422" text-anchor="middle" style="font-family:var(--fd);font-weight:700;font-size:34px;fill:#fff">الصيدلية</text>
+    </svg>
+    <img class="a" data-t="0.6" data-fx="pop" src="assets/symbol.png" alt="" style="position:absolute;left:460px;top:480px;width:140px;height:114px;object-fit:contain">
+    <div class="copy" style="top:330px">
+      <div class="kicker a" data-t="0.3" data-fx="up"><i></i>أبيض</div>
+      <h1 class="a" data-t="0.7" data-fx="blur">رعايتك صارت<br><em>حلقة وحدة</em></h1>
+      <p class="sub a" data-t="p0.5" data-fx="up">كل خطوة توصل للي يحتاجها… بلحظتها</p>
+    </div>
+  </section>
+
+  <!-- 4 · AI assistant -->
+  <section class="scene" data-id="ai">
+    <div class="copy">
+      <div class="kicker a" data-t="0" data-fx="up"><i></i>المساعد الذكي</div>
+      <h1 class="a" data-t="0.3" data-fx="blur">احچي…<br><em>ويفهمك</em></h1>
+      <div class="pts">
+        <div class="pt a" data-t="p0.2" data-fx="left"><b>🎙</b>بصوتك أو بالكتابة</div>
+        <div class="pt a" data-t="p0.45" data-fx="left"><b>✦</b>الاختصاص المناسب وأقرب طبيب</div>
+        <div class="pt a" data-t="p0.75" data-fx="left"><b>!</b>يوجّهك… وما يشخّص</div>
+      </div>
+    </div>
+    <div class="phone a" data-t="-0.3" data-fx="up" style="left:330px;top:130px">
+      <div class="screen"><div class="notch"></div>
+        <div class="sbar"><span>10:02</span><span>●●●</span></div>
+        <div class="appbar"><strong>المساعد الذكي</strong><img class="logo-i" src="assets/symbol-96.png" alt=""></div>
+        <div class="pbody" style="gap:16px">
+          <div class="card a" data-t="p0.02" data-fx="up" style="align-items:center;padding:22px 16px">
+            <div class="mic"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></div>
+            <div class="wave" data-fn="wave" data-t="0.4" data-d="4.5"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="mu" style="font-weight:600">يستمع…</div>
+          </div>
+          <div class="search" style="background:#E6F4F1;color:var(--fg)" data-fn="type" data-t="0.6" data-d="2.6" data-text="عندي صداع يتكرر كل يوم بالعصر" data-ph="احچي أو اكتب شنو تحس"></div>
+          <div class="card a" data-t="p0.42" data-fx="up" style="gap:10px">
+            <div class="row"><span class="nm">الاختصاص المقترح</span><span class="chip">أعصاب</span></div>
+            <div class="row"><div class="av" style="width:44px;height:44px;font-size:17px">سن</div><div style="flex:1"><div class="nm" style="font-size:17px">د. سارة ناجي</div><div class="mu">أعصاب · ٢ كم</div></div><span class="chip">اليوم</span></div>
+            <div class="row"><div class="av" style="width:44px;height:44px;font-size:17px">عر</div><div style="flex:1"><div class="nm" style="font-size:17px">د. علي الربيعي</div><div class="mu">أعصاب · ٤٫٥ كم</div></div><span class="chip gray">غداً</span></div>
+          </div>
+          <div class="chip a" data-t="p0.78" data-fx="pop" style="align-self:center;background:#FFF1D6;color:#9A6400;font-size:15px">يوجّه للاختصاص فقط — لا يشخّص ولا يصف دواء</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · nearest + map -->
+  <section class="scene" data-id="nearest">
+    <div class="copy" style="width:640px;right:110px">
+      <div class="kicker a" data-t="0" data-fx="up"><i></i>قريب منك</div>
+      <h1 class="a" data-t="0.3" data-fx="blur">الأقرب لك<br><em>أولاً</em></h1>
+      <p class="sub a" data-t="p0.45" data-fx="up">وبضغطة… تطبيق الملاحة يوصلك للباب</p>
+    </div>
+    <div class="desk a" data-t="-0.3" data-fx="up" style="left:90px;top:150px;width:1000px;height:700px;background:#E7EEF3">
+      <svg width="1000" height="700" viewBox="0 0 1000 700" style="position:absolute;inset:0">
+        <rect width="1000" height="700" fill="#E9EFF4"/>
+        <path d="M-20,520 C200,470 330,600 560,540 S900,430 1020,470" fill="none" stroke="#BFD9EE" stroke-width="46"/>
+        <g stroke="#FFFFFF" stroke-width="16" fill="none" stroke-linecap="round">
+          <path d="M0,160 L1000,120"/><path d="M0,330 L1000,300"/><path d="M180,0 L230,700"/><path d="M470,0 L500,700"/><path d="M760,0 L740,700"/><path d="M0,620 L1000,650"/>
+        </g>
+        <g fill="#DCE8E0"><rect x="260" y="180" width="170" height="100" rx="14"/><rect x="560" y="360" width="140" height="120" rx="14"/><rect x="40" y="380" width="110" height="90" rx="14"/></g>
+        <path data-fn="draw" data-t="p0.38" data-d="1.6" d="M330,450 L480,445 L490,310 L640,305 L650,205" fill="none" stroke="#0F766E" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 1" pathLength="1"/>
+      </svg>
+      <div data-fn="mypos" data-t="0.4" style="position:absolute;left:330px;top:450px;width:0;height:0"></div>
+      <div class="a" data-t="p0.12" data-fx="pin" style="position:absolute;left:622px;top:118px;transform-origin:28px 88px"><svg width="56" height="88" viewBox="0 0 56 88"><path d="M28 2C13 2 2 13 2 28c0 20 26 56 26 56s26-36 26-56C54 13 43 2 28 2z" fill="#C62828"/><circle cx="28" cy="28" r="10" fill="#fff"/></svg></div>
+      <div class="a" data-t="p0.2" data-fx="pin" style="position:absolute;left:830px;top:390px;transform-origin:22px 70px;opacity:.85"><svg width="44" height="70" viewBox="0 0 56 88"><path d="M28 2C13 2 2 13 2 28c0 20 26 56 26 56s26-36 26-56C54 13 43 2 28 2z" fill="#123B5D"/><circle cx="28" cy="28" r="10" fill="#fff"/></svg></div>
+      <div class="a" data-t="p0.26" data-fx="pin" style="position:absolute;left:120px;top:150px;transform-origin:22px 70px;opacity:.85"><svg width="44" height="70" viewBox="0 0 56 88"><path d="M28 2C13 2 2 13 2 28c0 20 26 56 26 56s26-36 26-56C54 13 43 2 28 2z" fill="#123B5D"/><circle cx="28" cy="28" r="10" fill="#fff"/></svg></div>
+      <div class="card a" data-t="p0.3" data-fx="up" style="position:absolute;right:26px;top:26px;width:360px;gap:8px">
+        <div class="row"><div class="av" style="width:46px;height:46px;font-size:18px">أس</div><div style="flex:1"><div class="nm">د. أحمد سالم</div><div class="mu">باطنية · الكرادة</div></div><span class="chip">١٫٢ كم</span></div>
+        <div class="row"><div class="btn care" style="flex:1;padding:11px;font-size:17px" data-fn="press" data-t="p0.62">الاتجاهات</div><div class="btn" style="flex:1;padding:11px;font-size:17px;background:#E9EEF2;color:var(--fg)">Waze</div></div>
+      </div>
+      <div class="chip a" data-t="p0.66" data-fx="pop" style="position:absolute;left:330px;top:600px;font-size:20px;padding:10px 20px;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.12)">يفتح خرائط Google ↗ · ٦ دقائق بالسيارة</div>
+    </div>
+  </section>
+
+  <!-- 6 · booking -->
+  <section class="scene" data-id="book">
+    <div class="copy">
+      <div class="kicker a" data-t="0" data-fx="up"><i></i>الحجز</div>
+      <h1 class="a" data-t="0.3" data-fx="blur">احجز <em>بلمسة</em></h1>
+      <div class="pts">
+        <div class="pt a" data-t="p0.1" data-fx="left"><b>◷</b>المواعيد الفارغة أمامك</div>
+        <div class="pt a" data-t="p0.35" data-fx="left"><b>✓</b>تأكيد فوري</div>
+        <div class="pt a" data-t="p0.62" data-fx="left"><b>🔔</b>تذكير قبل يوم وقبل ساعتين</div>
+      </div>
+    </div>
+    <div class="phone a" data-t="-0.3" data-fx="up" style="left:330px;top:130px">
+      <div class="screen"><div class="notch"></div>
+        <div class="sbar"><span>9:41</span><span>●●●</span></div>
+        <div class="appbar"><strong>احجز موعدك</strong><img class="logo-i" src="assets/symbol-96.png" alt=""></div>
+        <div class="pbody">
+          <div class="card"><div class="row"><div class="av">أس</div><div style="flex:1"><div class="nm">د. أحمد سالم</div><div class="mu">باطنية وقلبية · الكرادة</div></div><span class="chip">١٫٢ كم</span></div></div>
+          <div class="card a" data-t="p0.08" data-fx="up">
+            <div class="mu" style="font-weight:600;color:var(--fg)">الأحد ٢٦ تشرين الأول</div>
+            <div class="slots">
+              <div class="slot">4:00</div><div class="slot" data-fn="sel" data-t="p0.3">4:30</div><div class="slot">5:00</div>
+              <div class="slot">5:30</div><div class="slot">6:00</div><div class="slot">6:30</div>
+            </div>
+          </div>
+          <div class="card a" data-t="p0.16" data-fx="up"><div class="row"><span class="nm">كشفية</span><span class="mu">٢٥٬٠٠٠ د.ع</span></div><div class="row"><span class="nm">مراجعة</span><span class="mu">١٥٬٠٠٠ د.ع</span></div></div>
+          <div class="btn care a" data-t="p0.36" data-fx="up" data-fn="press" data-t2="p0.4">تأكيد الحجز</div>
+        </div>
+        <div class="notif a" data-t="p0.46" data-fx="drop" data-ding="1"><div class="ic"><img src="assets/symbol-96.png" alt=""></div><div><strong>تم تأكيد موعدك</strong><span>الأحد ٤:٣٠ م — رقم الحجز B-2041</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 · queue -->
+  <section class="scene" data-id="queue">
+    <div class="copy" style="width:640px;right:110px;top:250px">
+      <div class="kicker a" data-t="0" data-fx="up"><i></i>الاستقبال</div>
+      <h1 class="a" data-t="0.3" data-fx="blur" style="font-size:84px">نداء يوصل<br><em>للجيب</em></h1>
+      <p class="sub a" data-t="p0.3" data-fx="up">بلا زحمة، وبلا انتظار مجهول</p>
+    </div>
+    <div class="desk a" data-t="-0.3" data-fx="up" style="left:450px;top:170px;width:700px;height:560px">
+      <div class="dtop"><i></i><i></i><i></i><span>لوحة الاستقبال — عيادات الرافدين</span></div>
+      <div class="dwrap"><div class="dmain">
+        <div class="dh">مرضى اليوم</div>
+        <div class="lane in"><div class="av" style="width:44px;height:44px;font-size:17px">زه</div><div class="nm">زهراء كاظم</div><span class="chip">داخل الجلسة</span></div>
+        <div class="lane wait" data-fn="callrow" data-t="p0.3"><div class="av" style="width:44px;height:44px;font-size:17px">حع</div><div class="nm">حسن علي</div><span class="chip gray" data-fn="swap" data-t="p0.33" data-a="حضر وينتظر" data-b="نُودي الآن">حضر وينتظر</span><span class="callbtn">نداء</span></div>
+        <div class="lane wait"><div class="av" style="width:44px;height:44px;font-size:17px">مر</div><div class="nm">مريم رعد</div><span class="chip gray">حضر وينتظر</span></div>
+        <div class="lane done"><div class="av" style="width:44px;height:44px;font-size:17px">عج</div><div class="nm">علي جاسم</div><span class="chip gray">انتهى</span></div>
+      </div></div>
+    </div>
+    <div class="phone a" data-t="p0.2" data-fx="up" style="left:70px;top:190px;width:340px;height:700px;border-radius:50px">
+      <div class="screen" style="background:linear-gradient(180deg,#0E2A47,#123B5D);border-radius:40px"><div class="notch"></div>
+        <div class="sbar" style="color:#fff"><span>4:31</span><span>●●●</span></div>
+        <div data-fn="pulse" data-t="p0.36" style="position:absolute;left:50%;top:330px;width:0;height:0"></div>
+        <div class="a" data-t="p0.36" data-fx="pop" data-ding="2" style="position:absolute;left:0;right:0;top:230px;text-align:center;color:#fff">
+          <div style="width:150px;height:150px;border-radius:50%;background:var(--pulse);margin:0 auto;display:grid;place-items:center;font-size:72px">🔔</div>
+          <div style="font-family:var(--fd);font-weight:800;font-size:46px;margin-top:26px">حان دورك</div>
+          <div style="font-size:22px;opacity:.8;margin-top:6px">تفضّل إلى غرفة د. أحمد</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 · doctor -->
+  <section class="scene" data-id="doctor">
+    <div class="copy" style="width:600px;right:100px;top:240px">
+      <div class="kicker a" data-t="0" data-fx="up"><i></i>الطبيب</div>
+      <h1 class="a" data-t="0.3" data-fx="blur" style="font-size:84px">الصورة<br><em>كاملة</em></h1>
+      <div class="pts">
+        <div class="pt a" data-t="p0.12" data-fx="left"><b>♥</b>الأمراض والأدوية والحساسية</div>
+        <div class="pt a" data-t="p0.42" data-fx="left"><b>↗</b>التحاليل السابقة برسم</div>
+        <div class="pt a" data-t="p0.72" data-fx="left"><b>℞</b>وصفة وتحاليل بثواني</div>
+      </div>
+    </div>
+    <div class="desk a" data-t="-0.3" data-fx="up" style="left:60px;top:150px;width:1000px;height:680px">
+      <div class="dtop"><i></i><i></i><i></i><span>الجلسة — حسن علي</span></div>
+      <div class="dwrap">
+        <div class="dside"><div class="it on">البطاقة الطبية</div><div class="it">التحاليل</div><div class="it">الوصفة</div><div class="it">الأدوية</div></div>
+        <div class="dmain">
+          <div class="row"><div class="row" style="gap:14px;justify-content:flex-start"><div class="av">حع</div><div><div class="dh" style="font-size:24px">حسن علي · ٤٧ سنة</div><div class="mu">ID-W50 · آخر زيارة قبل ٣ أشهر</div></div></div></div>
+          <div class="row a" data-t="p0.14" data-fx="up" style="justify-content:flex-start;flex-wrap:wrap"><span class="chip">سكري نوع ٢</span><span class="chip">ضغط</span><span class="chip blue">ميتفورمين ٥٠٠</span><span class="chip red">حساسية: بنسلين</span></div>
+          <div class="card a" data-t="p0.38" data-fx="up" style="padding:16px 18px">
+            <div class="row"><strong style="font-size:18px">سكر صائم</strong><span class="chip">تحسّن ↓</span></div>
+            <svg width="100%" height="170" viewBox="0 0 640 170">
+              <rect x="0" y="62" width="640" height="56" fill="#E3ECFB"/>
+              <line x1="0" y1="62" x2="640" y2="62" stroke="#B9CBEA" stroke-dasharray="6 6"/><line x1="0" y1="118" x2="640" y2="118" stroke="#B9CBEA" stroke-dasharray="6 6"/>
+              <path data-fn="draw" data-t="p0.44" data-d="1.8" d="M40,20 L220,48 L400,78 L600,96" fill="none" stroke="#0F766E" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1 1"/>
+              <g class="a" data-t="p0.46" data-fx="fade"><circle cx="40" cy="20" r="8" fill="#C62828"/><text x="40" y="150" text-anchor="middle" font-size="18" fill="#5B6F82">140</text></g>
+              <g class="a" data-t="p0.52" data-fx="fade"><circle cx="220" cy="48" r="8" fill="#C62828"/><text x="220" y="150" text-anchor="middle" font-size="18" fill="#5B6F82">124</text></g>
+              <g class="a" data-t="p0.58" data-fx="fade"><circle cx="400" cy="78" r="8" fill="#1D5FD1"/><text x="400" y="150" text-anchor="middle" font-size="18" fill="#5B6F82">106</text></g>
+              <g class="a" data-t="p0.64" data-fx="fade"><circle cx="600" cy="96" r="10" fill="#1D5FD1"/><text x="600" y="150" text-anchor="middle" font-size="18" font-weight="700" fill="#1D5FD1">98</text></g>
+            </svg>
+          </div>
+          <div class="card a" data-t="p0.7" data-fx="up" style="padding:14px 18px;gap:8px">
+            <div class="row"><strong style="font-size:18px">℞ الوصفة</strong><span class="chip a" data-t="p0.92" data-fx="pop">معتمدة ✓</span></div>
+            <div style="font-size:18px" data-fn="type" data-t="p0.72" data-d="1.6" data-text="ميتفورمين ٥٠٠ ملغم — حبة بعد الأكل مرتين يومياً" data-ph=""></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 · lab -->
+  <section class="scene" data-id="lab">
+    <div class="copy" style="width:560px;right:90px;top:220px">
+      <div class="kicker a" data-t="0" data-fx="up"><i></i>المختبر</div>
+      <h1 class="a" data-t="0.3" data-fx="blur" style="font-size:80px">أي مختبر<br><em>برمز واحد</em></h1>
+      <div class="pts">
+        <div class="pt a" data-t="p0.1" data-fx="left"><b>▦</b>رمز QR بهاتف المريض</div>
+        <div class="pt a" data-t="p0.34" data-fx="left"><b>⇄</b>المختبر يمسح ويستلم</div>
+        <div class="pt a" data-t="p0.6" data-fx="left"><b>●</b>أحمر مرتفع · أزرق طبيعي</div>
+      </div>
+    </div>
+    <div class="phone a" data-t="-0.3" data-fx="up" style="left:760px;top:140px;width:360px;height:760px">
+      <div class="screen"><div class="notch"></div>
+        <div class="sbar"><span>10:12</span><span>●●●</span></div>
+        <div class="appbar"><strong>طلبات التحاليل</strong><img class="logo-i" src="assets/symbol-96.png" alt=""></div>
+        <div class="pbody" style="align-items:center">
+          <div class="mu" style="align-self:stretch;text-align:center">د. أحمد سالم — صالح ٧ أيام</div>
+          <div class="qr"><canvas id="qrc" width="29" height="29"></canvas><div class="scanline" data-fn="scan" data-t="p0.26" data-d="1.6"></div></div>
+          <div class="code">64JE-0X9N</div>
+          <div class="card" style="align-self:stretch;gap:8px">
+            <div class="row"><span>سكر صائم</span><span class="chip gray" data-fn="swap" data-t="p0.36" data-a="لم يُجرَ بعد" data-b="بالمختبر">لم يُجرَ بعد</span></div>
+            <div class="row"><span>السكر التراكمي</span><span class="chip gray" data-fn="swap" data-t="p0.36" data-a="لم يُجرَ بعد" data-b="بالمختبر">لم يُجرَ بعد</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="desk a" data-t="p0.22" data-fx="right" style="left:70px;top:250px;width:640px;height:460px">
+      <div class="dtop"><i></i><i></i><i></i><span>مختبر الرافدين — النتائج</span></div>
+      <div class="dmain" style="padding:22px">
+        <div class="dh" style="font-size:24px">حسن علي · رمز 64JE-0X9N</div>
+        <div class="res a" data-t="p0.48" data-fx="up" data-ding="3"><div><div class="nm">سكر صائم</div><div class="mu">المجال 70–100 mg/dL</div></div><div class="row" style="gap:12px"><span class="chip red">مرتفع ↑</span><span class="v" style="color:var(--high)">124</span></div></div>
+        <div class="res a" data-t="p0.56" data-fx="up"><div><div class="nm">السكر التراكمي HbA1c</div><div class="mu">المجال 4.0–5.6 %</div></div><div class="row" style="gap:12px"><span class="chip blue">طبيعي</span><span class="v" style="color:var(--normal)">5.4</span></div></div>
+        <div class="row a" data-t="p0.66" data-fx="up" style="justify-content:flex-start;gap:10px"><span class="chip">✓ وصلت للمريض</span><span class="chip">✓ وصلت للطبيب</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 · pharmacy -->
+  <section class="scene" data-id="pharmacy">
+    <div class="copy" style="width:620px;right:110px;top:260px">
+      <div class="kicker a" data-t="0" data-fx="up"><i></i>الصيدلية</div>
+      <h1 class="a" data-t="0.3" data-fx="blur" style="font-size:84px">وصفة بلا<br><em>ورق ولا خط</em></h1>
+      <p class="sub a" data-t="p0.35" data-fx="up">والصيدلي يحچي الطبيب مباشرة</p>
+    </div>
+    <div class="desk a" data-t="-0.3" data-fx="up" style="left:80px;top:170px;width:860px;height:470px">
+      <div class="dtop"><i></i><i></i><i></i><span>وارد الوصفات — صيدلية دجلة</span></div>
+      <div class="dmain">
+        <div class="card" data-fn="flyin" data-t="0.1" style="padding:18px 20px;gap:10px">
+          <div class="row"><strong style="font-size:21px">℞ RX-7781 · حسن علي</strong><span class="chip gray" data-fn="swap" data-t="p0.32" data-a="جديدة" data-b="تم الصرف ✓">جديدة</span></div>
+          <div class="row"><span style="font-size:19px">ميتفورمين ٥٠٠ ملغم — ٦٠ حبة</span><span class="mu">د. أحمد سالم</span></div>
+          <div class="row"><span style="font-size:19px">أملوديبين ٥ ملغم — ٣٠ حبة</span><span class="mu">مرة يومياً</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="bubble b1 a" data-t="p0.5" data-fx="up" style="left:150px;top:660px"><small>الصيدلي ← الطبيب</small>أملوديبين ٥ غير متوفر، ممكن ١٠ ملغم نص حبة؟</div>
+    <div class="bubble b2 a" data-t="p0.82" data-fx="up" data-ding="4" style="left:660px;top:720px"><small>رد الطبيب</small>نعم، نص حبة يومياً ✓</div>
+  </section>
+
+  <!-- 11 · meds -->
+  <section class="scene" data-id="meds">
+    <div class="copy" style="top:260px">
+      <div class="kicker a" data-t="0" data-fx="up"><i></i>بالبيت</div>
+      <h1 class="a" data-t="0.3" data-fx="blur">ولا جرعة<br><em>تفوتك</em></h1>
+      <p class="sub a" data-t="p0.4" data-fx="up">حتى بدون إنترنت — وطبيبك يتابع التزامك</p>
+    </div>
+    <div class="phone a" data-t="-0.3" data-fx="up" style="left:260px;top:130px">
+      <div class="screen" style="background:linear-gradient(170deg,#1A3E63,#0B1E33)"><div class="notch"></div>
+        <div class="sbar" style="color:#fff"><span></span><span>●●●</span></div>
+        <div style="text-align:center;color:#fff;margin-top:40px"><div style="font-family:var(--fe);font-weight:700;font-size:96px;direction:ltr">8:00</div><div style="font-size:22px;opacity:.8">الإثنين ٢٧ تشرين الأول</div></div>
+        <div class="notif a" data-t="p0.06" data-fx="drop" data-ding="5" style="top:300px;flex-wrap:wrap">
+          <div class="ic"><img src="assets/symbol-96.png" alt=""></div><div style="flex:1"><strong>تذكير</strong><span>حان موعد جرعتك حسب خطتك</span></div>
+          <div class="row" style="width:100%;gap:8px;margin-top:6px"><div class="btn care" style="flex:1;padding:11px;font-size:17px" data-fn="press" data-t="p0.3">أخذتها ✓</div><div class="btn" style="flex:1;padding:11px;font-size:17px;background:#E9EEF2;color:var(--fg)">بعد ١٠ دقائق</div></div>
+        </div>
+        <div class="a" data-t="p0.34" data-fx="pop" style="position:absolute;top:470px;left:0;right:0;text-align:center;color:#fff;font-family:var(--fd);font-weight:700;font-size:30px">✓ سُجّلت الجرعة</div>
+      </div>
+    </div>
+    <div class="desk a" data-t="p0.42" data-fx="right" style="left:720px;top:560px;width:430px;height:330px;border-radius:18px">
+      <div class="dmain" style="padding:20px">
+        <div class="row"><strong style="font-size:20px">الالتزام بالعلاج</strong><span class="chip"><span data-fn="count" data-t="p0.5" data-d="1.4" data-to="92">0</span>٪</span></div>
+        <div class="bars" data-fn="bars" data-t="p0.5" data-d="1.4">
+          <div style="--h:100%"></div><div style="--h:100%"></div><div class="miss" style="--h:30%"></div><div style="--h:100%"></div><div style="--h:85%"></div><div style="--h:100%"></div><div style="--h:100%"></div>
+        </div>
+        <div class="mu">آخر ٧ أيام · حسن علي</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12 · home lab -->
+  <section class="scene" data-id="homelab">
+    <div class="copy" style="width:600px;right:110px;top:250px">
+      <div class="kicker a" data-t="0" data-fx="up"><i></i>سحب منزلي</div>
+      <h1 class="a" data-t="0.3" data-fx="blur" style="font-size:84px">التحليل يجيك<br><em>للبيت</em></h1>
+      <p class="sub a" data-t="p0.5" data-fx="up">تتابع المختص خطوة بخطوة</p>
+    </div>
+    <div class="phone a" data-t="-0.3" data-fx="up" style="left:560px;top:130px">
+      <div class="screen"><div class="notch"></div>
+        <div class="sbar"><span>11:20</span><span>●●●</span></div>
+        <div class="appbar"><strong>تحليل منزلي</strong><img class="logo-i" src="assets/symbol-96.png" alt=""></div>
+        <div class="pbody">
+          <div class="card"><div class="row"><div class="nm">مختبر الرافدين</div><span class="chip">سحب منزلي</span></div><div class="mu">صورة دم كاملة · سكر صائم</div></div>
+          <div class="card steps4">
+            <div class="step" data-fn="stepon" data-t="p0.08"><span class="d">✓</span>وصل الطلب</div>
+            <div class="step" data-fn="stepon" data-t="p0.24"><span class="d">✓</span>تحدد الموعد — ٩:٠٠ ص</div>
+            <div class="step" data-fn="stepon" data-t="p0.42"><span class="d">✓</span>المختص بالطريق</div>
+            <div class="step" data-fn="stepon" data-t="p0.6"><span class="d">✓</span>سُحبت العينة</div>
+            <div class="step" data-fn="stepon" data-t="p0.8"><span class="d">✓</span>النتيجة جاهزة بتطبيقك</div>
+          </div>
+        </div>
+        <div class="notif a" data-t="p0.8" data-fx="drop" data-ding="6" style="top:600px"><div class="ic"><img src="assets/symbol-96.png" alt=""></div><div><strong>نتيجة تحليلك جاهزة</strong><span>افتح التطبيق لعرضها</span></div></div>
+      </div>
+    </div>
+    <div class="glass a" data-t="p0.3" data-fx="right" style="left:120px;top:420px;width:380px">
+      <div class="ico">🛵</div><div class="t">المختص بالطريق</div><p>يوصلك خلال ٢٠ دقيقة</p>
+    </div>
+  </section>
+
+  <!-- 13 · complexes -->
+  <section class="scene" data-id="complex">
+    <div class="copy" style="width:620px;right:100px;top:250px">
+      <div class="kicker a" data-t="0" data-fx="up"><i></i>المجمعات الطبية</div>
+      <h1 class="a" data-t="0.3" data-fx="blur" style="font-size:84px">مجمع كامل<br><em>بشاشة وحدة</em></h1>
+      <p class="sub a" data-t="p0.45" data-fx="up">عيادات وصيدلية ومختبر… مربوطين</p>
+    </div>
+    <div class="desk a" data-t="-0.3" data-fx="up" style="left:70px;top:160px;width:1020px;height:690px">
+      <div class="dtop"><i></i><i></i><i></i><span>إدارة المنصة — المجمعات والجهات</span></div>
+      <div class="dwrap">
+        <div class="dside"><div class="it">نظرة عامة</div><div class="it on">المجمعات والجهات</div><div class="it">طلبات الانضمام</div><div class="it">التقارير والمالية</div><div class="it">صحة النظام</div></div>
+        <div class="dmain">
+          <div class="row" style="justify-content:flex-start;gap:12px">
+            <div class="card a" data-t="p0.1" data-fx="up" style="flex:1;align-items:center"><div class="dh"><span data-fn="count" data-t="p0.12" data-d="1.2" data-to="12">0</span></div><div class="mu">طبيب</div></div>
+            <div class="card a" data-t="p0.14" data-fx="up" style="flex:1;align-items:center"><div class="dh"><span data-fn="count" data-t="p0.16" data-d="1.2" data-to="3">0</span></div><div class="mu">صيدلية</div></div>
+            <div class="card a" data-t="p0.18" data-fx="up" style="flex:1;align-items:center"><div class="dh"><span data-fn="count" data-t="p0.2" data-d="1.2" data-to="2">0</span></div><div class="mu">مختبر</div></div>
+          </div>
+          <div class="card a" data-t="p0.26" data-fx="up" style="gap:12px;padding:18px 20px">
+            <div class="row"><strong style="font-family:var(--fd);font-size:22px;color:var(--navy)">مجمع الرافدين الطبي</strong><span class="chip">فعّال</span></div>
+            <div class="mu" style="font-weight:700;color:var(--fg)">العيادات والأطباء</div>
+            <div class="row" style="justify-content:flex-start;flex-wrap:wrap;gap:8px">
+              <span class="chip a" data-t="p0.34" data-fx="pop">د. أحمد سالم · باطنية</span><span class="chip a" data-t="p0.38" data-fx="pop">د. سارة ناجي · أعصاب</span><span class="chip a" data-t="p0.42" data-fx="pop">د. ليلى عباس · جلدية</span>
+            </div>
+            <div class="row a" data-t="p0.5" data-fx="up" style="justify-content:flex-start;gap:12px"><span class="chip blue">صيدلية الرافدين</span><span class="chip blue">مختبر الرافدين</span></div>
+          </div>
+          <div class="card a" data-t="p0.6" data-fx="up" style="flex-direction:row;align-items:center;justify-content:space-between;border:1.5px dashed var(--line);box-shadow:none">
+            <span class="nm">صيدلية الأمل · غير تابعة لمجمع</span><span class="btn care" style="padding:9px 18px;font-size:16px" data-fn="press" data-t="p0.7">ربط بمجمع</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 14 · trust -->
+  <section class="scene" data-id="trust">
+    <svg width="380" height="380" viewBox="0 0 380 380" style="position:absolute;left:770px;top:110px">
+      <circle cx="190" cy="190" r="160" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="14"/>
+      <circle data-fn="draw" data-t="0.2" data-d="2.2" cx="190" cy="190" r="160" fill="none" stroke="#5EEAD4" stroke-width="14" stroke-linecap="round" pathLength="1" stroke-dasharray="1 1" transform="rotate(-90 190 190)" style="filter:drop-shadow(0 0 14px rgba(94,234,212,.6))"/>
+      <g class="a" data-t="0.8" data-fx="pop" style="transform-origin:190px 190px"><path d="M190 92l78 30v58c0 52-34 88-78 104-44-16-78-52-78-104v-58z" fill="#0F766E" stroke="#5EEAD4" stroke-width="6"/><path d="M158 192l22 22 44-48" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/></g>
+    </svg>
+    <div class="a" data-t="0.4" data-fx="blur" style="position:absolute;left:0;right:0;top:520px;text-align:center;font-family:var(--fd);font-weight:800;font-size:76px">بياناتك <span style="background:linear-gradient(100deg,#5EEAD4,#14B8A6);-webkit-background-clip:text;background-clip:text;color:transparent">بأمان</span></div>
+    <div class="glass a" data-t="p0.15" data-fx="up" style="right:150px;top:670px;width:500px"><div class="t">دخول بكوكل أو واتساب</div><p>رمز تحقق يوصلك بلحظة</p></div>
+    <div class="glass a" data-t="p0.35" data-fx="up" style="right:710px;top:670px;width:500px"><div class="t">كل جهة تشوف مرضاها</div><p>وكل اطلاع على سجلك ينسجل</p></div>
+    <div class="glass a" data-t="p0.6" data-fx="up" style="right:1270px;top:670px;width:500px"><div class="t">النظام يراقب نفسه</div><p>فحص كل ٥ دقائق وتنبيه فوري</p></div>
+    <div class="a" data-t="p0.7" data-fx="fade" style="position:absolute;left:150px;top:150px;display:flex;flex-direction:column;gap:10px;opacity:.9">
+      <div class="log"><b>✓</b>uptime · white.spardexlab.site · 200 OK</div>
+      <div class="log"><b>✓</b>audit · record.view · clinic #12</div>
+      <div class="log"><b>✓</b>crash-free sessions · 100%</div>
+    </div>
+  </section>
+
+  <!-- 15 · close -->
+  <section class="scene" data-id="close">
+    <div class="benefit a" data-t="0.1" data-fx="up" style="right:150px;top:110px"><div class="who">للمريض</div><p>راحة وأمان، وملفك الصحي بجيبك</p></div>
+    <div class="benefit a" data-t="p0.12" data-fx="up" style="right:725px;top:110px"><div class="who">للطبيب</div><p>صورة كاملة، ووقت أكثر للعلاج</p></div>
+    <div class="benefit a" data-t="p0.24" data-fx="up" style="right:1300px;top:110px"><div class="who">للمختبر والصيدلية</div><p>شغل أسرع، ومرضى أكثر</p></div>
+    <div data-fn="halo" data-t="p0.5" style="position:absolute;left:660px;top:330px;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle, rgba(94,234,212,.26), transparent 65%)"></div>
+    <img class="a" data-t="p0.52" data-fx="rise" src="assets/logo-full-light.png" alt="أبيض" style="position:absolute;left:810px;top:420px;width:300px;height:382px;object-fit:contain">
+    <div class="a" data-t="p0.66" data-fx="up" style="position:absolute;left:0;right:0;top:820px;text-align:center;font-family:var(--fd);font-weight:500;font-size:40px;color:var(--glow)">صحتك… بمكان واحد</div>
+    <div class="a" data-t="p0.8" data-fx="pop" style="position:absolute;left:0;right:0;top:900px;display:flex;justify-content:center;gap:18px">
+      <div style="background:linear-gradient(135deg,#14B8A6,#0F766E);padding:14px 40px;border-radius:18px;font-family:var(--fd);font-weight:700;font-size:32px;box-shadow:0 18px 40px rgba(15,118,110,.45)">حمّل التطبيق اليوم</div>
+      <div style="border:2px solid rgba(255,255,255,.25);padding:14px 30px;border-radius:18px;font-size:26px;font-weight:600;display:flex;align-items:center;font-family:var(--fe);direction:ltr">white.spardexlab.site</div>
+    </div>
+  </section>
+
+  <div id="sweep"></div>
+  <div id="mark"><img src="assets/symbol-96.png" alt=""><span>أبيض</span></div>
+  <div class="vig"></div>
+  <div id="cap"></div>
+</div>
+
+<script src="data.js"></script>
+<script>
+const SCRIPT = window.SCRIPT;
+const LEAD = 0.9, GAP = 0.55, TAIL = 0.5, END_HOLD = 2.4;
+const clamp = (x) => Math.max(0, Math.min(1, x));
+const easeOut = (x) => 1 - Math.pow(1 - x, 3);
+const easeInOut = (x) => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const easeBack = (x) => { const c1 = 1.5, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+
+let cur = 0;
+const scenes = SCRIPT.map((s, i) => {
+  const vs = cur, as = vs + (i === 0 ? LEAD : GAP), ae = as + s.dur, ve = ae + TAIL + (i === SCRIPT.length - 1 ? END_HOLD : 0);
+  cur = ve;
+  return { ...s, vs, as, ae, ve, el: document.querySelector(`.scene[data-id="${s.id}"]`) };
+});
+window.TOTAL = cur;
+window.AUDIO = scenes.map((s) => ({ id: s.id, at: +s.as.toFixed(3) }));
+const at = (v, s) => (String(v).startsWith('p') ? parseFloat(v.slice(1)) * s.dur : parseFloat(v || 0));
+const revealAt = scenes.find((s) => s.id === 'reveal').as + 3.2;
+
+// captions: sentence chunks, timed by length
+scenes.forEach((s) => {
+  const parts = s.text.split(/(?<=[.؟:،])\s+/);
+  const chunks = []; let buf = '';
+  for (const p of parts) { buf = buf ? buf + ' ' + p : p; if (buf.length >= 26) { chunks.push(buf); buf = ''; } }
+  if (buf) { if (chunks.length && buf.length < 14) chunks[chunks.length - 1] += ' ' + buf; else chunks.push(buf); }
+  const total = chunks.reduce((n, c) => n + c.length, 0); let t = s.as;
+  s.caps = chunks.map((c) => { const d = s.dur * c.length / total; const r = { t0: t, t1: t + d, text: c.replace(/[،.]$/, '') }; t += d; return r; });
+});
+
+window.DINGS = [];
+scenes.forEach((s) => s.el.querySelectorAll('[data-ding]').forEach((e) => window.DINGS.push(+(s.as + at(e.dataset.t, s) + 0.15).toFixed(3))));
+
+// deterministic particle field
+let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const P = []; const host = document.getElementById('parts');
+for (let i = 0; i < 70; i++) { const e = document.createElement('i'); const sz = 2 + rnd() * 4; e.style.width = e.style.height = sz + 'px'; host.appendChild(e);
+  P.push({ e, x: rnd() * 1920, y: rnd() * 1080, vx: (rnd() - .5) * 14, vy: -6 - rnd() * 16, ph: rnd() * 6.28, o: .15 + rnd() * .45 }); }
+
+// QR pattern (decorative)
+(function () {
+  const c = document.getElementById('qrc'), g = c.getContext('2d'), n = 29; let sd = 7;
+  const r = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  g.fillStyle = '#fff'; g.fillRect(0, 0, n, n); g.fillStyle = '#0B1E33';
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (r() > 0.52) g.fillRect(x, y, 1, 1);
+  const finder = (x, y) => { g.fillStyle = '#0B1E33'; g.fillRect(x, y, 7, 7); g.fillStyle = '#fff'; g.fillRect(x + 1, y + 1, 5, 5); g.fillStyle = '#0B1E33'; g.fillRect(x + 2, y + 2, 3, 3); };
+  g.fillStyle = '#fff'; g.fillRect(0, 0, 8, 8); g.fillRect(n - 8, 0, 8, 8); g.fillRect(0, n - 8, 8, 8);
+  finder(0, 0); finder(n - 7, 0); finder(0, n - 7);
+})();
+
+const FN = {
+  type(el, k, s, l, t0) { const txt = el.dataset.text, d = parseFloat(el.dataset.d || 1.2); const n = Math.round(clamp((l - t0) / d) * txt.length);
+    el.innerHTML = n ? `<span>${txt.slice(0, n)}</span>${n < txt.length ? '|' : ''}` : (el.dataset.ph ?? 'ابحث عن طبيب أو مختبر…'); },
+  draw(el, k, s, l, t0) { el.style.strokeDashoffset = 1 - easeOut(clamp((l - t0) / parseFloat(el.dataset.d || 1))); },
+  sel(el, k, s, l, t0) { el.classList.toggle('on', l >= t0); },
+  swap(el, k, s, l, t0) { const on = l >= t0; el.textContent = on ? el.dataset.b : el.dataset.a; el.className = 'chip ' + (on ? '' : 'gray'); },
+  stepon(el, k, s, l, t0) { el.classList.toggle('on', l >= t0); },
+  callrow(el, k, s, l, t0) { const p = clamp((l - t0) / 0.5); el.style.boxShadow = p > 0 && l < t0 + 2.5 ? `0 0 0 ${3 * p}px rgba(255,107,74,.6)` : 'none'; },
+  press(el, k, s, l, t0) { const p = l - t0; el.style.transform = p > 0 && p < 0.25 ? 'scale(.94)' : 'scale(1)'; el.style.filter = p > 0 && p < 0.25 ? 'brightness(1.15)' : 'none'; },
+  scan(el, k, s, l, t0) { const p = (l - t0) / parseFloat(el.dataset.d || 1.5); el.style.opacity = p > 0 && p < 1 ? 1 : 0; el.style.top = (10 + 200 * (0.5 - 0.5 * Math.cos(Math.PI * 2 * clamp(p)))) + 'px'; },
+  count(el, k, s, l, t0) { el.textContent = Math.round(easeOut(clamp((l - t0) / parseFloat(el.dataset.d))) * parseFloat(el.dataset.to)); },
+  bars(el, k, s, l, t0) { const p = easeOut(clamp((l - t0) / parseFloat(el.dataset.d))); [...el.children].forEach((b, i) => b.style.height = `calc(${b.style.getPropertyValue('--h')} * ${clamp(p * 1.4 - i * 0.06)})`); },
+  pulse(el, k, s, l, t0) {
+    if (!el._r) { el._r = [0, 1, 2].map(() => { const r = document.createElement('div'); r.className = 'ring-pulse'; el.appendChild(r); return r; }); }
+    el._r.forEach((r, i) => { const p = l < t0 ? -1 : ((l - t0) / 1.6 + i / 3) % 1; const sz = 150 + 260 * p;
+      r.style.cssText = `width:${sz}px;height:${sz}px;left:${-sz / 2}px;top:${-sz / 2}px;opacity:${p < 0 ? 0 : (1 - p) * 0.8}`; }); },
+  mypos(el, k, s, l, t0) {
+    if (!el._r) { el.innerHTML = '<b style="position:absolute;width:26px;height:26px;left:-13px;top:-13px;border-radius:50%;background:#1D5FD1;border:5px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.3)"></b>'; el._r = [0, 1].map(() => { const r = document.createElement('i'); el.appendChild(r); return r; }); }
+    el.style.opacity = clamp((l - t0) / .4);
+    el._r.forEach((r, i) => { const p = ((Math.max(0, l - t0)) / 1.8 + i / 2) % 1; const sz = 26 + 120 * p;
+      r.style.cssText = `position:absolute;width:${sz}px;height:${sz}px;left:${-sz / 2}px;top:${-sz / 2}px;border-radius:50%;background:rgba(29,95,209,${(1 - p) * .25})`; }); },
+  wave(el, k, s, l, t0) { const on = l >= t0 && l < t0 + parseFloat(el.dataset.d); [...el.children].forEach((b, i) => { const h = on ? 14 + 50 * Math.abs(Math.sin(l * 7 + i * .9) * Math.sin(l * 2.3 + i * .4)) : 10; b.style.height = h + 'px'; }); },
+  drift(el, k, s, l, t0) { const p = clamp(l / s.dur); el.style.transform = `translate(${(+el.dataset.dx) * p}px, ${-(1 - k) * 140 + 30 * p}px) rotate(${(+el.dataset.r) * (0.4 + p)}deg)`; el.style.opacity = k * (1 - clamp((l - s.dur * 0.85) / 1)); },
+  flyin(el, k, s, l, t0) { const p = easeOut(clamp((l - t0) / 0.9)); el.style.transform = `translateX(${-(1 - p) * 500}px)`; el.style.opacity = p; },
+  // logo reveal: light particles fly into the centre, a shockwave, a halo that breathes, a shine across the mark, the wordmark wipes in
+  converge(el, k, s, l, t0) {
+    if (!el._p) { let sd = 3; const r = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+      el._p = Array.from({ length: 90 }, () => { const e = document.createElement('i'); const a = r() * 6.283, d = 500 + r() * 700; e.style.cssText = 'position:absolute;border-radius:50%;background:#BFF7EE;box-shadow:0 0 10px #5EEAD4'; el.appendChild(e); return { e, a, d, sz: 2 + r() * 5, dl: r() * .5 }; }); }
+    const D = parseFloat(el.dataset.d);
+    el._p.forEach((p) => { const q = easeInOut(clamp((l - t0 - p.dl) / D)); const rr = p.d * (1 - q); const x = Math.cos(p.a + q * 1.2) * rr, y = Math.sin(p.a + q * 1.2) * rr * .7;
+      p.e.style.width = p.e.style.height = p.sz + 'px'; p.e.style.transform = `translate(${x}px,${y}px)`; p.e.style.opacity = l < t0 ? 0 : (q < .95 ? .9 : (1 - q) * 18); }); },
+  shock(el, k, s, l, t0) {
+    if (!el._r) { el._r = [0, 1].map(() => { const r = document.createElement('i'); el.appendChild(r); return r; }); }
+    el._r.forEach((r, i) => { const p = clamp((l - t0 - i * .18) / 1.3); const sz = 100 + 1500 * easeOut(p);
+      r.style.cssText = `position:absolute;width:${sz}px;height:${sz}px;left:${-sz / 2}px;top:${-sz / 2}px;border-radius:50%;border:${3 - i}px solid rgba(94,234,212,${p > 0 && p < 1 ? (1 - p) * .7 : 0})`; }); },
+  halo(el, k, s, l, t0) { const p = clamp((l - t0) / 1.2); el.style.opacity = p * (0.75 + 0.25 * Math.sin(l * 2)); el.style.transform = `scale(${0.6 + 0.4 * easeOut(p) + 0.03 * Math.sin(l * 1.6)})`; },
+  shine(el, k, s, l, t0) { const p = clamp((l - t0) / 1.1); const bar = el.firstElementChild; bar.style.left = (-200 + 900 * easeInOut(p)) + 'px'; el.style.opacity = p > 0 && p < 1 ? 1 : 0; },
+  wipe(el, k, s, l, t0) { const p = easeOut(clamp((l - t0) / parseFloat(el.dataset.d))); el.style.clipPath = `inset(0 0 0 ${100 - p * 100}%)`; el.style.transform = `translateY(${(1 - p) * 20}px)`; el.style.opacity = p > 0 ? 1 : 0; },
+};
+
+function applyFx(el, k, fx) {
+  let tr = '', f = '';
+  if (fx === 'up') tr = `translateY(${(1 - k) * 46}px)`;
+  else if (fx === 'drop') tr = `translateY(${-(1 - k) * 110}px)`;
+  else if (fx === 'left') tr = `translateX(${(1 - k) * 60}px)`;
+  else if (fx === 'right') tr = `translateX(${-(1 - k) * 80}px)`;
+  else if (fx === 'pop' || fx === 'pin') { const b = k <= 0 ? 0 : easeBack(Math.min(1, k)); tr = fx === 'pin' ? `translateY(${-(1 - b) * 60}px) scale(${0.6 + 0.4 * b})` : `scale(${0.5 + 0.5 * b})`; }
+  else if (fx === 'blur') { tr = `translateY(${(1 - k) * 30}px)`; f = `blur(${(1 - k) * 14}px)`; }
+  else if (fx === 'rise') { tr = `translateY(${(1 - k) * 60}px) scale(${0.82 + 0.18 * k})`; f = `blur(${(1 - k) * 18}px)`; }
+  el.style.opacity = clamp(k * 1.4);
+  if (el instanceof SVGElement && fx === 'fade') { el.style.opacity = k; return; }
+  el.style.transform = tr; if (f || el.style.filter) el.style.filter = f;
+}
+
+function seek(t) {
+  // background life
+  const A = (id, x, y) => document.getElementById(id).style.transform = `translate(${x}px, ${y}px)`;
+  A('a1', -200 + 160 * Math.sin(t * .11), 420 + 90 * Math.cos(t * .09));
+  A('a2', 1200 + 140 * Math.cos(t * .08), -180 + 120 * Math.sin(t * .1));
+  A('a3', 700 + 220 * Math.sin(t * .06 + 1), 300 + 160 * Math.cos(t * .07));
+  P.forEach((p) => { const y = ((p.y + p.vy * t) % 1180 + 1180) % 1180 - 50, x = p.x + p.vx * t * .4 + 18 * Math.sin(t * .5 + p.ph);
+    p.e.style.transform = `translate(${x}px, ${y}px)`; p.e.style.opacity = p.o * (0.6 + 0.4 * Math.sin(t * 1.3 + p.ph)); });
+  // light sweep at every scene change
+  const sw = document.getElementById('sweep'); let swp = -1;
+  for (const s of scenes.slice(1)) { const q = (t - (s.vs - 0.35)) / 0.9; if (q >= 0 && q <= 1) swp = q; }
+  sw.style.opacity = swp < 0 ? 0 : Math.sin(swp * Math.PI); sw.style.left = (-700 + 3200 * (swp < 0 ? 0 : easeInOut(swp))) + 'px';
+  // brand mark after the reveal, hidden on the final logo
+  const closeS = scenes[scenes.length - 1];
+  document.getElementById('mark').style.opacity = clamp((t - revealAt) / 0.8) * (1 - clamp((t - closeS.as - closeS.dur * 0.45) / 0.6));
+  let caption = '';
+  for (const s of scenes) {
+    const vis = t >= s.vs - 0.01 && t < s.ve + 0.45;
+    s.el.style.display = vis ? 'block' : 'none';
+    if (!vis) continue;
+    const fadeIn = clamp((t - s.vs) / 0.5), fadeOut = s.id === 'close' ? 1 : clamp((s.ve + 0.45 - t) / 0.45);
+    s.el.style.opacity = Math.min(fadeIn, fadeOut);
+    const l = t - s.as;
+    const z = clamp((t - s.vs) / (s.ve - s.vs));
+    s.el.style.transform = `scale(${1 + 0.03 * z})`;
+    s.el.style.filter = fadeOut < 1 ? `blur(${(1 - fadeOut) * 8}px)` : 'none';
+    s.el.querySelectorAll('.a').forEach((el) => { if (el.dataset.fn) return; const k = easeOut(clamp((l - at(el.dataset.t, s)) / 0.7)); applyFx(el, k, el.dataset.fx); });
+    s.el.querySelectorAll('[data-fn]').forEach((el) => { if (el.classList.contains('a') && el.dataset.fx && el.dataset.fn === 'press') { const k = easeOut(clamp((l - at(el.dataset.t, s)) / 0.7)); applyFx(el, k, el.dataset.fx); } const t0 = at(el.dataset.t2 || el.dataset.t, s); const k = easeOut(clamp((l - t0) / 0.7)); FN[el.dataset.fn](el, k, s, l, t0); });
+    for (const c of s.caps) if (t >= c.t0 && t < c.t1 + 0.12) caption = c.text;
+  }
+  document.getElementById('cap').textContent = window.NOCAP ? '' : caption;
+}
+window.seek = seek;
+seek(0);
+</script>
+</body>
+</html>

@@ -53,7 +53,7 @@ try {
 
   await p.getByRole('button', { name: /الدخول بالبريد الإلكتروني/ }).click();
   await p.getByLabel('البريد الإلكتروني').fill('mona@demo.test');
-  await p.getByLabel('كلمة المرور').fill('Demo-Pass-2026!');
+  await p.getByLabel('كلمة المرور', { exact: true }).fill('Demo-Pass-2026!');
   await shot(p, 'm04-review-signin');
   await p.getByRole('button', { name: 'دخول', exact: true }).click();
   await p.getByRole('button', { name: 'إرسال طلب الحجز' }).waitFor({ timeout: 15000 });
