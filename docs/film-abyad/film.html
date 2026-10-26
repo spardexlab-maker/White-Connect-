@@ -153,7 +153,7 @@ h1 em { font-style: normal; background: linear-gradient(100deg, #5EEAD4, #14B8A6
     <img class="a" data-t="1.2" data-fx="rise" src="assets/symbol.png" alt="" style="position:absolute;left:710px;top:180px;width:500px;height:407px;object-fit:contain;filter:drop-shadow(0 30px 60px rgba(20,184,166,.35))">
     <div data-fn="shine" data-t="2.6" style="position:absolute;left:700px;top:170px;width:520px;height:430px;overflow:hidden;-webkit-mask:url(assets/symbol.png) center/contain no-repeat;mask:url(assets/symbol.png) center/contain no-repeat"><i style="position:absolute;top:-60px;width:140px;height:560px;transform:rotate(18deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.75),transparent)"></i></div>
     <div data-fn="wipe" data-t="2.2" data-d="1.1" style="position:absolute;left:760px;top:625px;width:400px;height:200px"><img src="assets/wordmark-light.png" alt="" style="width:400px;height:200px;object-fit:contain"></div>
-    <div class="a" data-t="p0.55" data-fx="up" style="position:absolute;left:0;right:0;top:860px;text-align:center;font-family:var(--fd);font-weight:500;font-size:44px;color:rgba(255,255,255,.9)">طبيبك ومختبرك وصيدليتك… <span style="color:var(--glow)">بمكان واحد</span></div>
+    <div class="a" id="revealTag" data-t="p0.55" data-fx="up" style="position:absolute;left:0;right:0;top:860px;text-align:center;font-family:var(--fd);font-weight:500;font-size:44px;color:rgba(255,255,255,.9)">طبيبك ومختبرك وصيدليتك… <span style="color:var(--glow)">بمكان واحد</span></div>
   </section>
 
   <!-- 3 · the loop -->
@@ -359,7 +359,7 @@ h1 em { font-style: normal; background: linear-gradient(100deg, #5EEAD4, #14B8A6
         <div class="appbar"><strong>طلبات التحاليل</strong><img class="logo-i" src="assets/symbol-96.png" alt=""></div>
         <div class="pbody" style="align-items:center">
           <div class="mu" style="align-self:stretch;text-align:center">د. أحمد سالم — صالح ٧ أيام</div>
-          <div class="qr"><canvas id="qrc" width="29" height="29"></canvas><div class="scanline" data-fn="scan" data-t="p0.26" data-d="1.6"></div></div>
+          <div class="qr"><canvas class="qrc" width="29" height="29"></canvas><div class="scanline" data-fn="scan" data-t="p0.26" data-d="1.6"></div></div>
           <div class="code">64JE-0X9N</div>
           <div class="card" style="align-self:stretch;gap:8px">
             <div class="row"><span>سكر صائم</span><span class="chip gray" data-fn="swap" data-t="p0.36" data-a="لم يُجرَ بعد" data-b="بالمختبر">لم يُجرَ بعد</span></div>
@@ -523,6 +523,302 @@ h1 em { font-style: normal; background: linear-gradient(100deg, #5EEAD4, #14B8A6
     </div>
   </section>
 
+  <!-- ═════ audience films: doctor / lab / pharmacy ═════ -->
+
+  <!-- doctor · hook -->
+  <section class="scene" data-id="dhook">
+    <div class="copy" style="top:300px">
+      <div class="kicker a" data-t="0.1" data-fx="up"><i></i>يوم بالعيادة</div>
+      <h1 class="a" data-t="0.4" data-fx="blur">زحمة وتلفونات<br><em>ووقتك يضيع</em></h1>
+    </div>
+    <div class="paper a" data-t="0.2" data-fx="drop" data-fn="drift" data-dx="-60" data-r="-9" style="left:200px;top:180px"><b>وصفة بخط اليد</b><i></i><i style="width:70%"></i><i></i><i style="width:50%"></i></div>
+    <div class="paper a" data-t="1.4" data-fx="drop" data-fn="drift" data-dx="70" data-r="7" style="left:470px;top:330px"><b>تحاليل بصورة</b><i></i><i style="width:80%"></i><i style="width:60%"></i><i></i></div>
+    <div class="paper a" data-t="2.6" data-fx="drop" data-fn="drift" data-dx="-30" data-r="-3" style="left:310px;top:560px;height:260px"><b>شنو اسم دوائي؟</b><i></i><i style="width:40%"></i><i style="width:90%"></i></div>
+    <div class="big-badge a" data-t="p0.7" data-fx="pop" style="left:690px;top:240px;font-size:44px;background:var(--pulse);padding:10px 26px;border-radius:16px">وقتك أثمن من هيچ</div>
+  </section>
+
+  <!-- doctor · schedule & self-booking -->
+  <section class="scene" data-id="dsched">
+    <div class="copy" style="width:600px;right:100px;top:240px">
+      <div class="kicker a" data-t="0" data-fx="up"><i></i>جدولك</div>
+      <h1 class="a" data-t="0.3" data-fx="blur" style="font-size:84px">المرضى يحجزون<br><em>بنفسهم</em></h1>
+      <div class="pts">
+        <div class="pt a" data-t="p0.12" data-fx="left"><b>◷</b>جدول أسبوعي وإجازات</div>
+        <div class="pt a" data-t="p0.36" data-fx="left"><b>₪</b>أنواع الزيارة وأسعارها</div>
+        <div class="pt a" data-t="p0.64" data-fx="left"><b>🔔</b>تذكير يقلل الغياب</div>
+      </div>
+    </div>
+    <div class="desk a" data-t="-0.3" data-fx="up" style="left:60px;top:150px;width:1000px;height:680px">
+      <div class="dtop"><i></i><i></i><i></i><span>الجدول وسياسة الحجز — د. أحمد سالم</span></div>
+      <div class="dwrap">
+        <div class="dside"><div class="it">مرضى اليوم</div><div class="it on">الجدول</div><div class="it">ملفي</div><div class="it">أسئلة الصيدلية</div></div>
+        <div class="dmain">
+          <div class="dh">الجدول الأسبوعي</div>
+          <div class="card a" data-t="p0.08" data-fx="up" style="gap:10px">
+            <div class="row"><span class="nm" style="width:90px">السبت</span><span class="chip" style="flex:1;text-align:center">4:00 م — 9:00 م</span></div>
+            <div class="row"><span class="nm" style="width:90px">الأحد</span><span class="chip" style="flex:1;text-align:center">4:00 م — 9:00 م</span></div>
+            <div class="row"><span class="nm" style="width:90px">الإثنين</span><span class="chip" style="flex:1;text-align:center">4:00 م — 7:00 م</span><span class="chip" style="flex:1;text-align:center">7:30 م — 9:30 م</span></div>
+            <div class="row"><span class="nm" style="width:90px">الجمعة</span><span class="chip gray" style="flex:1;text-align:center">عطلة</span></div>
+          </div>
+          <div class="card a" data-t="p0.3" data-fx="up" style="gap:8px">
+            <div class="mu" style="font-weight:700;color:var(--fg)">أنواع الزيارة</div>
+            <div class="row"><span class="nm">كشفية · ٢٠ دقيقة</span><span class="mu">٢٥٬٠٠٠ د.ع</span></div>
+            <div class="row"><span class="nm">مراجعة · ١٠ دقائق</span><span class="mu">١٥٬٠٠٠ د.ع</span></div>
+          </div>
+          <div class="card a" data-t="p0.46" data-fx="up" style="flex-direction:row;align-items:center;justify-content:space-between">
+            <span class="nm">تأكيد الحجز</span><span class="chip gray" data-fn="swap" data-t="p0.52" data-a="يدوي من السكرتير" data-b="تلقائي فور الحجز ✓">يدوي من السكرتير</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="phone a" data-t="p0.58" data-fx="up" style="left:20px;top:380px;width:300px;height:600px;border-radius:44px">
+      <div class="screen" style="border-radius:34px"><div class="notch"></div>
+        <div class="sbar"><span>5:12</span><span>●●●</span></div>
+        <div class="notif a" data-t="p0.66" data-fx="drop" data-ding="1" style="top:70px"><div class="ic"><img src="assets/symbol-96.png" alt=""></div><div><strong>حجز جديد</strong><span>الأحد ٤:٣٠ — كشفية</span></div></div>
+        <div class="notif a" data-t="p0.8" data-fx="drop" style="top:180px"><div class="ic"><img src="assets/symbol-96.png" alt=""></div><div><strong>تذكير للمريض</strong><span>موعدك باچر ٤:٣٠ م</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- shared closing for audience films -->
+  <section class="scene" data-id="dclose">
+    <div class="benefit a" data-t="0.1" data-fx="up" style="right:150px;top:110px"><div class="who">وقت أكثر</div><p>للعلاج، مو للورق والتلفونات</p></div>
+    <div class="benefit a" data-t="p0.12" data-fx="up" style="right:725px;top:110px"><div class="who">عيادة مرتبة</div><p>حجوزات ودور ونداء بضغطة</p></div>
+    <div class="benefit a" data-t="p0.24" data-fx="up" style="right:1300px;top:110px"><div class="who">مرضى ملتزمين</div><p>تذكير بالجرعات وتشوف الالتزام</p></div>
+    <div data-fn="halo" data-t="p0.42" style="position:absolute;left:660px;top:260px;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle, rgba(94,234,212,.26), transparent 65%)"></div>
+    <img class="a" data-t="p0.44" data-fx="rise" src="assets/logo-full-light.png" alt="أبيض" style="position:absolute;left:820px;top:350px;width:280px;height:356px;object-fit:contain">
+    <div class="a" data-t="p0.56" data-fx="up" style="position:absolute;left:0;right:0;top:722px;text-align:center;font-family:var(--fd);font-weight:500;font-size:40px;color:var(--glow)">عيادتك… بشاشة وحدة</div>
+    <div class="a" data-t="p0.7" data-fx="pop" style="position:absolute;left:0;right:0;top:806px;display:flex;justify-content:center;gap:18px">
+      <div style="background:linear-gradient(135deg,#14B8A6,#0F766E);padding:14px 40px;border-radius:18px;font-family:var(--fd);font-weight:700;font-size:32px;box-shadow:0 18px 40px rgba(15,118,110,.45)">سجّل عيادتك اليوم</div>
+      <div style="border:2px solid rgba(255,255,255,.25);padding:14px 30px;border-radius:18px;font-size:26px;font-weight:600;display:flex;align-items:center;font-family:var(--fe);direction:ltr">info@spardexlab.site · +964 788 317 3489</div>
+    </div>
+  </section>
+
+  <!-- lab · hook -->
+  <section class="scene" data-id="lhook">
+    <div class="copy" style="top:300px">
+      <div class="kicker a" data-t="0.1" data-fx="up"><i></i>يوم بالمختبر</div>
+      <h1 class="a" data-t="0.4" data-fx="blur">طلبات ما تنقرى<br><em>ونتائج تضيع</em></h1>
+    </div>
+    <div class="paper a" data-t="0.2" data-fx="drop" data-fn="drift" data-dx="-60" data-r="-9" style="left:200px;top:180px"><b>طلب بخط اليد</b><i></i><i style="width:70%"></i><i></i><i style="width:50%"></i></div>
+    <div class="paper a" data-t="1.4" data-fx="drop" data-fn="drift" data-dx="70" data-r="7" style="left:470px;top:330px"><b>نتيجة بالواتساب</b><i></i><i style="width:80%"></i><i style="width:60%"></i><i></i></div>
+    <div class="paper a" data-t="2.6" data-fx="drop" data-fn="drift" data-dx="-30" data-r="-3" style="left:310px;top:560px;height:260px"><b>أي تحليل قصده؟</b><i></i><i style="width:40%"></i><i style="width:90%"></i></div>
+    <div class="big-badge a" data-t="p0.6" data-fx="pop" style="left:690px;top:240px;font-size:44px;background:var(--pulse);padding:10px 26px;border-radius:16px">☎ طلعت النتيجة؟</div>
+  </section>
+
+  <!-- lab · bench: sample, values, publish -->
+  <section class="scene" data-id="lbench">
+    <div class="copy" style="width:560px;right:90px;top:220px">
+      <div class="kicker a" data-t="0" data-fx="up"><i></i>شغل المختبر</div>
+      <h1 class="a" data-t="0.3" data-fx="blur" style="font-size:80px">من العينة<br><em>للنتيجة</em></h1>
+      <div class="pts">
+        <div class="pt a" data-t="p0.08" data-fx="left"><b>▥</b>رقم وباركود لكل عينة</div>
+        <div class="pt a" data-t="p0.3" data-fx="left"><b>!</b>القيم الحرجة تتعلّم</div>
+        <div class="pt a" data-t="p0.6" data-fx="left"><b>⇄</b>للمريض والطبيب سوا</div>
+      </div>
+    </div>
+    <div class="desk a" data-t="-0.3" data-fx="up" style="left:60px;top:150px;width:1040px;height:700px">
+      <div class="dtop"><i></i><i></i><i></i><span>مختبر الرافدين — طلبات المختبر</span></div>
+      <div class="dwrap">
+        <div class="dside"><div class="it on">طلبات المختبر</div><div class="it">فتح طلب برمز</div><div class="it">السحب المنزلي</div><div class="it">التقارير</div></div>
+        <div class="dmain">
+          <div class="row"><div><div class="dh" style="font-size:24px">حسن علي · ٤٧ سنة</div><div class="mu">طلب د. أحمد سالم · العينة S-1045</div></div>
+            <svg class="a" data-t="p0.06" data-fx="pop" width="190" height="56" viewBox="0 0 190 56"><g fill="#0B1E33"><rect x="0" width="4" height="44"/><rect x="8" width="2" height="44"/><rect x="14" width="6" height="44"/><rect x="24" width="2" height="44"/><rect x="30" width="4" height="44"/><rect x="38" width="2" height="44"/><rect x="44" width="6" height="44"/><rect x="54" width="4" height="44"/><rect x="62" width="2" height="44"/><rect x="68" width="6" height="44"/><rect x="78" width="2" height="44"/><rect x="84" width="4" height="44"/><rect x="92" width="2" height="44"/><rect x="98" width="6" height="44"/><rect x="108" width="2" height="44"/><rect x="114" width="4" height="44"/><rect x="122" width="6" height="44"/><rect x="132" width="2" height="44"/><rect x="138" width="4" height="44"/><rect x="146" width="2" height="44"/><rect x="152" width="6" height="44"/><rect x="162" width="2" height="44"/><rect x="168" width="4" height="44"/><rect x="176" width="6" height="44"/><rect x="186" width="4" height="44"/></g><text x="95" y="55" text-anchor="middle" font-size="11" font-family="Inter" fill="#5B6F82">S-1045</text></svg></div>
+          <div class="row" style="justify-content:flex-start;gap:10px"><span class="chip gray" data-fn="swap" data-t="p0.1" data-a="بانتظار السحب" data-b="قيد المعالجة">بانتظار السحب</span></div>
+          <div class="res a" data-t="p0.16" data-fx="up"><div><div class="nm">سكر صائم</div><div class="mu">المجال 70–100 mg/dL</div></div><div class="row" style="gap:12px"><span class="chip red a" data-t="p0.3" data-fx="pop">مرتفع ↑</span><span class="v" style="color:var(--high);min-width:70px;text-align:left" data-fn="type" data-t="p0.2" data-d="0.6" data-text="124" data-ph="—"></span></div></div>
+          <div class="res a" data-t="p0.22" data-fx="up"><div><div class="nm">البوتاسيوم K</div><div class="mu">المجال 3.5–5.1 mmol/L</div></div><div class="row" style="gap:12px"><span class="chip red a" data-t="p0.36" data-fx="pop" style="background:#C62828;color:#fff">حرج !</span><span class="v" style="color:var(--high);min-width:70px;text-align:left" data-fn="type" data-t="p0.26" data-d="0.6" data-text="6.4" data-ph="—"></span></div></div>
+          <div class="res a" data-t="p0.28" data-fx="up"><div><div class="nm">السكر التراكمي HbA1c</div><div class="mu">المجال 4.0–5.6 %</div></div><div class="row" style="gap:12px"><span class="chip blue a" data-t="p0.4" data-fx="pop">طبيعي</span><span class="v" style="color:var(--normal);min-width:70px;text-align:left" data-fn="type" data-t="p0.32" data-d="0.6" data-text="5.4" data-ph="—"></span></div></div>
+          <div class="btn care a" data-t="p0.46" data-fx="up" data-fn="press" data-t2="p0.56">إكمال التحليل ونشر النتيجة</div>
+          <div class="row a" data-t="p0.6" data-fx="up" data-ding="2" style="justify-content:flex-start;gap:10px"><span class="chip">✓ وصلت للمريض</span><span class="chip">✓ وصلت للطبيب</span><span class="chip gray">التصحيح يحتفظ بالأصل والسبب</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- lab · reports & receipts -->
+  <section class="scene" data-id="lreports">
+    <div class="copy" style="width:600px;right:110px;top:260px">
+      <div class="kicker a" data-t="0" data-fx="up"><i></i>الحسابات</div>
+      <h1 class="a" data-t="0.3" data-fx="blur" style="font-size:84px">شغلك<br><em>بالأرقام</em></h1>
+      <p class="sub a" data-t="p0.4" data-fx="up">إيصال لكل مراجع، وتقرير لكل شهر</p>
+    </div>
+    <div class="desk a" data-t="-0.3" data-fx="up" style="left:70px;top:170px;width:1000px;height:640px">
+      <div class="dtop"><i></i><i></i><i></i><span>التقارير — مختبر الرافدين</span></div>
+      <div class="dmain">
+        <div class="row" style="gap:12px">
+          <div class="card a" data-t="p0.08" data-fx="up" style="flex:1;align-items:center"><div class="dh"><span data-fn="count" data-t="p0.1" data-d="1.4" data-to="486">0</span></div><div class="mu">طلب مختبر</div></div>
+          <div class="card a" data-t="p0.12" data-fx="up" style="flex:1;align-items:center"><div class="dh"><span data-fn="count" data-t="p0.14" data-d="1.4" data-to="61">0</span></div><div class="mu">سحب منزلي</div></div>
+          <div class="card a" data-t="p0.16" data-fx="up" style="flex:1;align-items:center"><div class="dh"><span data-fn="count" data-t="p0.18" data-d="1.4" data-to="38">0</span></div><div class="mu">طبيب يرسل لك</div></div>
+        </div>
+        <div class="card a" data-t="p0.24" data-fx="up" style="padding:18px 20px">
+          <div class="row"><strong style="font-size:19px">الطلبات بالأسابيع</strong><span class="chip">↑ نمو</span></div>
+          <div class="bars" data-fn="bars" data-t="p0.28" data-d="1.4" style="height:170px"><div style="--h:38%"></div><div style="--h:46%"></div><div style="--h:52%"></div><div style="--h:61%"></div><div style="--h:70%"></div><div style="--h:78%"></div><div style="--h:92%"></div><div style="--h:100%"></div></div>
+        </div>
+        <div class="card a" data-t="p0.5" data-fx="up" style="flex-direction:row;align-items:center;justify-content:space-between"><span class="nm">إيصال · حسن علي · ٣ تحاليل</span><span class="mu" style="font-weight:700;color:var(--fg)">٣٥٬٠٠٠ د.ع</span><span class="chip">مدفوع ✓</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="scene" data-id="lclose">
+    <div class="benefit a" data-t="0.1" data-fx="up" style="right:150px;top:110px"><div class="who">طلبات أكثر</div><p>من كل طبيب على أبيض</p></div>
+    <div class="benefit a" data-t="p0.12" data-fx="up" style="right:725px;top:110px"><div class="who">شغل أسرع</div><p>بلا ورق ولا خط ما ينقرى</p></div>
+    <div class="benefit a" data-t="p0.24" data-fx="up" style="right:1300px;top:110px"><div class="who">بلا اتصالات</div><p>النتيجة توصل لحالها</p></div>
+    <div data-fn="halo" data-t="p0.42" style="position:absolute;left:660px;top:260px;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle, rgba(94,234,212,.26), transparent 65%)"></div>
+    <img class="a" data-t="p0.44" data-fx="rise" src="assets/logo-full-light.png" alt="أبيض" style="position:absolute;left:820px;top:350px;width:280px;height:356px;object-fit:contain">
+    <div class="a" data-t="p0.56" data-fx="up" style="position:absolute;left:0;right:0;top:722px;text-align:center;font-family:var(--fd);font-weight:500;font-size:40px;color:var(--glow)">مختبرك… موصول بكل طبيب</div>
+    <div class="a" data-t="p0.7" data-fx="pop" style="position:absolute;left:0;right:0;top:806px;display:flex;justify-content:center;gap:18px">
+      <div style="background:linear-gradient(135deg,#14B8A6,#0F766E);padding:14px 40px;border-radius:18px;font-family:var(--fd);font-weight:700;font-size:32px;box-shadow:0 18px 40px rgba(15,118,110,.45)">سجّل مختبرك اليوم</div>
+      <div style="border:2px solid rgba(255,255,255,.25);padding:14px 30px;border-radius:18px;font-size:26px;font-weight:600;display:flex;align-items:center;font-family:var(--fe);direction:ltr">info@spardexlab.site · +964 788 317 3489</div>
+    </div>
+  </section>
+
+  <!-- pharmacy · hook -->
+  <section class="scene" data-id="phook">
+    <div class="copy" style="top:300px">
+      <div class="kicker a" data-t="0.1" data-fx="up"><i></i>يوم بالصيدلية</div>
+      <h1 class="a" data-t="0.4" data-fx="blur">وصفة ما تنقرى<br><em>وطبيب ما يرد</em></h1>
+    </div>
+    <div class="paper a" data-t="0.2" data-fx="drop" data-fn="drift" data-dx="-60" data-r="-9" style="left:200px;top:180px"><b>وصفة بخط اليد</b><i></i><i style="width:70%"></i><i></i><i style="width:50%"></i></div>
+    <div class="paper a" data-t="1.4" data-fx="drop" data-fn="drift" data-dx="70" data-r="7" style="left:470px;top:330px"><b>أصلية لو مزوّرة؟</b><i></i><i style="width:80%"></i><i style="width:60%"></i><i></i></div>
+    <div class="paper a" data-t="2.6" data-fx="drop" data-fn="drift" data-dx="-30" data-r="-3" style="left:310px;top:560px;height:260px"><b>المخزون خلص؟</b><i></i><i style="width:40%"></i><i style="width:90%"></i></div>
+    <div class="big-badge a" data-t="p0.6" data-fx="pop" style="left:690px;top:240px;font-size:44px;background:var(--pulse);padding:10px 26px;border-radius:16px">☎ الطبيب ما يرد</div>
+  </section>
+
+  <!-- pharmacy · verify -->
+  <section class="scene" data-id="pverify">
+    <div class="copy" style="width:600px;right:110px;top:250px">
+      <div class="kicker a" data-t="0" data-fx="up"><i></i>التحقق</div>
+      <h1 class="a" data-t="0.3" data-fx="blur" style="font-size:84px">وصفة<br><em>ما تنزوّر</em></h1>
+      <div class="pts">
+        <div class="pt a" data-t="p0.12" data-fx="left"><b>▦</b>رمز تحقق لكل وصفة</div>
+        <div class="pt a" data-t="p0.4" data-fx="left"><b>✓</b>معتمدة من الطبيب</div>
+        <div class="pt a" data-t="p0.66" data-fx="left"><b>↻</b>التعديل يلغي القديمة</div>
+      </div>
+    </div>
+    <div class="phone a" data-t="-0.3" data-fx="up" style="left:640px;top:130px;width:380px;height:800px">
+      <div class="screen"><div class="notch"></div>
+        <div class="sbar"><span>12:40</span><span>●●●</span></div>
+        <div class="appbar"><strong>التحقق من وصفة</strong><img class="logo-i" src="assets/symbol-96.png" alt=""></div>
+        <div class="pbody" style="align-items:center">
+          <div class="qr" style="width:200px;height:200px"><canvas class="qrc" width="29" height="29"></canvas><div class="scanline" data-fn="scan" data-t="p0.1" data-d="1.4"></div></div>
+          <div class="card a" data-t="p0.34" data-fx="pop" data-ding="3" style="align-self:stretch;align-items:center;background:#E6F4F1">
+            <div style="font-family:var(--fd);font-weight:800;font-size:28px;color:var(--care-d)">✓ وصفة أصلية</div>
+            <div class="mu">RX-7781 · د. أحمد سالم · عيادات الرافدين</div>
+          </div>
+          <div class="card a" data-t="p0.5" data-fx="up" style="align-self:stretch;gap:8px">
+            <div class="row"><span class="nm">الإصدار ٢</span><span class="chip">عدّلها الطبيب</span></div>
+            <div class="row"><span class="mu" style="text-decoration:line-through">الإصدار ١</span><span class="chip red">ملغاة — لا يجوز صرفها</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="glass a" data-t="p0.6" data-fx="right" style="left:120px;top:430px;width:420px">
+      <div class="ico">⚠</div><div class="t">حساسية موثقة</div><p>بنسلين — تظهر وياك قبل الصرف</p>
+    </div>
+  </section>
+
+  <!-- pharmacy · dispense -->
+  <section class="scene" data-id="pdispense">
+    <div class="copy" style="width:560px;right:90px;top:240px">
+      <div class="kicker a" data-t="0" data-fx="up"><i></i>الصرف</div>
+      <h1 class="a" data-t="0.3" data-fx="blur" style="font-size:80px">تحضير وصرف<br><em>بخطوتين</em></h1>
+      <p class="sub a" data-t="p0.66" data-fx="up">وتذكيرات الدواء بهاتف المريض، بموافقته</p>
+    </div>
+    <div class="desk a" data-t="-0.3" data-fx="up" style="left:60px;top:220px;width:1060px;height:540px">
+      <div class="dtop"><i></i><i></i><i></i><span>التحضير والصرف — RX-7781</span></div>
+      <div class="dmain">
+        <div class="card a" data-t="p0.06" data-fx="up" style="gap:10px">
+          <div class="row"><strong style="font-size:20px">ميتفورمين ٥٠٠ ملغم</strong><span class="mu">المطلوب: ٦٠ · المصروف: <b data-fn="count" data-t="p0.36" data-d="0.8" data-to="60">0</b></span><span class="chip gray" data-fn="swap" data-t="p0.38" data-a="بانتظار" data-b="صُرفت ✓">بانتظار</span></div>
+          <div class="row"><strong style="font-size:20px">أملوديبين ١٠ ملغم</strong><span class="mu">المطلوب: ١٥ · المصروف: <b data-fn="count" data-t="p0.42" data-d="0.8" data-to="10">0</b></span><span class="chip gray" data-fn="swap" data-t="p0.44" data-a="بانتظار" data-b="صرف جزئي">بانتظار</span></div>
+        </div>
+        <div class="row" style="gap:12px">
+          <div class="btn a" data-t="p0.12" data-fx="up" data-fn="press" data-t2="p0.2" style="flex:1">تحضير (حجز الكمية)</div>
+          <div class="btn care a" data-t="p0.14" data-fx="up" data-fn="press" data-t2="p0.34" style="flex:1">صرف</div>
+        </div>
+        <div class="chip a" data-t="p0.22" data-fx="pop" style="align-self:flex-start;font-size:17px">تم حجز الكميات للتحضير</div>
+        <div class="card a" data-t="p0.48" data-fx="up" style="flex-direction:row;align-items:center;justify-content:space-between"><span class="nm">الإجمالي: ٢٢٬٥٠٠ د.ع</span><span class="btn" style="padding:9px 20px;font-size:17px" data-fn="press" data-t="p0.54">تسجيل الدفع نقداً</span><span class="chip a" data-t="p0.56" data-fx="pop">سُجل الدفع ✓</span></div>
+        <div class="card a" data-t="p0.62" data-fx="up" style="flex-direction:row;align-items:center;gap:14px">
+          <div data-fn="toggle" data-t="p0.72" style="width:62px;height:34px;border-radius:20px;background:#D5DEE6;position:relative;flex:none"><b style="position:absolute;top:4px;right:4px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:none"></b></div>
+          <span class="nm">تفعيل تذكيرات الدواء للمريض (بموافقته)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- pharmacy · stock -->
+  <section class="scene" data-id="pstock">
+    <div class="copy" style="width:560px;right:90px;top:240px">
+      <div class="kicker a" data-t="0" data-fx="up"><i></i>المخزون</div>
+      <h1 class="a" data-t="0.3" data-fx="blur" style="font-size:84px">تعرف النقص<br><em>قبل المريض</em></h1>
+      <div class="pts">
+        <div class="pt a" data-t="p0.14" data-fx="left"><b>▤</b>دفعات وتواريخ انتهاء</div>
+        <div class="pt a" data-t="p0.42" data-fx="left"><b>⇆</b>بيع مباشر ووصفة ورقية</div>
+        <div class="pt a" data-t="p0.66" data-fx="left"><b>↩</b>مرتجعات ترجع للمخزون</div>
+      </div>
+    </div>
+    <div class="desk a" data-t="-0.3" data-fx="up" style="left:60px;top:170px;width:1060px;height:640px">
+      <div class="dtop"><i></i><i></i><i></i><span>المخزون — صيدلية دجلة</span></div>
+      <div class="dmain">
+        <div class="row mu" style="font-weight:700;padding:0 16px"><span style="flex:2">المنتج</span><span style="flex:1">المتاح</span><span style="flex:1">أقرب انتهاء</span><span style="flex:1">الحالة</span></div>
+        <div class="lane a" data-t="p0.06" data-fx="up" style="border-right-color:var(--care-d)"><span class="nm" style="flex:2">ميتفورمين ٥٠٠ ملغم</span><span style="flex:1;font-family:var(--fe);font-weight:700">420</span><span class="mu" style="flex:1">2027/03</span><span style="flex:1"><span class="chip">متوفر</span></span></div>
+        <div class="lane a" data-t="p0.12" data-fx="up" style="border-right-color:#F0B429"><span class="nm" style="flex:2">أملوديبين ٥ ملغم</span><span style="flex:1;font-family:var(--fe);font-weight:700">12</span><span class="mu" style="flex:1">2026/12</span><span style="flex:1"><span class="chip a" data-t="p0.22" data-fx="pop" style="background:#FFF1D6;color:#9A6400">نقص</span></span></div>
+        <div class="lane a" data-t="p0.18" data-fx="up" style="border-right-color:var(--high)"><span class="nm" style="flex:2">أموكسيسيلين ٥٠٠</span><span style="flex:1;font-family:var(--fe);font-weight:700">0</span><span class="mu" style="flex:1">—</span><span style="flex:1"><span class="chip red a" data-t="p0.28" data-fx="pop">غير متوفر</span></span></div>
+        <div class="lane a" data-t="p0.24" data-fx="up" style="border-right-color:var(--high)"><span class="nm" style="flex:2">باراسيتامول شراب</span><span style="flex:1;font-family:var(--fe);font-weight:700">8</span><span class="mu" style="flex:1;color:var(--high)">2026/10</span><span style="flex:1"><span class="chip red a" data-t="p0.34" data-fx="pop">منتهي الصلاحية</span></span></div>
+        <div class="row a" data-t="p0.46" data-fx="up" style="gap:12px;margin-top:10px">
+          <div class="card" style="flex:1;align-items:center"><div class="nm">بيع مباشر</div><div class="mu">بدون وصفة</div></div>
+          <div class="card" style="flex:1;align-items:center"><div class="nm">وصفة ورقية</div><div class="mu">تنسجل بثواني</div></div>
+          <div class="card" style="flex:1;align-items:center"><div class="nm">مرتجع</div><div class="mu">يرجع للمخزون</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- pharmacy · reports -->
+  <section class="scene" data-id="preports">
+    <div class="copy" style="width:600px;right:110px;top:260px">
+      <div class="kicker a" data-t="0" data-fx="up"><i></i>التقارير</div>
+      <h1 class="a" data-t="0.3" data-fx="blur" style="font-size:84px">صيدليتك<br><em>بالأرقام</em></h1>
+      <p class="sub a" data-t="p0.4" data-fx="up">شنو ينباع، ومنو يرسلك، وشنو ينقص</p>
+    </div>
+    <div class="desk a" data-t="-0.3" data-fx="up" style="left:70px;top:160px;width:1000px;height:680px">
+      <div class="dtop"><i></i><i></i><i></i><span>التقارير — صيدلية دجلة</span></div>
+      <div class="dmain">
+        <div class="card a" data-t="p0.08" data-fx="up" style="padding:18px 20px;gap:12px">
+          <strong style="font-size:19px">المبيعات حسب المنتج</strong>
+          <div data-fn="hbars" data-t="p0.12" data-d="1.4" style="display:flex;flex-direction:column;gap:10px">
+            <div class="row"><span style="width:200px">ميتفورمين ٥٠٠</span><i style="--w:100%;height:22px;border-radius:6px;background:var(--care-d);display:block;flex:none"></i></div>
+            <div class="row"><span style="width:200px">أملوديبين ٥</span><i style="--w:74%;height:22px;border-radius:6px;background:var(--care);display:block;flex:none"></i></div>
+            <div class="row"><span style="width:200px">أوميبرازول ٢٠</span><i style="--w:58%;height:22px;border-radius:6px;background:#5EEAD4;display:block;flex:none"></i></div>
+          </div>
+        </div>
+        <div class="row" style="gap:14px;align-items:stretch">
+          <div class="card a" data-t="p0.34" data-fx="up" style="flex:1;gap:8px">
+            <strong style="font-size:18px">الأطباء الأكثر إرسالاً لك</strong>
+            <div class="row"><span>د. أحمد سالم</span><span class="chip">١٢٤ وصفة</span></div>
+            <div class="row"><span>د. سارة ناجي</span><span class="chip">٨٧ وصفة</span></div>
+          </div>
+          <div class="card a" data-t="p0.5" data-fx="up" style="flex:1;align-items:center;justify-content:center">
+            <strong style="font-size:18px">الموصوف مقابل المصروف</strong>
+            <div class="dh" style="font-size:54px"><span data-fn="count" data-t="p0.54" data-d="1.2" data-to="91">0</span>٪</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="scene" data-id="pclose">
+    <div class="benefit a" data-t="0.1" data-fx="up" style="right:150px;top:110px"><div class="who">وصفات أوضح</div><p>بلا خط يغلط ولا تزوير</p></div>
+    <div class="benefit a" data-t="p0.12" data-fx="up" style="right:725px;top:110px"><div class="who">مخزون مضبوط</div><p>دفعات وانتهاء ونقص</p></div>
+    <div class="benefit a" data-t="p0.24" data-fx="up" style="right:1300px;top:110px"><div class="who">مرضى يرجعون</div><p>تذكير بالدواء ووصفات توصلك</p></div>
+    <div data-fn="halo" data-t="p0.42" style="position:absolute;left:660px;top:260px;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle, rgba(94,234,212,.26), transparent 65%)"></div>
+    <img class="a" data-t="p0.44" data-fx="rise" src="assets/logo-full-light.png" alt="أبيض" style="position:absolute;left:820px;top:350px;width:280px;height:356px;object-fit:contain">
+    <div class="a" data-t="p0.56" data-fx="up" style="position:absolute;left:0;right:0;top:722px;text-align:center;font-family:var(--fd);font-weight:500;font-size:40px;color:var(--glow)">صيدليتك… موصولة بكل طبيب</div>
+    <div class="a" data-t="p0.7" data-fx="pop" style="position:absolute;left:0;right:0;top:806px;display:flex;justify-content:center;gap:18px">
+      <div style="background:linear-gradient(135deg,#14B8A6,#0F766E);padding:14px 40px;border-radius:18px;font-family:var(--fd);font-weight:700;font-size:32px;box-shadow:0 18px 40px rgba(15,118,110,.45)">سجّل صيدليتك اليوم</div>
+      <div style="border:2px solid rgba(255,255,255,.25);padding:14px 30px;border-radius:18px;font-size:26px;font-weight:600;display:flex;align-items:center;font-family:var(--fe);direction:ltr">info@spardexlab.site · +964 788 317 3489</div>
+    </div>
+  </section>
+
   <div id="sweep"></div>
   <div id="mark"><img src="assets/symbol-96.png" alt=""><span>أبيض</span></div>
   <div class="vig"></div>
@@ -542,12 +838,14 @@ let cur = 0;
 const scenes = SCRIPT.map((s, i) => {
   const vs = cur, as = vs + (i === 0 ? LEAD : GAP), ae = as + s.dur, ve = ae + TAIL + (i === SCRIPT.length - 1 ? END_HOLD : 0);
   cur = ve;
-  return { ...s, vs, as, ae, ve, el: document.querySelector(`.scene[data-id="${s.id}"]`) };
+  return { ...s, vs, as, ae, ve, el: document.querySelector(`.scene[data-id="${s.scene || s.id}"]`) };
 });
 window.TOTAL = cur;
 window.AUDIO = scenes.map((s) => ({ id: s.id, at: +s.as.toFixed(3) }));
 const at = (v, s) => (String(v).startsWith('p') ? parseFloat(v.slice(1)) * s.dur : parseFloat(v || 0));
-const revealAt = scenes.find((s) => s.id === 'reveal').as + 3.2;
+const revealS = scenes.find((s) => (s.scene || s.id) === 'reveal'); const revealAt = revealS ? revealS.as + 3.2 : 0;
+const LAST = scenes[scenes.length - 1];
+if (revealS && revealS.tag) document.getElementById('revealTag').innerHTML = revealS.tag;
 
 // captions: sentence chunks, timed by length
 scenes.forEach((s) => {
@@ -570,13 +868,13 @@ for (let i = 0; i < 70; i++) { const e = document.createElement('i'); const sz =
 
 // QR pattern (decorative)
 (function () {
-  const c = document.getElementById('qrc'), g = c.getContext('2d'), n = 29; let sd = 7;
+  document.querySelectorAll('canvas.qrc').forEach((c, ci) => { const g = c.getContext('2d'), n = 29; let sd = 7 + ci * 13;
   const r = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
   g.fillStyle = '#fff'; g.fillRect(0, 0, n, n); g.fillStyle = '#0B1E33';
   for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (r() > 0.52) g.fillRect(x, y, 1, 1);
   const finder = (x, y) => { g.fillStyle = '#0B1E33'; g.fillRect(x, y, 7, 7); g.fillStyle = '#fff'; g.fillRect(x + 1, y + 1, 5, 5); g.fillStyle = '#0B1E33'; g.fillRect(x + 2, y + 2, 3, 3); };
   g.fillStyle = '#fff'; g.fillRect(0, 0, 8, 8); g.fillRect(n - 8, 0, 8, 8); g.fillRect(0, n - 8, 8, 8);
-  finder(0, 0); finder(n - 7, 0); finder(0, n - 7);
+  finder(0, 0); finder(n - 7, 0); finder(0, n - 7); });
 })();
 
 const FN = {
@@ -602,6 +900,8 @@ const FN = {
       r.style.cssText = `position:absolute;width:${sz}px;height:${sz}px;left:${-sz / 2}px;top:${-sz / 2}px;border-radius:50%;background:rgba(29,95,209,${(1 - p) * .25})`; }); },
   wave(el, k, s, l, t0) { const on = l >= t0 && l < t0 + parseFloat(el.dataset.d); [...el.children].forEach((b, i) => { const h = on ? 14 + 50 * Math.abs(Math.sin(l * 7 + i * .9) * Math.sin(l * 2.3 + i * .4)) : 10; b.style.height = h + 'px'; }); },
   drift(el, k, s, l, t0) { const p = clamp(l / s.dur); el.style.transform = `translate(${(+el.dataset.dx) * p}px, ${-(1 - k) * 140 + 30 * p}px) rotate(${(+el.dataset.r) * (0.4 + p)}deg)`; el.style.opacity = k * (1 - clamp((l - s.dur * 0.85) / 1)); },
+  toggle(el, k, s, l, t0) { const p = easeOut(clamp((l - t0) / 0.3)); el.style.background = p > .5 ? 'var(--care-d)' : '#D5DEE6'; el.firstElementChild.style.transform = `translateX(${-28 * p}px)`; },
+  hbars(el, k, s, l, t0) { const p = easeOut(clamp((l - t0) / parseFloat(el.dataset.d))); el.querySelectorAll('i').forEach((b, i) => b.style.width = `calc((100% - 210px) * ${parseFloat(b.style.getPropertyValue('--w')) / 100} * ${clamp(p * 1.3 - i * 0.12)})`); },
   flyin(el, k, s, l, t0) { const p = easeOut(clamp((l - t0) / 0.9)); el.style.transform = `translateX(${-(1 - p) * 500}px)`; el.style.opacity = p; },
   // logo reveal: light particles fly into the centre, a shockwave, a halo that breathes, a shine across the mark, the wordmark wipes in
   converge(el, k, s, l, t0) {
@@ -653,7 +953,7 @@ function seek(t) {
     const vis = t >= s.vs - 0.01 && t < s.ve + 0.45;
     s.el.style.display = vis ? 'block' : 'none';
     if (!vis) continue;
-    const fadeIn = clamp((t - s.vs) / 0.5), fadeOut = s.id === 'close' ? 1 : clamp((s.ve + 0.45 - t) / 0.45);
+    const fadeIn = clamp((t - s.vs) / 0.5), fadeOut = s === LAST ? 1 : clamp((s.ve + 0.45 - t) / 0.45);
     s.el.style.opacity = Math.min(fadeIn, fadeOut);
     const l = t - s.as;
     const z = clamp((t - s.vs) / (s.ve - s.vs));
