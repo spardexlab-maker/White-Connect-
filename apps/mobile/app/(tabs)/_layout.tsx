@@ -22,7 +22,7 @@ export default function TabsLayout() {
         ),
       }}
     >
-      <Tabs.Screen name="index" options={{ title: 'الرئيسية', headerTitle: 'منصة الرعاية', tabBarIcon: ({ color: c, size }) => <House color={c} size={size} /> }} />
+      <Tabs.Screen name="index" options={{ title: 'الرئيسية', headerTitle: 'أبيض', tabBarIcon: ({ color: c, size }) => <House color={c} size={size} /> }} />
       <Tabs.Screen name="appointments" options={{ title: 'حجوزاتي', tabBarIcon: ({ color: c, size }) => <CalendarDays color={c} size={size} /> }} />
       <Tabs.Screen name="health" options={{ title: 'صحتي', headerTitle: 'صحتي', tabBarIcon: ({ color: c, size }) => <Activity color={c} size={size} /> }} />
       <Tabs.Screen name="journey" options={{ title: 'رحلتي', headerTitle: 'رحلتي الطبية', tabBarIcon: ({ color: c, size }) => <Route color={c} size={size} /> }} />

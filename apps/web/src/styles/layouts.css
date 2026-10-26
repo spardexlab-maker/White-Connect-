@@ -5,6 +5,7 @@
 .brand { display: inline-flex; align-items: center; gap: var(--s-2); font-weight: 700; color: var(--c-primary); text-decoration: none; font-size: var(--f-body-lg); }
 .brand-mark { width: 34px; height: 34px; border-radius: 11px; background: linear-gradient(145deg, var(--c-primary-600), var(--c-primary)); color: #fff; display: grid; place-items: center; box-shadow: 0 4px 10px -4px rgb(18 59 93 / .6); }
 .brand-mark svg { color: var(--c-accent-bright); }
+.brand-logo { width: 34px; height: 34px; object-fit: contain; flex: none; }
 .p-main { flex: 1; width: 100%; max-width: var(--content-max); margin-inline: auto; padding: var(--s-4) var(--s-4) calc(var(--bottomnav-h) + var(--s-8) + env(safe-area-inset-bottom)); }
 .p-bottomnav { position: fixed; inset-inline: 0; inset-block-end: 0; z-index: 50; background: rgb(255 255 255 / .94); backdrop-filter: saturate(1.6) blur(12px); border-block-start: 1px solid var(--c-border); padding-block-end: env(safe-area-inset-bottom); }
 .p-bottomnav ul { list-style: none; margin: 0 auto; padding: 0; display: grid; grid-template-columns: repeat(5, 1fr); max-width: 640px; }

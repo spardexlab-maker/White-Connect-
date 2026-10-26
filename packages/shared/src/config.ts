@@ -1,10 +1,10 @@
 /**
- * Central product configuration. The brand name is a placeholder until the
- * owner decides; override with VITE_PRODUCT_NAME at build time.
+ * Central product configuration — brand «أبيض / ABYAD» (owner's brand package, Oct 2026);
+ * VITE_PRODUCT_NAME can still override the web name at build time.
  */
 export const productDefaults = {
-  name: 'منصة الرعاية',
-  nameEn: 'Care Platform',
+  name: 'أبيض',
+  nameEn: 'ABYAD',
   defaultTimezone: 'Asia/Baghdad',
   defaultCurrency: 'IQD',
   defaultLocale: 'ar',

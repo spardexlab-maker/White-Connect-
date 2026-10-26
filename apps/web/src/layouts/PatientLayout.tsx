@@ -1,6 +1,6 @@
 import { NavLink, Outlet, Link, useLocation } from 'react-router-dom';
 import { LiveNotifications } from '../components/LiveNotifications';
-import { Activity, Bell, CalendarDays, Home, Route, UserRound, HeartPulse, Briefcase } from 'lucide-react';
+import { Activity, Bell, CalendarDays, Home, Route, UserRound, Briefcase } from 'lucide-react';
 import { productName } from '../lib/supabase';
 import { OfflineBanner } from '../components/ui';
 import { useAuth } from '../lib/auth';
@@ -22,7 +22,7 @@ export function PatientLayout() {
       <OfflineBanner />
       <header className="p-header">
         <div className="p-header-inner">
-          <Link to="/patient" className="brand"><span className="brand-mark"><HeartPulse size={18} aria-hidden /></span>{productName}</Link>
+          <Link to="/patient" className="brand"><img className="brand-logo" src="/logo-symbol.png" alt="" width={34} height={34} />{productName}</Link>
           <nav className="p-desktop-nav" aria-label="التنقل الرئيسي">
             {items.map((i) => <NavLink key={i.to} to={i.to} end={i.end}>{i.label}</NavLink>)}
           </nav>

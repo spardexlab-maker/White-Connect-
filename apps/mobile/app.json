@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "منصة الرعاية",
+    "name": "أبيض",
     "slug": "white-connect",
     "scheme": "whiteconnect",
-    "version": "0.8.0",
+    "version": "0.9.0",
     "runtimeVersion": "3",
     "updates": {
       "url": "https://utuwjykgubsqqescpiwz.supabase.co/functions/v1/app-update",
@@ -17,7 +17,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#123B5D"
+      "backgroundColor": "#FFFFFF"
     },
     "ios": {
       "bundleIdentifier": "com.whiteconnect.patient",
@@ -31,7 +31,7 @@
       "package": "com.whiteconnect.patient",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#123B5D"
+        "backgroundColor": "#FFFFFF"
       },
       "permissions": [
         "ACCESS_COARSE_LOCATION",
@@ -44,7 +44,7 @@
         "ACCESS_BACKGROUND_LOCATION",
         "READ_CONTACTS"
       ],
-      "versionCode": 11,
+      "versionCode": 12,
       "googleServicesFile": "./google-services.json"
     },
     "web": {
@@ -68,8 +68,8 @@
         "expo-splash-screen",
         {
           "image": "./assets/splash.png",
-          "backgroundColor": "#123B5D",
-          "imageWidth": 160
+          "backgroundColor": "#FFFFFF",
+          "imageWidth": 220
         }
       ],
       [

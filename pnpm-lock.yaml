@@ -141,6 +141,9 @@ importers:
       '@app/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@fontsource/alexandria':
+        specifier: ^5.3.0
+        version: 5.3.0
       '@fontsource/ibm-plex-sans-arabic':
         specifier: ^5.1.0
         version: 5.3.0
@@ -925,6 +928,9 @@ packages:
   '@expo/xcpretty@4.4.7':
     resolution: {integrity: sha512-EbxYllZ7/ozONVZd425cm4XnolfW+AmSFT5aP7Jdno6oc3WrYQcHz2CO20z/2rwWwYgztmV2PXvYH+BQ8YFjqg==}
     hasBin: true
+
+  '@fontsource/alexandria@5.3.0':
+    resolution: {integrity: sha512-it7vTsYG4pB0G00g49z5bwdMtf41EacTIZQFSxcDRajlV4xrCAz9+0/FMoWo3GD50Ifu5+t6ta22xsmnX5Akwg==}
 
   '@fontsource/ibm-plex-sans-arabic@5.3.0':
     resolution: {integrity: sha512-ZZ4g+JDgQY0NqSh4o0MNWU1sHQmtcee1g++aKAwyJvZxnT5y51JXsN1cIXnaQaMd40dcbK6QFYa+Z1LbaiNuqA==}
@@ -4793,6 +4799,8 @@ snapshots:
       '@babel/code-frame': 7.29.7
       chalk: 4.1.2
       js-yaml: 4.3.2
+
+  '@fontsource/alexandria@5.3.0': {}
 
   '@fontsource/ibm-plex-sans-arabic@5.3.0': {}
 

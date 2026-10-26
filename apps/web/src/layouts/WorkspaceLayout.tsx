@@ -82,7 +82,7 @@ export function WorkspaceLayout() {
     <div className="w-shell">
       <a href="#main" className="skip-link">تخطَّ إلى المحتوى</a>
       <aside className="w-sidebar" data-open={menuOpen} aria-label="القائمة الجانبية">
-        <div className="brand"><span className="brand-mark"><HeartPulse size={18} aria-hidden /></span>{productName}</div>
+        <div className="brand"><img className="brand-logo" src="/logo-symbol.png" alt="" width={34} height={34} />{productName}</div>
         {onAdmin ? (
           <div className="w-ws-card" aria-label="مساحة العمل الحالية">
             <span className="ws-ico"><ShieldCheck size={20} aria-hidden /></span>

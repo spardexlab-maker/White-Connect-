@@ -49,6 +49,7 @@
 
   /* type */
   --f-family: 'IBM Plex Sans Arabic', 'Noto Sans Arabic', 'Segoe UI', Tahoma, sans-serif;
+  --f-display-family: 'Alexandria', var(--f-family);   /* brand headings */
   --f-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
   --f-micro: 12px; --f-label: 13px; --f-small: 14px; --f-body: 15px; --f-body-lg: 16px;
   --f-h4: 18px; --f-h3: 20px; --f-h2: 24px; --f-h1: 30px; --f-display: 36px;

@@ -1,10 +1,10 @@
-// Web Push for منصة الرعاية: shows the (generic) notification and opens the
+// Web Push for أبيض: shows the (generic) notification and opens the
 // right page when it is tapped. Nothing is cached here — the app stays online-first.
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
 
 self.addEventListener('push', (event) => {
-  let data = { title: 'منصة الرعاية', body: 'لديك تحديث جديد.', link: '/' };
+  let data = { title: 'أبيض', body: 'لديك تحديث جديد.', link: '/' };
   try { data = { ...data, ...event.data.json() }; } catch { /* keep the default text */ }
   event.waitUntil(self.registration.showNotification(data.title, {
     body: data.body, dir: 'rtl', lang: 'ar',
