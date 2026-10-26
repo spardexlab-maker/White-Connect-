@@ -88,6 +88,7 @@ function RootLayout() {
           <Stack.Screen name="provider/[facilityId]" options={{ title: 'مقدم الخدمة' }} />
           <Stack.Screen name="book/[facilityId]" options={{ title: 'حجز موعد' }} />
           <Stack.Screen name="rx/[id]" options={{ title: 'الوصفة' }} />
+          <Stack.Screen name="visit/[id]" options={{ title: 'تفاصيل الزيارة' }} />
           <Stack.Screen name="lab/[orderId]" options={{ title: 'نتائج التحليل' }} />
           <Stack.Screen name="meds" options={{ title: 'خطة الدواء' }} />
           <Stack.Screen name="home-lab" options={{ title: 'تحليل منزلي' }} />

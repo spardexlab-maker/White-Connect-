@@ -39,12 +39,12 @@ export default function Journey() {
       kind: 'appointment', at: x.starts_at, key: `a${x.appointment_id}`, title: `موعد — ${x.service_name}`, who: x.practitioner_name ?? x.facility_name,
       where: x.facility_name, patient: x.patient_name, badge: appointmentStatus[x.status], link: '/appointments' }));
     for (const e of data.data.j) {
-      out.push({ kind: e.event_type, at: e.occurred_at, key: `${e.event_type}${e.ref_id}`, title: e.title, who: e.practitioner_name ?? '', where: e.facility_name,
+      out.push({ kind: e.event_type, at: e.occurred_at, key: `${e.event_type}${e.ref_id}`, title: e.event_type === 'visit' ? 'زيارة — التشخيص والتعليمات' : e.title, who: e.practitioner_name ?? '', where: e.facility_name,
         patient: e.patient_name, corrected: e.corrected,
         badge: e.event_type === 'visit' ? encounterStatus[e.status as EncounterStatus]
           : e.event_type === 'lab' ? patientLabStatus[e.status as LabStatus]
           : e.status === 'active' ? { label: 'معتمدة', tone: 'success' } : { label: 'ملغاة', tone: 'neutral' },
-        link: e.event_type === 'prescription' ? `/rx/${e.ref_id}` : e.event_type === 'lab' ? `/lab/${e.ref_id}` : undefined });
+        link: e.event_type === 'prescription' ? `/rx/${e.ref_id}` : e.event_type === 'lab' ? `/lab/${e.ref_id}` : `/visit/${e.ref_id}` });
     }
     return out.sort((x, y) => y.at.localeCompare(x.at)).filter((e) =>
       filter === 'all' || (filter === 'visits' && (e.kind === 'visit' || e.kind === 'appointment')) || (filter === 'prescriptions' && e.kind === 'prescription') || (filter === 'labs' && e.kind === 'lab'));
@@ -87,7 +87,7 @@ export default function Journey() {
           </Stack>
         );
       })}
-      <Alert tone="info" title="عن هذه الصفحة">تعرض الرحلة ما اعتمده المهنيون الصحيون: الوصفات المعتمدة والنتائج المنشورة. الملاحظات الداخلية والمسودات لا تُنشر لك تلقائياً.</Alert>
+      <Alert tone="info" title="عن هذه الصفحة">تعرض الرحلة ما اعتمده المهنيون الصحيون: تشخيص الزيارة وتعليمات الطبيب، الوصفات المعتمدة، والنتائج المنشورة. الملاحظات الداخلية والمسودات لا تُنشر لك تلقائياً.</Alert>
     </Screen>
   );
 }

@@ -3,7 +3,7 @@ import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Location from 'expo-location';
 import {
-  Baby, BadgeCheck, House, Bone, Brain, CalendarClock, Clock, Droplets, Ear, Eye, FlaskConical, Flower2, HeartHandshake, HeartPulse, LocateFixed, MapPin,
+  Baby, BadgeCheck, House, Bone, Brain, CalendarClock, Clock, Droplets, Ear, Eye, Flower2, HeartHandshake, HeartPulse, LocateFixed, MapPin,
   QrCode, Search, SearchX, Smile, Sparkles, Stethoscope, Syringe, Users,
 } from 'lucide-react-native';
 import { addDays, formatDateShort, formatMoney, formatTime, localDateKey } from '@app/shared';
@@ -12,10 +12,11 @@ import { unwrap, useAsync } from '../../src/lib/useAsync';
 import { useAuth } from '../../src/lib/auth';
 import { mediaUrl } from '../../src/lib/media';
 import { AiAssist } from '../../src/components/AiAssist';
+import { HomeHero } from '../../src/components/HomeHero';
 import { PendingRx } from '../../src/components/PendingRx';
 import { providerHref } from '../../src/lib/routes';
 import { Avatar, Card, Chip, EmptyState, ErrorState, FadeIn, PressScale, Row, Screen, SkeletonBox, Stack, Text } from '../../src/components/ui';
-import { color, family, radius, shadow, size, space, startAlign } from '../../src/theme';
+import { color, family, radius, size, space, startAlign } from '../../src/theme';
 
 const specIcons: [RegExp, (c: string) => ReactNode][] = [
   [/قلب/, (c) => <HeartPulse size={20} color={c} />], [/أطفال/, (c) => <Baby size={20} color={c} />], [/نسائية|توليد/, (c) => <Flower2 size={20} color={c} />],
@@ -35,7 +36,12 @@ interface Provider {
 }
 
 export default function Home() {
-  const { session } = useAuth();
+  const { session, access } = useAuth();
+  const selfId = access?.patient_ids.find((x) => x.relationship === 'self')?.patient_id ?? null;
+  const me = useAsync(async () => (selfId
+    ? ((await unwrap(supabase.from('patients').select('full_name').eq('id', selfId).maybeSingle())) as { full_name: string } | null)?.full_name ?? null
+    : null), [selfId]);
+  const firstName = me.data?.trim().split(/\s+/)[0] ?? null;
   const [kind, setKind] = useState<Kind>('doctor');
   const [query, setQuery] = useState('');
   const [debounced, setDebounced] = useState('');
@@ -85,42 +91,17 @@ export default function Home() {
 
   return (
     <Screen refreshing={results.status === 'loading' && !!results.data} onRefresh={results.reload}>
-      <FadeIn>
-        <View style={h.hero}>
-          <View style={h.glow} pointerEvents="none" />
-          <View style={h.ring} pointerEvents="none" />
-          <Row between style={{ alignItems: 'flex-start' }}>
-            <Stack gap={2} style={{ flex: 1 }}>
-              <Text variant="label" style={{ color: '#A9C3DA' }}>{session ? 'أهلاً بك من جديد' : 'مرحباً بك'}</Text>
-              <Text variant="h2" style={{ color: '#fff' }}>كيف نساعدك اليوم؟</Text>
-            </Stack>
-            {session && (
-              <Pressable onPress={() => router.navigate('/account')} style={h.pill} accessibilityRole="button" accessibilityLabel="بطاقتي">
-                <QrCode size={16} color="#fff" /><Text variant="small" weight="semibold" style={{ color: '#fff' }}>بطاقتي</Text>
-              </Pressable>
-            )}
-          </Row>
-          <View style={h.search}>
-            <Search size={20} color={color.mutedText} />
-            <TextInput value={query} onChangeText={setQuery} placeholder="ابحث عن طبيب أو تحليل أو منطقة" placeholderTextColor={color.mutedText}
-                       returnKeyType="search" accessibilityLabel="ابحث عن طبيب أو تحليل" style={h.searchInput} />
-          </View>
-          <View style={h.seg} accessibilityRole="tablist">
-            {(['doctor', 'laboratory'] as Kind[]).map((k) => {
-              const on = kind === k;
-              return (
-                <Pressable key={k} onPress={() => setKind(k)} style={[h.segBtn, on && { backgroundColor: '#fff' }]} accessibilityRole="tab" accessibilityState={{ selected: on }}>
-                  {k === 'doctor' ? <Stethoscope size={16} color={on ? color.primary : '#CFE0EE'} /> : <FlaskConical size={16} color={on ? color.primary : '#CFE0EE'} />}
-                  <Text variant="small" weight="semibold" style={{ color: on ? color.primary : '#CFE0EE' }}>{k === 'doctor' ? 'أطباء' : 'مختبرات'}</Text>
-                </Pressable>
-              );
-            })}
-          </View>
+      <HomeHero greeting={session ? 'أهلاً بك من جديد' : 'مرحباً بك'} name={firstName} kind={kind} onKind={setKind} search={(
+        <View style={h.search}>
+          <Search size={20} color={color.mutedText} />
+          <TextInput value={query} onChangeText={setQuery} placeholder={kind === 'doctor' ? 'ابحث عن طبيب أو تخصص أو منطقة' : 'ابحث عن مختبر أو تحليل أو منطقة'} placeholderTextColor={color.mutedText}
+                     returnKeyType="search" accessibilityLabel={kind === 'doctor' ? 'ابحث عن طبيب' : 'ابحث عن مختبر أو تحليل'} style={h.searchInput} />
         </View>
-      </FadeIn>
+      )} />
 
       {session && <PendingRx compact />}
       <AiAssist />
+      {kind === 'laboratory' && (<>
       <Pressable accessibilityRole="link" onPress={() => router.push('/home-lab')}>
         <Card style={{ flexDirection: 'row', alignItems: 'center', gap: space[3] }}>
           <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: color.accentSoft, alignItems: 'center', justifyContent: 'center' }}>
@@ -145,6 +126,7 @@ export default function Home() {
           </Card>
         </Pressable>
       )}
+      </>)}
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space[2] }}>
         <Chip label={geo === 'ok' ? 'الأقرب إليك' : geo === 'asking' ? 'جارٍ التحديد…' : 'استخدم موقعي'} selected={geo === 'ok'}
@@ -190,14 +172,8 @@ export default function Home() {
 }
 
 const h = StyleSheet.create({
-  hero: { backgroundColor: color.primary, borderRadius: 22, padding: space[5], gap: space[4], overflow: 'hidden', ...shadow },
-  glow: { position: 'absolute', top: -70, left: -50, width: 220, height: 220, borderRadius: 110, backgroundColor: 'rgba(94,234,212,0.16)' },
-  ring: { position: 'absolute', bottom: -110, right: -40, width: 260, height: 260, borderRadius: 130, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
-  pill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: space[3], minHeight: 38, borderRadius: radius.pill, backgroundColor: 'rgba(255,255,255,0.12)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
   search: { flexDirection: 'row', alignItems: 'center', gap: space[2], backgroundColor: '#fff', borderRadius: radius.lg, paddingHorizontal: space[4], minHeight: 54 },
   searchInput: { flex: 1, minWidth: 0, width: 0, fontFamily: family.regular, fontSize: size.bodyLg, color: color.text, textAlign: startAlign, paddingVertical: 10 },
-  seg: { flexDirection: 'row', gap: 4, padding: 4, borderRadius: radius.md, backgroundColor: 'rgba(255,255,255,0.1)' },
-  segBtn: { flex: 1, minHeight: 40, borderRadius: radius.sm, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   spec: { width: 86, paddingVertical: space[3], paddingHorizontal: 4, borderRadius: radius.lg, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, alignItems: 'center', gap: 6 },
   specIco: { width: 40, height: 40, borderRadius: 13, backgroundColor: '#EEF3F8', alignItems: 'center', justifyContent: 'center' },
 });

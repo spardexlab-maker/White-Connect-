@@ -3451,6 +3451,9 @@ isOneToOne: false
 "patient_medical_card":
 { Args: { "p_patient_id": string }; Returns: Json
                            },
+"patient_visit":
+{ Args: { "p_encounter_id": string }; Returns: Json
+                           },
 "pause_encounter":
 { Args: { "p_encounter_id": string,"p_reason"?: string }; Returns: {
               "appointment_id": string | null,
