@@ -1665,14 +1665,14 @@ isOneToOne: true
                   ]
                 },"platform_settings": {
                   Row: {
-                    "default_currency": string,"default_timezone": string,"id": boolean,"lookup_rate_limit_per_minute": number,"require_admin_mfa": boolean,"updated_at": string
+                    "default_currency": string,"default_timezone": string,"id": boolean,"lookup_rate_limit_per_minute": number,"require_admin_mfa": boolean,"reset_locked_at": string | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "default_currency"?: string,"default_timezone"?: string,"id"?: boolean,"lookup_rate_limit_per_minute"?: number,"require_admin_mfa"?: boolean,"updated_at"?: string
+                    "default_currency"?: string,"default_timezone"?: string,"id"?: boolean,"lookup_rate_limit_per_minute"?: number,"require_admin_mfa"?: boolean,"reset_locked_at"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "default_currency"?: string,"default_timezone"?: string,"id"?: boolean,"lookup_rate_limit_per_minute"?: number,"require_admin_mfa"?: boolean,"updated_at"?: string
+                    "default_currency"?: string,"default_timezone"?: string,"id"?: boolean,"lookup_rate_limit_per_minute"?: number,"require_admin_mfa"?: boolean,"reset_locked_at"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     
@@ -2591,6 +2591,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"admin_lock_reset":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
 "admin_monitor":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
@@ -2622,6 +2625,12 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"admin_reset_platform":
+{ Args: { "p_confirm": string }; Returns: Json
+                           },
+"admin_reset_preview":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
 "admin_retry_dead_notification":
 { Args: { "p_id": string }; Returns: undefined
                            },

@@ -513,3 +513,9 @@
 .visit-link { padding-block: var(--s-2); border-top: 1px solid var(--c-border); color: inherit; text-decoration: none; gap: var(--s-2); }
 .visit-link:first-of-type { border-top: 0; }
 .visit-link:hover { color: var(--c-accent, #0F766E); }
+
+/* ---------- Admin: demo-data reset ---------- */
+.danger-zone { border: 1px solid #F3C7C7; }
+.reset-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: var(--s-2); }
+.reset-grid > div { display: flex; flex-direction: column; gap: 2px; padding: var(--s-3); border-radius: var(--r-md); background: var(--c-surface-sunken); }
+.reset-grid b { font-size: 20px; }
