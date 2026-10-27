@@ -244,6 +244,31 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
+# Arabic, ABYAD-branded auth emails (the cloud project carries the same HTML: Auth → Emails → Templates)
+[auth.email.template.confirmation]
+subject = "أبيض — تأكيد بريدك الإلكتروني"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.recovery]
+subject = "أبيض — تغيير كلمة المرور"
+content_path = "./supabase/templates/recovery.html"
+
+[auth.email.template.magic_link]
+subject = "أبيض — رابط الدخول"
+content_path = "./supabase/templates/magic_link.html"
+
+[auth.email.template.email_change]
+subject = "أبيض — تأكيد تغيير البريد"
+content_path = "./supabase/templates/email_change.html"
+
+[auth.email.template.invite]
+subject = "أبيض — دعوة للانضمام"
+content_path = "./supabase/templates/invite.html"
+
+[auth.email.template.reauthentication]
+subject = "أبيض — رمز التحقق"
+content_path = "./supabase/templates/reauthentication.html"
+
 # Uncomment to customize email template
 # [auth.email.template.invite]
 # subject = "You have been invited"
