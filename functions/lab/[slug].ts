@@ -1,6 +1,6 @@
 // /lab/<name>-<id>: one laboratory.
 import { labPath, labsPath } from '../../packages/shared/src/seo';
-import { directory, esc, findBySlug, hoursSpec, hoursText, money, profile, render, type Handler } from '../_lib/site';
+import { directory, isDemo, esc, findBySlug, hoursSpec, hoursText, money, profile, render, type Handler } from '../_lib/site';
 
 export const onRequestGet: Handler = async (ctx) => {
   const dir = await directory(ctx);
@@ -26,5 +26,5 @@ export const onRequestGet: Handler = async (ctx) => {
     ${hours.length ? `<h2>أوقات الدوام</h2><ul>${hours.map((h) => `<li>${esc(h)}</li>`).join('')}</ul>` : ''}
     ${p?.services.length ? `<h2>التحاليل والأسعار</h2><ul>${p.services.map((s) => `<li>${esc(s.name)}${s.price_minor != null ? ` — ${money(s.price_minor)}` : ''}</li>`).join('')}</ul>` : ''}
     <p><a href="/patient/book/${l.facility_id}">احجز في ${esc(l.name)}</a></p>`;
-  return render(ctx, { title, description, canonical: url, jsonld, body });
+  return render(ctx, { noindex: isDemo(l.name), title, description, canonical: url, jsonld, body });
 };

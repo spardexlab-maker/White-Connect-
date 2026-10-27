@@ -1,6 +1,6 @@
 // /doctors, /doctors/<city>, /doctors/<city>/<specialty>: listing pages search engines can read.
 import { doctorPath, doctorsPath, listing, listingTitle } from '../../packages/shared/src/seo';
-import { directory, esc, money, render, type Handler } from '../_lib/site';
+import { directory, esc, isDemo, money, render, type Handler } from '../_lib/site';
 
 export const onRequestGet: Handler = async (ctx) => {
   const [city, spec] = ([] as string[]).concat(ctx.params.path ?? []);
@@ -22,7 +22,7 @@ export const onRequestGet: Handler = async (ctx) => {
     itemListElement: l.doctors.slice(0, 50).map((d, i) => ({ '@type': 'ListItem', position: i + 1, url: `${origin}${doctorPath(d)}`, name: d.name })),
   }];
   return render(ctx, {
-    status: missing ? 404 : 200, title, description, canonical: `${origin}${doctorsPath(l.city?.slug, l.specialty?.code)}`, jsonld,
+    noindex: !l.doctors.some((d) => !isDemo(d.name)), status: missing ? 404 : 200, title, description, canonical: `${origin}${doctorsPath(l.city?.slug, l.specialty?.code)}`, jsonld,
     body: `<h1>${esc(listingTitle(l.city, l.specialty))}</h1>${l.doctors.length ? `<ul>${items}</ul>` : '<p>ماكو أطباء هنا بعد.</p>'}${nav}<p><a href="/labs">المختبرات</a></p>`,
   });
 };

@@ -62,7 +62,10 @@ export function hoursText(h: Profile['weekly_hours']) {
 }
 export const hoursSpec = (h: Profile['weekly_hours']) => h.map((s) => `${DAYS_EN[s.weekday]} ${hhmm(s.start)}-${hhmm(s.end)}`);
 
-export interface Page { title: string; description: string; canonical: string; image?: string | null; jsonld?: unknown[]; body: string; status?: number }
+/** Demo / test entries stay out of search engines (they disappear with the demo-data wipe). */
+export const isDemo = (name: string | null | undefined) => /تجريبي|اختبار|\(test\)|demo/i.test(name ?? '');
+
+export interface Page { noindex?: boolean; title: string; description: string; canonical: string; image?: string | null; jsonld?: unknown[]; body: string; status?: number }
 
 /** The app's index.html with this page's title, preview tags, structured data and readable content. */
 export async function render(ctx: Ctx, page: Page): Promise<Response> {
@@ -73,6 +76,7 @@ export async function render(ctx: Ctx, page: Page): Promise<Response> {
     `<title>${esc(page.title)}</title>`,
     `<meta name="description" content="${esc(page.description)}" />`,
     `<link rel="canonical" href="${esc(page.canonical)}" />`,
+    ...(page.noindex ? ['<meta name="robots" content="noindex, follow" />'] : []),
     `<meta property="og:type" content="website" />`, `<meta property="og:site_name" content="أبيض" />`, `<meta property="og:locale" content="ar_IQ" />`,
     `<meta property="og:title" content="${esc(page.title)}" />`, `<meta property="og:description" content="${esc(page.description)}" />`,
     `<meta property="og:url" content="${esc(page.canonical)}" />`, `<meta property="og:image" content="${esc(image)}" />`,

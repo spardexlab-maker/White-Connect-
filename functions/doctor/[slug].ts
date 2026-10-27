@@ -1,6 +1,6 @@
 // /doctor/<name>-<id>: one doctor, every clinic they work at, with hours and prices.
 import { doctorPath, doctorsPath } from '../../packages/shared/src/seo';
-import { directory, esc, findBySlug, hoursSpec, hoursText, mediaUrl, money, profile, render, type Handler } from '../_lib/site';
+import { directory, isDemo, esc, findBySlug, hoursSpec, hoursText, mediaUrl, money, profile, render, type Handler } from '../_lib/site';
 
 export const onRequestGet: Handler = async (ctx) => {
   const dir = await directory(ctx);
@@ -48,5 +48,5 @@ export const onRequestGet: Handler = async (ctx) => {
   const body = `<nav><a href="/doctors">الأطباء</a>${d.city_slug ? ` › <a href="${doctorsPath(d.city_slug)}">${esc(d.city)}</a>` : ''}${d.city_slug && d.specialty_code ? ` › <a href="${doctorsPath(d.city_slug, d.specialty_code)}">${esc(d.specialty)}</a>` : ''}</nav>
     <h1>${esc(d.name)}</h1><p>${esc([d.title, d.specialty].filter(Boolean).join(' · '))}${d.verified ? ' · ترخيص تمت مراجعته' : ''}</p>
     ${bio ? `<p>${esc(bio)}</p>` : ''}${clinics}`;
-  return render(ctx, { title, description, canonical: url, image: mediaUrl(ctx.env, d.photo_path), jsonld, body });
+  return render(ctx, { noindex: isDemo(d.name) || d.clinics.every((c) => isDemo(c.facility_name)), title, description, canonical: url, image: mediaUrl(ctx.env, d.photo_path), jsonld, body });
 };

@@ -1,9 +1,13 @@
 // /sitemap.xml: every public page, for search engines.
 import { doctorPath, doctorsPath, labPath, labsPath, listing } from '../packages/shared/src/seo';
-import { directory, type Handler } from './_lib/site';
+import { directory, isDemo, type Handler } from './_lib/site';
 
 export const onRequestGet: Handler = async (ctx) => {
-  const dir = await directory(ctx);
+  const all = await directory(ctx);
+  // only real entries go to search engines
+  const doctors = all.doctors.filter((d) => !isDemo(d.name) && !d.clinics.every((c) => isDemo(c.facility_name)));
+  const labs = all.labs.filter((l) => !isDemo(l.name));
+  const dir = { ...all, doctors, labs, cities: all.cities.map((c) => ({ ...c, doctors: doctors.filter((d) => d.city_slug === c.slug).length, labs: labs.filter((l) => l.city_slug === c.slug).length })) };
   const o = new URL(ctx.request.url).origin;
   const urls = ['/', '/videos', doctorsPath(), labsPath()];
   for (const c of dir.cities) {
