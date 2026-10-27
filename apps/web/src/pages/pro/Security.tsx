@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ShieldCheck, Smartphone } from 'lucide-react';
 import { errorMessage } from '@app/shared';
@@ -25,8 +25,13 @@ export function Security() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // once per signed-in user: a token refresh hands us a new session object, and re-running this
+  // would replace the QR the person already scanned with a fresh secret (their codes would then fail)
+  const uid = session?.user.id;
+  const started = useRef<string | null>(null);
   useEffect(() => {
-    if (!session) return;
+    if (!uid || started.current === uid) return;
+    started.current = uid;
     (async () => {
       const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
       const { data: factors } = await supabase.auth.mfa.listFactors();
@@ -42,7 +47,7 @@ export function Security() {
       if (err) { setError(errorMessage(err)); return; }
       setFactorId(data.id); setQr(data.totp.qr_code); setSecret(data.totp.secret); setState('enroll');
     })();
-  }, [session]);
+  }, [uid]);
 
   const verify = async (e: FormEvent) => {
     e.preventDefault();
@@ -66,6 +71,7 @@ export function Security() {
         {state === 'enroll' && (
           <>
             <p className="small">1) ثبّت تطبيق مصادقة مثل Google Authenticator أو Microsoft Authenticator. 2) امسح الرمز. 3) أدخل الرمز المكوّن من 6 أرقام.</p>
+            <p className="small muted">إذا عندك بالتطبيق سطور قديمة لهذا الحساب، احذفها واستخدم السطر الجديد «ABYAD أبيض» فقط. لا تحدّث الصفحة بعد المسح.</p>
             {qr && <img src={qr} alt="رمز QR لإضافة الحساب إلى تطبيق المصادقة" style={{ width: 200, height: 200, alignSelf: 'center', background: '#fff' }} />}
             {secret && <p className="small muted">أو أدخل المفتاح يدوياً: <Ltr className="code-pill">{secret}</Ltr></p>}
           </>
