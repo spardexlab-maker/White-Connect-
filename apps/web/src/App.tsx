@@ -7,6 +7,7 @@ import { ToastProvider, Alert, SkeletonList } from './components/ui';
 import { PatientLayout } from './layouts/PatientLayout';
 import { RequireStaff, RequireStaffOrPatient, RequireWorkspaceRole, RequirePlatformAdmin } from './components/guards';
 import { PatientHome } from './pages/patient/Home';
+import { DoctorsDirectory, LabsDirectory, ProviderBySlug } from './pages/Directory';
 import { ProviderPage } from './pages/patient/Provider';
 import { BookingFlow } from './pages/patient/Booking';
 import { MyAppointments } from './pages/patient/Appointments';
@@ -99,6 +100,13 @@ export function App() {
               <Route path="/" element={<Navigate to="/patient" replace />} />
 
               {/* Patient experience (public discovery; account pages need sign-in) */}
+              {/* Public directory: doctor and lab pages that search engines and link previews read (rendered on the edge too) */}
+              <Route element={<PatientLayout />}>
+                <Route path="/doctors/:city?/:specialty?" element={<DoctorsDirectory />} />
+                <Route path="/labs/:city?" element={<LabsDirectory />} />
+                <Route path="/doctor/:slug" element={<ProviderBySlug kind="doctor" />} />
+                <Route path="/lab/:slug" element={<ProviderBySlug kind="lab" />} />
+              </Route>
               <Route path="/patient" element={<PatientLayout />}>
                 <Route index element={<PatientHome />} />
                 <Route path="provider/:facilityId/:practitionerId?" element={<ProviderPage />} />

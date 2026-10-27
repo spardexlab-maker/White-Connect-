@@ -16,3 +16,4 @@ export * from './homeLab';
 export * from './phone';
 export * from './mapLink';
 export * from './youtube';
+export * from './seo';

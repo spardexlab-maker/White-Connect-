@@ -7,6 +7,7 @@ import { useAuth } from '../../lib/auth';
 import { useWorkspace } from '../../lib/workspace';
 import { fetchProviderMedia, mediaUrl, uploadProviderMedia, type MediaItem } from '../../lib/media';
 import { MediaGallery as Gallery } from '../../components/MediaGallery';
+import { ShareMyPage } from '../../components/SharePage';
 import { Avatar, Button, ConfirmDialog, ErrorState, PageHead, SkeletonList, TextField, useToast } from '../../components/ui';
 
 type Kind = 'clinic_photo' | 'certificate' | 'profile_photo';
@@ -52,6 +53,7 @@ export function DoctorProfile() {
   return (
     <div className="stack">
       <PageHead title="ملفي المهني" subtitle="الصور والشهادات تظهر للمرضى في صفحتك عند البحث والحجز" />
+      {me && <ShareMyPage practitionerId={me} />}
 
       <section className="card stack" aria-labelledby="photo-title">
         <h2 id="photo-title" className="section-title"><UserRound size={18} aria-hidden /> صورتي الشخصية</h2>

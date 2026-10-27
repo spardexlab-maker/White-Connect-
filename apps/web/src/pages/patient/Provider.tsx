@@ -29,8 +29,11 @@ export function useProviderProfile(facilityId?: string, practitionerId?: string)
 
 type Tab = 'about' | 'services' | 'location';
 
-export function ProviderPage() {
-  const { facilityId, practitionerId } = useParams();
+/** Opened from the search (ids in the URL) or from a public doctor/lab page (ids passed in). */
+export function ProviderPage(props: { facilityId?: string; practitionerId?: string } = {}) {
+  const params = useParams();
+  const facilityId = props.facilityId ?? params.facilityId;
+  const practitionerId = props.facilityId ? props.practitionerId : params.practitionerId;
   const profile = useProviderProfile(facilityId, practitionerId);
   const [tab, setTab] = useState<Tab>('about');
   const media = useAsync(() => (facilityId ? fetchProviderMedia(facilityId, practitionerId) : Promise.resolve(null)), [facilityId, practitionerId]);

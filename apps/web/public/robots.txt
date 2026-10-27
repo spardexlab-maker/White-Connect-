@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Disallow: /workspace
+Disallow: /platform-admin
+Disallow: /patient/account
+Disallow: /patient/appointments
+Disallow: /patient/journey
+Disallow: /patient/health
+Disallow: /patient/meds
+Disallow: /invite
+Disallow: /security
+Disallow: /api/
+
+Sitemap: https://white.spardexlab.site/sitemap.xml
