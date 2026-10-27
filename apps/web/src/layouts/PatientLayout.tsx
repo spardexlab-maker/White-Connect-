@@ -31,7 +31,12 @@ export function PatientLayout() {
           {!session && <Link to="/login" className="btn btn-ghost btn-sm"><Briefcase size={16} aria-hidden />دخول المهنيين</Link>}
         </div>
       </header>
-      <main id="main" className="p-main"><div key={location.pathname} className="page"><Outlet /></div></main>
+      <main id="main" className="p-main">
+        <div key={location.pathname} className="page"><Outlet /></div>
+        <footer className="p-footer small muted">
+          <Link to="/doctors">دليل الأطباء</Link> · <Link to="/labs">المختبرات</Link> · <Link to="/videos">فيديوهات الشرح</Link> · <Link to="/privacy">الخصوصية</Link> · <Link to="/terms">الشروط</Link>
+        </footer>
+      </main>
       <nav className="p-bottomnav" aria-label="التنقل الرئيسي">
         <ul>
           {items.map(({ to, label, icon: Icon, end }) => (

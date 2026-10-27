@@ -1,6 +1,6 @@
 import { Link, useParams } from 'react-router-dom';
 import { ArrowRight, CalendarClock, FlaskConical, HeartPulse, Pill, Printer, Stethoscope } from 'lucide-react';
-import { encounterStatus, formatDate, formatDateTime, patientLabStatus, type EncounterStatus, type LabStatus } from '@app/shared';
+import { patientEncounterStatus, formatDate, formatDateTime, patientLabStatus, type EncounterStatus, type LabStatus } from '@app/shared';
 import { supabase } from '../../lib/supabase';
 import { unwrap, useAsync } from '../../lib/useAsync';
 import { Alert, Badge, ErrorState, SkeletonList } from '../../components/ui';
@@ -48,7 +48,7 @@ export function PatientVisit() {
                   <span className="small muted">{[d.specialty, d.facility].filter(Boolean).join(' · ')}</span>
                 </div>
               </div>
-              <Badge tone={encounterStatus[d.status].tone}>{encounterStatus[d.status].label}</Badge>
+              <Badge tone={patientEncounterStatus[d.status].tone}>{patientEncounterStatus[d.status].label}</Badge>
             </div>
             <span className="small muted">{formatDateTime(d.started_at)} · {d.patient_name}</span>
           </section>

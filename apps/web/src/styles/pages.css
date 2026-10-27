@@ -578,3 +578,5 @@
 .seo-page h2 { font-size: 20px; margin-block: 20px 6px; }
 .seo-page ul { padding-inline-start: 20px; }
 .share-card .qr { width: 140px; height: 140px; border-radius: 12px; background: #fff; padding: 6px; border: 1px solid var(--c-border); }
+html:has(.session-header) { scroll-padding-top: calc(var(--topbar-h) + 128px); } /* new content scrolled into view is not hidden under the patient banner */
+.p-footer { text-align: center; padding: var(--s-6) var(--s-4) var(--s-4); } .p-footer a { color: var(--c-muted); }

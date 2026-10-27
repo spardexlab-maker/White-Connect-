@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { CalendarClock, ChevronLeft, FlaskConical, HeartPulse, Pill, Stethoscope } from 'lucide-react-native';
-import { encounterStatus, formatDate, formatDateTime, patientLabStatus, type EncounterStatus, type LabStatus } from '@app/shared';
+import { patientEncounterStatus, formatDate, formatDateTime, patientLabStatus, type EncounterStatus, type LabStatus } from '@app/shared';
 import { supabase } from '../../src/lib/supabase';
 import { unwrap, useAsync } from '../../src/lib/useAsync';
 import { Alert, Badge, Card, Divider, ErrorState, Loading, Ltr, Row, Screen, Stack, Summary, Text } from '../../src/components/ui';
@@ -47,7 +47,7 @@ export default function VisitScreen() {
               <Text variant="small" muted>{[d.specialty, d.facility].filter(Boolean).join(' · ')}</Text>
             </Stack>
           </Row>
-          <Badge {...encounterStatus[d.status]} />
+          <Badge {...patientEncounterStatus[d.status]} />
         </Row>
         <Summary rows={[['التاريخ', formatDateTime(d.started_at)], ['المريض', d.patient_name]]} />
       </Card>

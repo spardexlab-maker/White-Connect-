@@ -31,13 +31,13 @@ select throws_ok(format('select public.invoice_document(%L)', (select id from t 
 
 -- facility report: run by the platform admin (facility-admin role retired) — counts and money only
 select tests.login(:U_DRAHMED);
-select throws_ok(format('select public.facility_report(%L, current_date, current_date)', :A1), 'P0001', 'app:forbidden', 'a doctor cannot open financial reports');
+select throws_ok(format('select public.facility_report(%L, (now() at time zone ''Asia/Baghdad'')::date, (now() at time zone ''Asia/Baghdad'')::date)', :A1), 'P0001', 'app:forbidden', 'a doctor cannot open financial reports');
 select tests.login(:U_ADMIN, 'admin@demo.test', 'aal2');
-select is((public.facility_report(:A1, current_date, current_date) ->> 'collected_minor')::bigint, 25000::bigint, 'collected amount reported');
-select ok(not (public.facility_report(:A1, current_date, current_date)::text ~* 'assessment|diagnos|full_name'), 'report contains no clinical or patient names');
+select is((public.facility_report(:A1, (now() at time zone 'Asia/Baghdad')::date, (now() at time zone 'Asia/Baghdad')::date) ->> 'collected_minor')::bigint, 25000::bigint, 'collected amount reported');
+select ok(not (public.facility_report(:A1, (now() at time zone 'Asia/Baghdad')::date, (now() at time zone 'Asia/Baghdad')::date)::text ~* 'assessment|diagnos|full_name'), 'report contains no clinical or patient names');
 
 select tests.login(:U_RECA);
-select throws_ok(format('select public.facility_report(%L, current_date, current_date)', :A1), 'P0001', 'app:forbidden', 'receptionist cannot open financial reports');
+select throws_ok(format('select public.facility_report(%L, (now() at time zone ''Asia/Baghdad'')::date, (now() at time zone ''Asia/Baghdad'')::date)', :A1), 'P0001', 'app:forbidden', 'receptionist cannot open financial reports');
 select throws_ok('select public.system_health()', 'P0001', 'app:forbidden', 'system health is platform-admin only');
 
 select * from finish();

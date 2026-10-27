@@ -115,7 +115,7 @@ function OrderSheet({ orderId, isApprover, onClose, onChanged }: { orderId: stri
         if (next[it.id]) continue;
         const dr = it.results.find((r) => r.status === 'draft');
         next[it.id] = { value: dr ? String(dr.value_numeric ?? dr.value_text ?? '') : '', unit: dr?.unit ?? it.catalog.unit ?? '',
-          range: dr?.reference_range ?? it.catalog.reference_range_text ?? '', flag: dr?.lab_flag ?? '', notes: dr?.notes ?? '' };
+          range: dr?.reference_range ?? (/* a catalogue note like «يحدده المختبر» is a hint, not a range */ /\d/.test(it.catalog.reference_range_text ?? '') ? it.catalog.reference_range_text! : ''), flag: dr?.lab_flag ?? '', notes: dr?.notes ?? '' };
       }
       return next;
     });
@@ -204,7 +204,7 @@ function OrderSheet({ orderId, isApprover, onClose, onChanged }: { orderId: stri
                   <div className="rx-grid">
                     <TextField label="القيمة" optional={files > 0} ltr value={f.value} onChange={(e) => set(it.id, { value: e.target.value })} />
                     <TextField label="الوحدة" ltr value={f.unit} onChange={(e) => set(it.id, { unit: e.target.value })} />
-                    <TextField label="المجال المرجعي" value={f.range} onChange={(e) => set(it.id, { range: e.target.value })} />
+                    <TextField label="المجال المرجعي" value={f.range} placeholder={it.catalog.reference_range_text ?? 'مثلاً 70-100'} onChange={(e) => set(it.id, { range: e.target.value })} />
                     <SelectField label="وسم المختبر" value={f.flag} onChange={(e) => set(it.id, { flag: e.target.value })}>
                       <option value="">—</option><option value="low">منخفض</option><option value="high">مرتفع</option><option value="abnormal">غير طبيعي</option><option value="critical">حرج (سياسة المختبر)</option>
                     </SelectField>

@@ -81,6 +81,16 @@ export const encounterStatus: Record<EncounterStatus, { label: string; tone: Ton
   closed: { label: 'مغلقة', tone: 'neutral' },
 };
 
+/** The same visit states in the patient's words (they don't need the clinic's workflow names). */
+export const patientEncounterStatus: Record<EncounterStatus, { label: string; tone: Tone }> = {
+  not_started: { label: 'لم تبدأ', tone: 'neutral' },
+  in_progress: { label: 'جارية الآن', tone: 'accent' },
+  awaiting_results: { label: 'بانتظار التحاليل', tone: 'warning' },
+  ready_for_review: { label: 'النتائج عند طبيبك', tone: 'info' },
+  completed: { label: 'منتهية', tone: 'success' },
+  closed: { label: 'منتهية', tone: 'success' },
+};
+
 export const labStatus: Record<LabStatus, { label: string; tone: Tone }> = {
   ordered: { label: 'مطلوب', tone: 'neutral' },
   scheduled: { label: 'مجدول', tone: 'info' },
