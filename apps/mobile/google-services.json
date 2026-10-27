@@ -7,6 +7,25 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:436488289545:android:3ff36a66671eb4d86227d8",
+        "android_client_info": {
+          "package_name": "com.spardexlab.abyad"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyArl96Kg7Cd5mKGX1y_v-T5As-ahJLvmEs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:436488289545:android:b13a290dced25a926227d8",
         "android_client_info": {
           "package_name": "com.whiteconnect.patient"

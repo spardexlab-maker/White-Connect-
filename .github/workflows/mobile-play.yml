@@ -59,6 +59,9 @@ jobs:
           KS: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_B64 }}
         run: |
           cp .env.example .env
+          # Google Play build: Play delivers updates, so no self-updater and no install-packages permission
+          echo "EXPO_PUBLIC_DISTRIBUTION=play" >> .env
+          node -e "const f='app.json',j=require('./'+f);j.expo.android.permissions=j.expo.android.permissions.filter(p=>p!=='REQUEST_INSTALL_PACKAGES');(j.expo.android.blockedPermissions||=[]).push('android.permission.REQUEST_INSTALL_PACKAGES');require('fs').writeFileSync(f,JSON.stringify(j,null,2))"
           npx expo prebuild -p android --no-install
           echo "$KS" | base64 -d > "$RUNNER_TEMP/upload.jks"
           # release builds sign with the upload key (a second android {} block merges into the generated one)

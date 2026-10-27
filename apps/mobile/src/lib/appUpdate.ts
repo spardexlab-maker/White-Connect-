@@ -33,7 +33,8 @@ interface GhRelease { tag_name: string; body: string | null; draft: boolean; pre
 
 /** Newest published mobile release that is newer than this build, or null. */
 export async function checkForUpdate(): Promise<AvailableUpdate | null> {
-  if (Platform.OS !== 'android') return null;
+  // store builds update through Google Play; only side-loaded test builds fetch APKs
+  if (Platform.OS !== 'android' || process.env.EXPO_PUBLIC_DISTRIBUTION === 'play') return null;
   const res = await fetch(RELEASES_URL, { headers: { Accept: 'application/vnd.github+json' } });
   if (!res.ok) throw new Error(`update check failed (${res.status})`);
   const releases = (await res.json()) as GhRelease[];
@@ -49,7 +50,7 @@ export async function checkForUpdate(): Promise<AvailableUpdate | null> {
 
 /** Downloads the APK (reporting 0..1 progress) and hands it to the system installer. */
 export async function downloadAndInstall(update: AvailableUpdate, onProgress: (fraction: number) => void, signal?: AbortSignal): Promise<void> {
-  const target = new File(Paths.cache, `white-connect-${update.version}.apk`);
+  const target = new File(Paths.cache, `abyad-${update.version}.apk`);
   if (target.exists) target.delete();
   const file = await File.downloadFileAsync(update.url, target, {
     idempotent: true,

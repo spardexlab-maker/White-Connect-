@@ -3,7 +3,7 @@
     "name": "أبيض",
     "slug": "white-connect",
     "scheme": "whiteconnect",
-    "version": "0.9.0",
+    "version": "1.0.0",
     "runtimeVersion": "3",
     "updates": {
       "url": "https://utuwjykgubsqqescpiwz.supabase.co/functions/v1/app-update",
@@ -20,7 +20,7 @@
       "backgroundColor": "#FFFFFF"
     },
     "ios": {
-      "bundleIdentifier": "com.whiteconnect.patient",
+      "bundleIdentifier": "com.spardexlab.abyad",
       "supportsTablet": false,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "يُستخدم الموقع اختيارياً لترتيب الأطباء والمختبرات حسب القرب. الحجز لا يحتاج الموقع.",
@@ -28,7 +28,7 @@
       }
     },
     "android": {
-      "package": "com.whiteconnect.patient",
+      "package": "com.spardexlab.abyad",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
@@ -44,7 +44,7 @@
         "ACCESS_BACKGROUND_LOCATION",
         "READ_CONTACTS"
       ],
-      "versionCode": 12,
+      "versionCode": 13,
       "googleServicesFile": "./google-services.json"
     },
     "web": {

@@ -88,10 +88,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.v.outputs.version }}
         run: |
-          APK="white-connect-$VERSION.apk"
+          APK="abyad-$VERSION.apk"
           cp apps/mobile/android/app/build/outputs/apk/release/app-release.apk "$APK"
           gh release create "mobile-v$VERSION" "$APK" \
             --target "$GITHUB_SHA" \
-            --title "تطبيق المريض $VERSION (تجريبي)" \
+            --title "أبيض $VERSION" \
             --notes-file apps/mobile/RELEASE_NOTES.md \
             --prerelease
