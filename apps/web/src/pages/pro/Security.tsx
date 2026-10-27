@@ -38,7 +38,7 @@ export function Security() {
       }
       // clean up abandoned enrollments, then start a new one
       for (const f of factors?.all ?? []) if (f.status !== 'verified') await supabase.auth.mfa.unenroll({ factorId: f.id });
-      const { data, error: err } = await supabase.auth.mfa.enroll({ factorType: 'totp', friendlyName: `${productName} ${new Date().toISOString().slice(0, 10)}` });
+      const { data, error: err } = await supabase.auth.mfa.enroll({ factorType: 'totp', issuer: 'ABYAD أبيض', friendlyName: `${productName} ${new Date().toISOString().slice(0, 10)}` });
       if (err) { setError(errorMessage(err)); return; }
       setFactorId(data.id); setQr(data.totp.qr_code); setSecret(data.totp.secret); setState('enroll');
     })();
