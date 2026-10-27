@@ -42,13 +42,6 @@ if (sentryOn) {
 /** The root component wrapped by Sentry when it is on (touch/navigation context for crashes). */
 export const withCrashReporting = (C: ComponentType<Record<string, unknown>>) => (sentryOn ? Sentry.wrap(C) : C);
 
-/** «إرسال تقرير تجريبي»: proves crash reports leave this phone. Returns a short Arabic status. */
-export async function sendTestReport(): Promise<string> {
-  if (Platform.OS === 'web') return 'هذا الفحص للموبايل فقط.';
-  if (!sentryOn) return 'تقارير Sentry غير مفعّلة بهذي النسخة — حدّث التطبيق.';
-  Sentry.captureMessage(`تقرير تجريبي من التطبيق (${version()})`, 'info');
-  return (await Sentry.flush()) ? 'وصل التقرير إلى Sentry ✓' : 'ما وصل التقرير — تأكد من الإنترنت وحاول مرة ثانية.';
-}
 
 /** Errors outside a screen (timers, promises): report, then let React Native handle them as before. */
 export function installErrorReporting() {
