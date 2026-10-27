@@ -57,6 +57,7 @@ await p.getByLabel('كلمة المرور').fill(PASSWORD);
 await p.getByRole('button', { name: 'دخول', exact: true }).click();
 await p.locator('canvas').first().waitFor();
 await p.goto(`${BASE}/patient`);
+await p.getByRole('button', { name: /مختبرات/ }).click(); // lab cards live under «مختبرات»
 await p.getByRole('link', { name: /طلبات التحاليل/ }).click();
 await p.getByText(code).first().waitFor();
 await shot(p, 'open-2-patient');

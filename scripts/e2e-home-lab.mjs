@@ -45,6 +45,7 @@ await p.getByLabel('كلمة المرور').fill(PASSWORD);
 await p.getByRole('button', { name: 'دخول', exact: true }).click();
 await p.locator('canvas').first().waitFor();
 await p.goto(`${BASE}/patient`);
+await p.getByRole('button', { name: /مختبرات/ }).click(); // lab cards live under «مختبرات»
 await p.getByRole('link', { name: /تحليل منزلي/ }).click();
 await p.getByRole('button', { name: 'طلب سحب منزلي' }).click();
 await p.getByLabel('المختبر').selectOption({ label: /مختبر الرافدين/ }).catch(async () => {
