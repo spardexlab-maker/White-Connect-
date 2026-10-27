@@ -75,7 +75,7 @@ def lines_of(text, max_words=7):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('name'); ap.add_argument('--clips', required=True); ap.add_argument('--out')
-    ap.add_argument('--tts', default='habibi'); ap.add_argument('--target', type=float); ap.add_argument('--preview', action='store_true')
+    ap.add_argument('--tts', default='habibi'); ap.add_argument('--target', type=float); ap.add_argument('--preview', action='store_true'); ap.add_argument('--tempo', type=float, default=1.0)
     a = ap.parse_args()
     spec = json.load(open(HERE / 'scripts' / f'{a.name}.json'))
     work = Path(os.environ.get('FILM_WORK', f'/tmp/film-{a.name}'))
@@ -105,6 +105,8 @@ def main():
         else:
             edge(s['text'], work / 'audio' / f"{s['id']}.mp3")
             run('ffmpeg', '-v', 'error', '-y', '-i', str(work / 'audio' / f"{s['id']}.mp3"), '-ar', '44100', '-ac', '1', str(out))
+        if a.tempo != 1.0:
+            run('ffmpeg', '-v', 'error', '-y', '-i', str(out), '-af', f'atempo={a.tempo}', str(out) + '.t.wav'); os.replace(str(out) + '.t.wav', out)
         s['audio'] = round(dur(out), 2)
         print(f"  voice {s['id']}: {s['audio']} s", flush=True)
 
@@ -125,7 +127,7 @@ def main():
     for s in spec['scenes']:
         s['dur'] = round(s['dur'], 2); s['start'] = round(t, 2); t += s['dur']
         s['audioOffset'] = 0.9 if s['layout'] == 'title' else 0.6
-        s['lines'] = lines_of(s['text'])
+        s['lines'] = lines_of(s['text'].replace('بالـ كيو آر', 'بالـ QR'))
         if 'clip' in s:  # play the clip across the visible part, between 0.7× and 1.7× speed
             show = s['dur'] - 0.8
             s['rate'] = round(max(0.7, min(1.7, s['clipSec'] / show)), 3)
