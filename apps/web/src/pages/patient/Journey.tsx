@@ -30,12 +30,12 @@ export function Journey() {
       kind: 'appointment', at: x.starts_at, key: `a${x.appointment_id}`, title: `موعد — ${x.service_name}`, who: x.practitioner_name ?? x.facility_name,
       where: x.facility_name, patient: x.patient_name, badge: <Badge tone={appointmentStatus[x.status].tone}>{appointmentStatus[x.status].label}</Badge>, link: '/patient/appointments' }));
     for (const e of data.data.j) {
-      out.push({ kind: e.event_type, at: e.occurred_at, key: `${e.event_type}${e.ref_id}`, title: e.title, who: e.practitioner_name ?? '', where: e.facility_name,
+      out.push({ kind: e.event_type, at: e.occurred_at, key: `${e.event_type}${e.ref_id}`, title: e.event_type === 'visit' ? 'زيارة — التشخيص والتعليمات' : e.title, who: e.practitioner_name ?? '', where: e.facility_name,
         patient: e.patient_name, corrected: e.corrected, group: e.encounter_id,
         badge: e.event_type === 'visit' ? <Badge tone={encounterStatus[e.status as EncounterStatus].tone}>{encounterStatus[e.status as EncounterStatus].label}</Badge>
           : e.event_type === 'lab' ? <Badge tone={patientLabStatus[e.status as LabStatus].tone}>{patientLabStatus[e.status as LabStatus].label}</Badge>
           : <Badge tone={e.status === 'active' ? 'success' : 'neutral'}>{e.status === 'active' ? 'معتمدة' : 'ملغاة'}</Badge>,
-        link: e.event_type === 'prescription' ? `/patient/rx/${e.ref_id}` : e.event_type === 'lab' ? `/patient/labs/${e.ref_id}` : undefined });
+        link: e.event_type === 'prescription' ? `/patient/rx/${e.ref_id}` : e.event_type === 'lab' ? `/patient/labs/${e.ref_id}` : `/patient/visit/${e.ref_id}` });
     }
     return out.sort((x, y) => y.at.localeCompare(x.at)).filter((e) =>
       filter === 'all' || (filter === 'visits' && (e.kind === 'visit' || e.kind === 'appointment')) || (filter === 'prescriptions' && e.kind === 'prescription') || (filter === 'labs' && e.kind === 'lab'));
@@ -75,7 +75,7 @@ export function Journey() {
           </ol>
         )}
       </div>
-      <Alert tone="info" title="عن هذه الصفحة">تعرض الرحلة ما اعتمده المهنيون الصحيون: الوصفات المعتمدة والنتائج المنشورة. الملاحظات الداخلية والمسودات لا تُنشر لك تلقائياً.</Alert>
+      <Alert tone="info" title="عن هذه الصفحة">تعرض الرحلة ما اعتمده المهنيون الصحيون: تشخيص الزيارة وتعليمات الطبيب، الوصفات المعتمدة، والنتائج المنشورة. الملاحظات الداخلية والمسودات لا تُنشر لك تلقائياً.</Alert>
     </div>
   );
 }

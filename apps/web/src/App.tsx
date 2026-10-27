@@ -14,6 +14,7 @@ import { Journey } from './pages/patient/Journey';
 import { Notifications } from './pages/patient/Notifications';
 import { Account } from './pages/patient/Account';
 import { PatientRx } from './pages/patient/PatientRx';
+import { PatientVisit } from './pages/patient/Visit';
 import { Meds } from './pages/patient/Meds';
 import { HomeLab } from './pages/patient/HomeLab';
 import { PatientLabOrders } from './pages/patient/LabOrders';
@@ -105,6 +106,7 @@ export function App() {
                 <Route path="notifications" element={<Notifications />} />
                 <Route path="account" element={<Account />} />
                 <Route path="rx/:id" element={<PatientRx />} />
+                <Route path="visit/:id" element={<PatientVisit />} />
                 <Route path="meds" element={<Meds />} />
                 <Route path="home-lab" element={<HomeLab />} />
                 <Route path="lab-orders" element={<PatientLabOrders />} />

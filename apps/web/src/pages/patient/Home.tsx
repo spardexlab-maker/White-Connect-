@@ -32,7 +32,12 @@ const specIcons: [RegExp, ReactNode][] = [
 const specIcon = (name: string) => specIcons.find(([re]) => re.test(name))?.[1] ?? <Stethoscope size={20} />;
 
 export function PatientHome() {
-  const { session } = useAuth();
+  const { session, access } = useAuth();
+  const selfId = access?.patient_ids.find((x) => x.relationship === 'self')?.patient_id ?? null;
+  const me = useAsync(async () => (selfId
+    ? ((await unwrap(supabase.from('patients').select('full_name').eq('id', selfId).maybeSingle())) as { full_name: string } | null)?.full_name ?? null
+    : null), [selfId]);
+  const firstName = me.data?.trim().split(/\s+/)[0] ?? null;
   const [kind, setKind] = useState<Kind>('doctor');
   const [query, setQuery] = useState('');
   const [debounced, setDebounced] = useState('');
@@ -90,19 +95,18 @@ export function PatientHome() {
 
   return (
     <div className="stack-lg">
-      <section className="hero stack reveal" aria-labelledby="home-title">
+      <section className="hero hero-live stack reveal" aria-labelledby="home-title">
         <div className="row-between" style={{ alignItems: 'flex-start' }}>
           <div className="stack-sm" style={{ gap: 4 }}>
-            <span className="eyebrow">{session ? 'أهلاً بك من جديد' : 'مرحباً بك'}</span>
+            <span className="eyebrow">{session ? 'أهلاً بك من جديد' : 'مرحباً بك'}{firstName && <>، <b className="hero-name">{firstName}</b></>} <span className="hero-wave" aria-hidden>👋</span></span>
             <h1 id="home-title">كيف نساعدك اليوم؟</h1>
             <p className="lead">ابحث عن طبيب أو مختبر قريب منك، واحجز الوقت المناسب خلال دقيقة.</p>
           </div>
-          {session && <Link to="/patient/account#card" className="hero-pill" style={{ textDecoration: 'none' }}><QrCode size={16} aria-hidden />بطاقتي</Link>}
         </div>
         <div className="input-icon search-xl">
           <Search size={20} aria-hidden />
           <label className="sr-only" htmlFor="q">ابحث عن طبيب أو تحليل</label>
-          <input id="q" className="input" type="search" placeholder="ابحث عن طبيب أو تحليل أو منطقة" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <input id="q" className="input" type="search" placeholder={kind === 'doctor' ? 'ابحث عن طبيب أو تخصص أو منطقة' : 'ابحث عن مختبر أو تحليل أو منطقة'} value={query} onChange={(e) => setQuery(e.target.value)} />
         </div>
         <div className="hero-tools">
           <button className="hero-pill" aria-pressed={geoState === 'ok'} onClick={askLocation} aria-describedby="loc-hint">
@@ -122,12 +126,14 @@ export function PatientHome() {
             <button aria-pressed={kind === 'laboratory'} onClick={() => setKind('laboratory')}><FlaskConical size={16} aria-hidden /> مختبرات</button>
           </div>
         </div>
+        <span className="hero-orb" aria-hidden /><span className="hero-sweep" aria-hidden />
         <span id="loc-hint" className="sr-only">الموقع اختياري ولا يلزم للحجز</span>
         {geoState === 'denied' && <span className="small" style={{ color: '#FDE7C2' }}>لم يُمنح إذن الموقع — اختر المدينة يدوياً، والحجز لا يحتاج GPS.</span>}
       </section>
 
       <AiAssist />
 
+      {kind === 'laboratory' && (<>
       <Link to="/patient/home-lab" className="card row home-lab-cta" style={{ gap: 'var(--s-3)', alignItems: 'center' }}>
         <span className="ai-ico" aria-hidden><House size={20} /></span>
         <span className="grow stack-sm" style={{ gap: 2 }}><strong>تحليل منزلي</strong><span className="small muted">المختبر يجيك للبيت ويسحب العينة، وتتابع الزيارة من هنا</span></span>
@@ -137,6 +143,7 @@ export function PatientHome() {
         <span className="ai-ico" aria-hidden><QrCode size={20} /></span>
         <span className="grow stack-sm" style={{ gap: 2 }}><strong>طلبات التحاليل</strong><span className="small muted">رمز طلب طبيبك لأي مختبر، وأدخل نتيجتك إذا سويتها بمختبر ثاني</span></span>
       </Link>
+      </>)}
 
       {kind === 'doctor' && (
         <section aria-label="التخصصات" className="stack-sm">
