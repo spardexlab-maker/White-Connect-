@@ -1665,14 +1665,14 @@ isOneToOne: true
                   ]
                 },"platform_settings": {
                   Row: {
-                    "default_currency": string,"default_timezone": string,"explainer_videos": NonNullable<Json>,"id": boolean,"lookup_rate_limit_per_minute": number,"require_admin_mfa": boolean,"reset_locked_at": string | null,"updated_at": string
+                    "ai_cost_per_message_usd": number,"default_currency": string,"default_timezone": string,"explainer_videos": NonNullable<Json>,"id": boolean,"lookup_rate_limit_per_minute": number,"require_admin_mfa": boolean,"reset_locked_at": string | null,"subscription_notice_days": number,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "default_currency"?: string,"default_timezone"?: string,"explainer_videos"?: NonNullable<Json>,"id"?: boolean,"lookup_rate_limit_per_minute"?: number,"require_admin_mfa"?: boolean,"reset_locked_at"?: string | null,"updated_at"?: string
+                    "ai_cost_per_message_usd"?: number,"default_currency"?: string,"default_timezone"?: string,"explainer_videos"?: NonNullable<Json>,"id"?: boolean,"lookup_rate_limit_per_minute"?: number,"require_admin_mfa"?: boolean,"reset_locked_at"?: string | null,"subscription_notice_days"?: number,"updated_at"?: string
                   }
                   Update: {
-                    "default_currency"?: string,"default_timezone"?: string,"explainer_videos"?: NonNullable<Json>,"id"?: boolean,"lookup_rate_limit_per_minute"?: number,"require_admin_mfa"?: boolean,"reset_locked_at"?: string | null,"updated_at"?: string
+                    "ai_cost_per_message_usd"?: number,"default_currency"?: string,"default_timezone"?: string,"explainer_videos"?: NonNullable<Json>,"id"?: boolean,"lookup_rate_limit_per_minute"?: number,"require_admin_mfa"?: boolean,"reset_locked_at"?: string | null,"subscription_notice_days"?: number,"updated_at"?: string
                   }
                   Relationships: [
                     
@@ -2363,6 +2363,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"subscriptions": {
+                  Row: {
+                    "amount_iqd": number | null,"ends_on": string,"note": string | null,"organization_id": string,"paid": boolean,"plan": string,"starts_on": string,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount_iqd"?: number | null,"ends_on": string,"note"?: string | null,"organization_id": string,"paid"?: boolean,"plan": string,"starts_on": string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "amount_iqd"?: number | null,"ends_on"?: string,"note"?: string | null,"organization_id"?: string,"paid"?: boolean,"plan"?: string,"starts_on"?: string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "subscriptions_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: true
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "subscriptions_updated_by_fkey"
+      columns: ["updated_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"suppliers": {
                   Row: {
                     "created_at": string,"id": string,"name": string,"pharmacy_id": string,"phone": string | null
@@ -2591,6 +2617,9 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"admin_growth":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
 "admin_lock_reset":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
@@ -2637,6 +2666,9 @@ isOneToOne: false
 "admin_set_account_status":
 { Args: { "p_reason": string,"p_status": Database["public"]['Enums']["account_status"],"p_user_id": string }; Returns: undefined
                            },
+"admin_set_ai_cost":
+{ Args: { "p_usd": number }; Returns: number
+                           },
 "admin_set_branch_location":
 { Args: { "p_address"?: string,"p_branch_id": string,"p_latitude": number,"p_longitude": number }; Returns: {
               "address": string | null,
@@ -2665,10 +2697,19 @@ isOneToOne: false
 "admin_set_explainer_videos":
 { Args: { "p_videos": Json }; Returns: Json
                            },
+"admin_set_subscription":
+{ Args: { "p_amount_iqd"?: number,"p_ends_on": string,"p_note"?: string,"p_organization_id": string,"p_paid": boolean,"p_plan": string,"p_starts_on": string }; Returns: Json
+                           },
+"admin_set_subscription_notice_days":
+{ Args: { "p_days": number }; Returns: number
+                           },
 "admin_structure":
 { Args: Record<PropertyKey, never>; Returns: {
               "doctors": Json,"facility_id": string,"staff_count": number
             }[]
+                           },
+"admin_subscriptions":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "admin_upsert_practitioner":
 { Args: { "p_full_name": string,"p_license_number"?: string,"p_mark_license_verified"?: boolean,"p_specialty_id"?: string,"p_title"?: string,"p_user_id": string }; Returns: {
@@ -4074,6 +4115,9 @@ isOneToOne: false
                            },
 "submit_provider_application":
 { Args: { "p": Json }; Returns: Json
+                           },
+"subscription_notice":
+{ Args: { "p_organization_id": string }; Returns: Json
                            },
 "system_health":
 { Args: Record<PropertyKey, never>; Returns: Json

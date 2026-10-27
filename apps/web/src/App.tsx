@@ -41,6 +41,7 @@ const AdminOrganizations = lazy(() => import('./pages/admin/Organizations').then
 const AdminMembers = lazy(() => import('./pages/admin/Members').then((m) => ({ default: m.AdminMembers })));
 const AdminLabTests = lazy(() => import('./pages/admin/LabTests').then((m) => ({ default: m.AdminLabTests })));
 const AdminApplications = lazy(() => import('./pages/admin/Applications').then((m) => ({ default: m.AdminApplications })));
+const AdminSubscriptions = lazy(() => import('./pages/admin/Subscriptions').then((m) => ({ default: m.AdminSubscriptions })));
 const AdminAudit = lazy(() => import('./pages/admin/Audit').then((m) => ({ default: m.AdminAudit })));
 const DoctorSession = lazy(() => import('./pages/pro/DoctorSession').then((m) => ({ default: m.DoctorSession })));
 const PharmacyInbox = lazy(() => import('./pages/pro/PharmacyInbox').then((m) => ({ default: m.PharmacyInbox })));
@@ -149,6 +150,7 @@ export function App() {
                 <Route path="/workspace/organization" element={<RequireWorkspaceRole roles={['organization_admin']}><OrganizationAdmin /></RequireWorkspaceRole>} />
                 <Route path="/platform-admin" element={<RequirePlatformAdmin><AdminOverview /></RequirePlatformAdmin>} />
                 <Route path="/platform-admin/organizations" element={<RequirePlatformAdmin><AdminOrganizations /></RequirePlatformAdmin>} />
+                <Route path="/platform-admin/subscriptions" element={<RequirePlatformAdmin><AdminSubscriptions /></RequirePlatformAdmin>} />
                 <Route path="/platform-admin/members" element={<RequirePlatformAdmin><AdminMembers /></RequirePlatformAdmin>} />
                 <Route path="/workspace/organization/reports" element={<RequireWorkspaceRole roles={['organization_admin']}><FacilityReports /></RequireWorkspaceRole>} />
                 <Route path="/platform-admin/health" element={<RequirePlatformAdmin><AdminHealth /></RequirePlatformAdmin>} />

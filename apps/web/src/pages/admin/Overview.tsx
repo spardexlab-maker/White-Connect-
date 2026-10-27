@@ -3,6 +3,7 @@ import { Building2, Lock, MailOpen, PlayCircle, ShieldAlert, Trash2, UserCheck }
 import { errorMessage, videoAudienceLabel, youtubeId, youtubeThumb, type ExplainerVideo, type VideoAudience } from '@app/shared';
 import { supabase } from '../../lib/supabase';
 import { unwrap, useAsync } from '../../lib/useAsync';
+import { GrowthDashboard } from './Growth';
 import { Alert, Button, ConfirmDialog, ErrorState, PageHead, SkeletonList, TextField, useToast } from '../../components/ui';
 
 interface Overview { organizations: Record<string, number> | null; facilities: Record<string, number> | null; pending_facilities: number; active_memberships: number; open_invitations: number; suspended_accounts: number }
@@ -12,7 +13,9 @@ export function AdminOverview() {
   const data = useAsync(async () => (await unwrap(supabase.rpc('platform_overview'))) as unknown as Overview, []);
   return (
     <div className="stack">
-      <PageHead title="نظرة عامة على المنصة" subtitle="مؤشرات تشغيلية — بلا بيانات طبية" />
+      <PageHead title="نظرة عامة على المنصة" subtitle="أرقام النمو والتشغيل — بلا بيانات طبية ولا أسماء مرضى" />
+      <GrowthDashboard />
+      <h2 className="section-title">المنصة</h2>
       {data.status === 'loading' && <SkeletonList />}
       {data.status === 'error' && <ErrorState error={data.error} onRetry={data.reload} />}
       {data.data && (

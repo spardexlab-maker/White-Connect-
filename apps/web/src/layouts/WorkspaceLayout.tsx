@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
-  Activity, Award, House, QrCode, BarChart3, Boxes, Receipt, Building2, CalendarClock, ChevronDown, ClipboardList, FlaskConical, HeartPulse, LayoutDashboard, LogOut, Menu,
+  Activity, Award, House, QrCode, BarChart3, Boxes, Receipt, Building2, CalendarClock, ChevronDown, ClipboardList, CreditCard, FlaskConical, HeartPulse, LayoutDashboard, LogOut, Menu,
   LockKeyhole, Pill, ScrollText, Settings2, ShieldCheck, Stethoscope, Users,
 } from 'lucide-react';
 import { facilityTypeLabel, roleLabel, workspaceArea, formatDate } from '@app/shared';
@@ -12,6 +12,7 @@ import { OfflineBanner, Sheet } from '../components/ui';
 import { PushToggle } from '../components/PushToggle';
 import { LiveNotifications } from '../components/LiveNotifications';
 import { InboxBell } from '../components/InboxBell';
+import { SubscriptionBanner } from '../components/SubscriptionBanner';
 
 interface NavItem { to: string; label: string; icon: ReactNode; end?: boolean }
 
@@ -21,6 +22,7 @@ function navFor(ws: Workspace | null, isPlatformAdmin: boolean, path: string): N
     return [
       { to: '/platform-admin', label: 'نظرة عامة', icon: <LayoutDashboard size={20} />, end: true },
       { to: '/platform-admin/organizations', label: 'المجمعات والجهات', icon: <Building2 size={20} /> },
+      { to: '/platform-admin/subscriptions', label: 'الاشتراكات', icon: <CreditCard size={20} /> },
       { to: '/platform-admin/members', label: 'الحسابات والعضويات', icon: <Users size={20} /> },
       { to: '/platform-admin/applications', label: 'طلبات الانضمام', icon: <ClipboardList size={20} /> },
       { to: '/platform-admin/lab-tests', label: 'دليل التحاليل', icon: <FlaskConical size={20} /> },
@@ -131,6 +133,7 @@ export function WorkspaceLayout() {
 
       <main id="main" className="w-main">
         <OfflineBanner />
+        {!onAdmin && current && <SubscriptionBanner organizationId={current.organization_id} />}
         <div key={location.pathname} className="page"><Outlet /></div>
       </main>
 
