@@ -519,3 +519,20 @@
 .reset-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: var(--s-2); }
 .reset-grid > div { display: flex; flex-direction: column; gap: 2px; padding: var(--s-3); border-radius: var(--r-md); background: var(--c-surface-sunken); }
 .reset-grid b { font-size: 20px; }
+
+/* ---------- Explainer films (YouTube) ---------- */
+.explainer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--s-3); }
+.explainer { margin: 0; padding: 0; overflow: hidden; display: flex; flex-direction: column; }
+.explainer-frame { position: relative; aspect-ratio: 16 / 9; background: #0B1B2B; }
+.explainer-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.explainer-poster { position: absolute; inset: 0; padding: 0; border: 0; cursor: pointer; background: #0B1B2B; }
+.explainer-poster img { width: 100%; height: 100%; object-fit: cover; opacity: .9; transition: transform var(--dur-3), opacity var(--dur-2); }
+.explainer-poster:hover img { transform: scale(1.04); opacity: 1; }
+.explainer-play { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 68px; height: 68px; border-radius: 50%;
+  display: grid; place-items: center; color: #fff; background: rgb(15 118 110 / .92); box-shadow: 0 10px 30px rgb(0 0 0 / .35), 0 0 0 8px rgb(255 255 255 / .18);
+  animation: play-pulse 2.4s ease-in-out infinite; }
+.explainer figcaption { padding: var(--s-3) var(--s-4); gap: var(--s-2); }
+@keyframes play-pulse { 0%, 100% { box-shadow: 0 10px 30px rgb(0 0 0 / .35), 0 0 0 6px rgb(255 255 255 / .18); } 50% { box-shadow: 0 10px 30px rgb(0 0 0 / .35), 0 0 0 14px rgb(255 255 255 / .06); } }
+@media (prefers-reduced-motion: reduce) { .explainer-play { animation: none; } }
+.video-links { display: grid; gap: var(--s-3); }
+.video-slot { width: 96px; height: 54px; border-radius: 8px; background: var(--c-surface-sunken); flex: none; }

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CheckCircle2, HeartPulse } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import { errorMessage, roleLabel, type MemberRole } from '@app/shared';
 import { supabase, productName } from '../../lib/supabase';
 import { useAuth } from '../../lib/auth';
@@ -46,7 +46,7 @@ export function AcceptInvite() {
   return (
     <main className="auth-wrap">
       <div className="auth-card">
-        <div className="brand"><span className="brand-mark"><HeartPulse size={18} aria-hidden /></span>{productName}</div>
+        <div className="brand"><img className="brand-logo" src="/logo-symbol.png" alt="" width={34} height={34} />{productName}</div>
         <h1 style={{ fontSize: 'var(--f-h2)' }}>قبول دعوة الانضمام</h1>
         {!token && <Alert tone="danger">رابط الدعوة غير مكتمل.</Alert>}
         {accepted ? (

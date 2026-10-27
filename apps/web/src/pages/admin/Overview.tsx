@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Building2, Lock, MailOpen, ShieldAlert, Trash2, UserCheck } from 'lucide-react';
-import { errorMessage } from '@app/shared';
+import { Building2, Lock, MailOpen, PlayCircle, ShieldAlert, Trash2, UserCheck } from 'lucide-react';
+import { errorMessage, videoAudienceLabel, youtubeId, youtubeThumb, type ExplainerVideo, type VideoAudience } from '@app/shared';
 import { supabase } from '../../lib/supabase';
 import { unwrap, useAsync } from '../../lib/useAsync';
 import { Alert, Button, ConfirmDialog, ErrorState, PageHead, SkeletonList, TextField, useToast } from '../../components/ui';
@@ -32,6 +32,7 @@ export function AdminOverview() {
           </div>
         </>
       )}
+      <VideoLinks />
       <ResetDemoData onDone={data.reload} />
     </div>
   );
@@ -89,6 +90,56 @@ function ResetDemoData({ onDone }: { onDone: () => void }) {
                      confirmLabel={ask === 'reset' ? 'نعم، امسح' : 'نعم، اقفلها'}>
         {ask === 'reset' ? 'كل المجمعات والأطباء والمرضى والحجوزات والوصفات والحسابات (عدا المدير) تنمسح هسه، وما ترجع.' : 'بعد القفل ما يكدر أحد، حتى المدير، يشغّل المسح مرة ثانية.'}
       </ConfirmDialog>
+    </section>
+  );
+}
+
+const AUDIENCES: VideoAudience[] = ['patient', 'doctor', 'lab', 'pharmacy'];
+const DEFAULT_TITLES: Record<VideoAudience, string> = { patient: 'شرح أبيض للمرضى', doctor: 'أبيض للأطباء', lab: 'أبيض للمختبرات', pharmacy: 'أبيض للصيدليات' };
+
+/** One YouTube link per audience; they show in the app, on the patient home and on /videos. */
+function VideoLinks() {
+  const toast = useToast();
+  const [links, setLinks] = useState<Record<VideoAudience, string> | null>(null);
+  const [busy, setBusy] = useState(false);
+  useAsync(async () => {
+    const list = ((await unwrap(supabase.rpc('explainer_videos'))) ?? []) as unknown as ExplainerVideo[];
+    const m = { patient: '', doctor: '', lab: '', pharmacy: '' } as Record<VideoAudience, string>;
+    for (const v of list) m[v.audience] = `https://youtu.be/${v.youtube_id}`;
+    setLinks(m);
+    return list;
+  }, []);
+  if (!links) return null;
+  const bad = AUDIENCES.filter((a) => links[a].trim() && !youtubeId(links[a]));
+
+  const save = async () => {
+    setBusy(true);
+    const videos = AUDIENCES.filter((a) => youtubeId(links[a])).map((a) => ({ audience: a, title: DEFAULT_TITLES[a], youtube_id: youtubeId(links[a])! }));
+    const { error } = await supabase.rpc('admin_set_explainer_videos', { p_videos: videos });
+    setBusy(false);
+    toast(error ? errorMessage(error) : 'انحفظت روابط الفيديوهات — تظهر هسه بالتطبيق والموقع', error ? 'danger' : 'success');
+  };
+
+  return (
+    <section className="card stack" aria-labelledby="vid-title">
+      <h2 id="vid-title" className="section-title row" style={{ gap: 8 }}><PlayCircle size={18} aria-hidden />فيديوهات الشرح (YouTube)</h2>
+      <p className="small muted">ارفع الفيديو على YouTube، انسخ رابطه والصقه هنا. فيديو المرضى يطلع بالصفحة الرئيسية للتطبيق والموقع، وفيديوهات المهنيين بصفحة «/videos» وصفحة دخول المهنيين. خانة فارغة = الفيديو ما يطلع.</p>
+      <div className="video-links">
+        {AUDIENCES.map((a) => {
+          const id = youtubeId(links[a]);
+          return (
+            <div key={a} className="row" style={{ gap: 'var(--s-3)', alignItems: 'flex-end' }}>
+              {id ? <img src={youtubeThumb(id)} alt="" width={96} height={54} style={{ borderRadius: 8, objectFit: 'cover' }} /> : <span className="video-slot" aria-hidden />}
+              <div className="grow">
+                <TextField label={`${DEFAULT_TITLES[a]} — ${videoAudienceLabel[a]}`} ltr placeholder="https://youtu.be/…" value={links[a]}
+                           error={links[a].trim() && !id ? 'هذا مو رابط YouTube' : undefined}
+                           onChange={(e) => setLinks({ ...links, [a]: e.target.value })} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div><Button loading={busy} disabled={bad.length > 0} onClick={() => void save()}>حفظ الروابط</Button></div>
     </section>
   );
 }

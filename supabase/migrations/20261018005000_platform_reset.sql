@@ -111,7 +111,7 @@ as $$
 declare at timestamptz;
 begin
   if not private.is_platform_admin() then perform private.fail('forbidden'); end if;
-  update public.platform_settings set reset_locked_at = coalesce(reset_locked_at, now()) returning reset_locked_at into at;
+  update public.platform_settings set reset_locked_at = coalesce(reset_locked_at, now()) where id is not null returning reset_locked_at into at;
   perform private.audit('platform.reset_locked', 'platform', null, null, null, null, '{}'::jsonb);
   return at;
 end;

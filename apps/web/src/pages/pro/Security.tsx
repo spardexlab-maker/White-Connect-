@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { HeartPulse, ShieldCheck, Smartphone } from 'lucide-react';
+import { ShieldCheck, Smartphone } from 'lucide-react';
 import { errorMessage } from '@app/shared';
 import { supabase, productName } from '../../lib/supabase';
 import { useAuth } from '../../lib/auth';
@@ -60,7 +60,7 @@ export function Security() {
   return (
     <main className="auth-wrap">
       <div className="auth-card">
-        <div className="brand"><span className="brand-mark"><HeartPulse size={18} aria-hidden /></span>{productName}</div>
+        <div className="brand"><img className="brand-logo" src="/logo-symbol.png" alt="" width={34} height={34} />{productName}</div>
         <h1 style={{ fontSize: 'var(--f-h2)' }} className="row"><ShieldCheck aria-hidden />المصادقة الثنائية</h1>
         {state === 'loading' && !error && <SkeletonList rows={2} />}
         {state === 'enroll' && (

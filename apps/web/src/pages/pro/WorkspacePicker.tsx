@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { HeartPulse, LogOut, ShieldCheck, UserRound } from 'lucide-react';
+import { LogOut, ShieldCheck, UserRound } from 'lucide-react';
 import { productName } from '../../lib/supabase';
 import { useAuth } from '../../lib/auth';
 import { useWorkspace } from '../../lib/workspace';
@@ -23,7 +23,7 @@ export function WorkspacePicker() {
   return (
     <main className="auth-wrap">
       <div className="auth-card" style={{ width: 'min(560px, 100%)' }}>
-        <div className="brand"><span className="brand-mark"><HeartPulse size={18} aria-hidden /></span>{productName}</div>
+        <div className="brand"><img className="brand-logo" src="/logo-symbol.png" alt="" width={34} height={34} />{productName}</div>
         <h1 style={{ fontSize: 'var(--f-h2)' }}>اختر مساحة العمل</h1>
         {loading && <SkeletonList rows={2} />}
         {!!error && <ErrorState error={error} onRetry={() => void reload()} />}

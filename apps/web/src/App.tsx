@@ -50,6 +50,7 @@ const PharmacyReports = lazy(() => import('./pages/pro/pharmacy/Reports').then((
 const FacilityReports = lazy(() => import('./pages/pro/FacilityReports').then((m) => ({ default: m.FacilityReports })));
 const AdminReports = lazy(() => import('./pages/pro/FacilityReports').then((m) => ({ default: m.AdminReports })));
 const AdminHealth = lazy(() => import('./pages/admin/Health').then((m) => ({ default: m.AdminHealth })));
+const VideosPage = lazy(() => import('./pages/Videos').then((m) => ({ default: m.VideosPage })));
 const PrivacyPage = lazy(() => import('./pages/legal/Legal').then((m) => ({ default: m.PrivacyPage })));
 const TermsPage = lazy(() => import('./pages/legal/Legal').then((m) => ({ default: m.TermsPage })));
 const AccountDeletionPage = lazy(() => import('./pages/legal/Legal').then((m) => ({ default: m.AccountDeletionPage })));
@@ -116,6 +117,7 @@ export function App() {
               </Route>
 
               {/* Public legal pages (linked from the stores and the sign-in screen) */}
+              <Route path="/videos" element={<VideosPage />} />
               <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="/terms" element={<TermsPage />} />
               <Route path="/account-deletion" element={<AccountDeletionPage />} />

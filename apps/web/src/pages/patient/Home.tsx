@@ -10,6 +10,7 @@ import { supabase } from '../../lib/supabase';
 import { unwrap, useAsync } from '../../lib/useAsync';
 import { useAuth } from '../../lib/auth';
 import { mediaUrl } from '../../lib/media';
+import { ExplainerVideos } from '../../components/ExplainerVideos';
 import { AiAssist } from '../../components/AiAssist';
 import { Avatar, EmptyState, ErrorState, Skeleton } from '../../components/ui';
 
@@ -132,6 +133,8 @@ export function PatientHome() {
       </section>
 
       <AiAssist />
+
+      <ExplainerVideos audiences={['patient']} />
 
       {kind === 'laboratory' && (<>
       <Link to="/patient/home-lab" className="card row home-lab-cta" style={{ gap: 'var(--s-3)', alignItems: 'center' }}>

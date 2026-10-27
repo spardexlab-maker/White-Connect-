@@ -3,6 +3,7 @@ import { color, contrastPairs, contrastRatio } from '../src/tokens';
 import { errorMessage } from '../src/errors';
 import { addDays, formatMoney, localDateKey, weekdayOf } from '../src/format';
 import { quickBookingSchema } from '../src/validation';
+import { youtubeId } from '../src/youtube';
 import { iraqiLocal, toIraqiE164 } from '../src/phone';
 import { directionsUrl, isShortMapLink, parseMapLink } from '../src/mapLink';
 
@@ -62,4 +63,17 @@ describe('map links', () => {
   it.each(['https://maps.app.goo.gl/abc123', 'عيادة النور', '', '95, 200'])('no coordinates in %s', (s) => expect(parseMapLink(s)).toBeNull());
   it('knows a short link needs following', () => expect(isShortMapLink('https://maps.app.goo.gl/AbC')).toBe(true));
   it('builds directions', () => expect(directionsUrl({ lat: 33.3, lng: 44.4 })).toBe('https://www.google.com/maps/dir/?api=1&destination=33.3%2C44.4'));
+});
+
+describe('youtubeId', () => {
+  it('reads the id from every common YouTube link shape', () => {
+    for (const link of ['https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'https://youtu.be/dQw4w9WgXcQ?si=abc', 'https://youtube.com/shorts/dQw4w9WgXcQ',
+      'https://www.youtube.com/embed/dQw4w9WgXcQ', 'https://m.youtube.com/watch?feature=share&v=dQw4w9WgXcQ', 'dQw4w9WgXcQ']) {
+      expect(youtubeId(link)).toBe('dQw4w9WgXcQ');
+    }
+  });
+  it('rejects anything else', () => {
+    expect(youtubeId('https://vimeo.com/123')).toBeNull();
+    expect(youtubeId('')).toBeNull();
+  });
 });

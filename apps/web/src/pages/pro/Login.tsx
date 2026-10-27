@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { HeartPulse, LogIn } from 'lucide-react';
+import { LogIn } from 'lucide-react';
 import { errorMessage } from '@app/shared';
 import { supabase, productName } from '../../lib/supabase';
 import { useAuth } from '../../lib/auth';
@@ -46,7 +46,7 @@ export function ProLogin() {
   return (
     <main className="auth-wrap">
       <form className="auth-card" onSubmit={submit} noValidate aria-labelledby="login-title">
-        <div className="brand"><span className="brand-mark"><HeartPulse size={18} aria-hidden /></span>{productName}</div>
+        <div className="brand"><img className="brand-logo" src="/logo-symbol.png" alt="" width={34} height={34} />{productName}</div>
         <div className="stack-sm">
           <h1 id="login-title" style={{ fontSize: 'var(--f-h2)' }}>دخول المهنيين</h1>
           <p className="muted small">للأطباء والسكرتارية والصيدليات والمختبرات وإدارة المنشآت. الحسابات تُنشأ بدعوة من الإدارة فقط.</p>
@@ -69,6 +69,7 @@ export function ProLogin() {
           الدخول بحساب Google
         </button>
         <p className="small muted">الأدوار الحساسة تتطلب المصادقة الثنائية (MFA) حسب إعداد المنصة.</p>
+        <Link to="/videos" className="small">شاهد فيديوهات شرح أبيض للأطباء والمختبرات والصيدليات</Link>
         <Link to="/patient" className="small">أنا مريض — الذهاب إلى صفحة الحجز</Link>
       </form>
     </main>

@@ -1665,14 +1665,14 @@ isOneToOne: true
                   ]
                 },"platform_settings": {
                   Row: {
-                    "default_currency": string,"default_timezone": string,"id": boolean,"lookup_rate_limit_per_minute": number,"require_admin_mfa": boolean,"reset_locked_at": string | null,"updated_at": string
+                    "default_currency": string,"default_timezone": string,"explainer_videos": NonNullable<Json>,"id": boolean,"lookup_rate_limit_per_minute": number,"require_admin_mfa": boolean,"reset_locked_at": string | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "default_currency"?: string,"default_timezone"?: string,"id"?: boolean,"lookup_rate_limit_per_minute"?: number,"require_admin_mfa"?: boolean,"reset_locked_at"?: string | null,"updated_at"?: string
+                    "default_currency"?: string,"default_timezone"?: string,"explainer_videos"?: NonNullable<Json>,"id"?: boolean,"lookup_rate_limit_per_minute"?: number,"require_admin_mfa"?: boolean,"reset_locked_at"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "default_currency"?: string,"default_timezone"?: string,"id"?: boolean,"lookup_rate_limit_per_minute"?: number,"require_admin_mfa"?: boolean,"reset_locked_at"?: string | null,"updated_at"?: string
+                    "default_currency"?: string,"default_timezone"?: string,"explainer_videos"?: NonNullable<Json>,"id"?: boolean,"lookup_rate_limit_per_minute"?: number,"require_admin_mfa"?: boolean,"reset_locked_at"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     
@@ -2662,6 +2662,9 @@ isOneToOne: false
 "admin_set_entity_status":
 { Args: { "p_entity": string,"p_id": string,"p_reason": string,"p_status": Database["public"]['Enums']["entity_status"] }; Returns: undefined
                            },
+"admin_set_explainer_videos":
+{ Args: { "p_videos": Json }; Returns: Json
+                           },
 "admin_structure":
 { Args: Record<PropertyKey, never>; Returns: {
               "doctors": Json,"facility_id": string,"staff_count": number
@@ -3151,6 +3154,9 @@ isOneToOne: false
                            },
 "expire_pending_appointments":
 { Args: Record<PropertyKey, never>; Returns: number
+                           },
+"explainer_videos":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "facility_day_board":
 { Args: { "p_date": string,"p_facility_id": string,"p_practitioner_id"?: string }; Returns: {

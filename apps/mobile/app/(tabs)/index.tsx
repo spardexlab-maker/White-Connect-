@@ -13,6 +13,7 @@ import { useAuth } from '../../src/lib/auth';
 import { mediaUrl } from '../../src/lib/media';
 import { AiAssist } from '../../src/components/AiAssist';
 import { HomeHero } from '../../src/components/HomeHero';
+import { ExplainerVideo } from '../../src/components/ExplainerVideo';
 import { PendingRx } from '../../src/components/PendingRx';
 import { providerHref } from '../../src/lib/routes';
 import { Avatar, Card, Chip, EmptyState, ErrorState, FadeIn, PressScale, Row, Screen, SkeletonBox, Stack, Text } from '../../src/components/ui';
@@ -101,6 +102,7 @@ export default function Home() {
 
       {session && <PendingRx compact />}
       <AiAssist />
+      <ExplainerVideo />
       {kind === 'laboratory' && (<>
       <Pressable accessibilityRole="link" onPress={() => router.push('/home-lab')}>
         <Card style={{ flexDirection: 'row', alignItems: 'center', gap: space[3] }}>

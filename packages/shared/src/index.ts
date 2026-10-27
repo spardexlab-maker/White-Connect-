@@ -15,3 +15,4 @@ export * from './diagnoses';
 export * from './homeLab';
 export * from './phone';
 export * from './mapLink';
+export * from './youtube';
