@@ -76,6 +76,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('name'); ap.add_argument('--clips', required=True); ap.add_argument('--out')
     ap.add_argument('--tts', default='habibi'); ap.add_argument('--target', type=float); ap.add_argument('--preview', action='store_true'); ap.add_argument('--tempo', type=float, default=1.0)
+    ap.add_argument('--silent', action='store_true', help='no narration, no music, no subtitles (for a recorded voice-over)')
     a = ap.parse_args()
     spec = json.load(open(HERE / 'scripts' / f'{a.name}.json'))
     work = Path(os.environ.get('FILM_WORK', f'/tmp/film-{a.name}'))
@@ -132,7 +133,7 @@ def main():
             show = s['dur'] - 0.8
             s['rate'] = round(max(0.7, min(1.7, s['clipSec'] / show)), 3)
     total = round(t, 2)
-    film = {'name': a.name, 'cta': spec['cta'], 'chips': CHIPS[a.name], 'total': total, 'scenes': spec['scenes']}
+    film = {'noSubs': a.silent, 'name': a.name, 'cta': spec['cta'], 'chips': CHIPS[a.name], 'total': total, 'scenes': spec['scenes']}
     (work / 'data.js').write_text('window.FILM=' + json.dumps(film, ensure_ascii=False) + ';')
     print(f'timeline: {total} s, {len(spec["scenes"])} scenes', flush=True)
 
@@ -140,9 +141,12 @@ def main():
     out.parent.mkdir(parents=True, exist_ok=True)
     rng = ['0', '12'] if a.preview else []
     run('node', str(HERE / 'render.mjs'), str(work), str(work / 'silent.mp4'), *rng)
-    run(sys.executable, str(HERE / 'mix.py'), str(work), str(12 if a.preview else total))
-    run('ffmpeg', '-v', 'error', '-y', '-i', str(work / 'silent.mp4'), '-i', str(work / 'mix.wav'), '-c:v', 'copy',
-        '-c:a', 'aac', '-b:a', '192k', '-ar', '44100', '-shortest', '-movflags', '+faststart', str(out))
+    if a.silent:
+        run('ffmpeg', '-v', 'error', '-y', '-i', str(work / 'silent.mp4'), '-c:v', 'copy', '-an', '-movflags', '+faststart', str(out))
+    else:
+        run(sys.executable, str(HERE / 'mix.py'), str(work), str(12 if a.preview else total))
+        run('ffmpeg', '-v', 'error', '-y', '-i', str(work / 'silent.mp4'), '-i', str(work / 'mix.wav'), '-c:v', 'copy',
+            '-c:a', 'aac', '-b:a', '192k', '-ar', '44100', '-shortest', '-movflags', '+faststart', str(out))
     print('done:', out)
 
 

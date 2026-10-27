@@ -137,6 +137,7 @@ F.scenes.forEach((s, i) => {
   }
   host.appendChild(el);
 });
+if (F.noSubs) $('#subs').style.display = 'none';
 $('#prog').innerHTML = F.scenes.map(() => '<i><b></b></i>').join('');
 window.TOTAL = F.total;
 
