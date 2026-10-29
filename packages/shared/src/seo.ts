@@ -54,9 +54,11 @@ export async function buildDirectory(src: DirectorySource): Promise<Directory> {
   const doctors = new Map<string, DirDoctor>();
   const labs: DirLab[] = [];
   const outCities: DirCity[] = [];
-  for (const c of cities) {
+  // all cities at once (a cold build is ~2 lookups per city), then grouped in city order
+  const rows = await Promise.all(cities.map((c) => Promise.all([src.search('doctor', c.id), src.search('laboratory', c.id)])));
+  for (const [i, c] of cities.entries()) {
     const slug = citySlug(c);
-    const [docRows, labRows] = await Promise.all([src.search('doctor', c.id), src.search('laboratory', c.id)]);
+    const [docRows, labRows] = rows[i];
     for (const r of docRows) {
       if (!r.practitioner_id) continue;
       const clinic: DirClinic = { facility_id: r.facility_id, facility_name: r.facility_name, organization_name: r.organization_name, branch_name: r.branch_name,
