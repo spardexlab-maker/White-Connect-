@@ -76,7 +76,7 @@ step('lab accepts and sets the visit time');
 await p.reload();
 await p.getByText(/حُدّد موعد الزيارة/).waitFor();
 await p.getByText(/علي/).first().waitFor();
-await p.getByText(/٩:٠٠ ص|9:00 ص/).first().waitFor();   // the lab's 09:00 is the patient's 09:00 (Baghdad)
+await p.getByText(/9:00 ص|9:00 ص/).first().waitFor();   // the lab's 09:00 is the patient's 09:00 (Baghdad)
 await shot(p, 'homelab-3-patient-scheduled');
 step('patient sees the visit time and who is coming');
 

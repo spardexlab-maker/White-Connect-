@@ -1,24 +1,26 @@
 import { productDefaults } from './config';
 
 const tz: string = productDefaults.defaultTimezone;
+/** Arabic words with 0-9 digits: the same digits as phone numbers, codes, prices and counts everywhere in the product. */
+export const LOCALE = 'ar-IQ-u-nu-latn';
 
 /** IQD has no minor unit in daily use: amount_minor == dinars. Integer math only. */
 export function formatMoney(amountMinor: number | null | undefined, currency = 'IQD'): string {
   if (amountMinor == null) return '—';
-  const n = new Intl.NumberFormat('ar-IQ', { maximumFractionDigits: 0 }).format(amountMinor);
+  const n = new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 0 }).format(amountMinor);
   return currency === 'IQD' ? `${n} د.ع` : `${n} ${currency}`;
 }
 
 export function formatTime(iso: string | Date, timeZone = tz): string {
-  return new Intl.DateTimeFormat('ar-IQ', { hour: 'numeric', minute: '2-digit', timeZone }).format(new Date(iso));
+  return new Intl.DateTimeFormat(LOCALE, { hour: 'numeric', minute: '2-digit', timeZone }).format(new Date(iso));
 }
 
 export function formatDate(iso: string | Date, timeZone = tz): string {
-  return new Intl.DateTimeFormat('ar-IQ', { weekday: 'long', day: 'numeric', month: 'long', timeZone }).format(new Date(iso));
+  return new Intl.DateTimeFormat(LOCALE, { weekday: 'long', day: 'numeric', month: 'long', timeZone }).format(new Date(iso));
 }
 
 export function formatDateShort(iso: string | Date, timeZone = tz): string {
-  return new Intl.DateTimeFormat('ar-IQ', { day: 'numeric', month: 'short', timeZone }).format(new Date(iso));
+  return new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'short', timeZone }).format(new Date(iso));
 }
 
 export function formatDateTime(iso: string | Date, timeZone = tz): string {

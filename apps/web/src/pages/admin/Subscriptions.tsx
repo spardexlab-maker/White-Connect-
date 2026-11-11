@@ -28,7 +28,7 @@ type Filter = 'all' | 'attention' | SubState;
 
 const formatNumber = (n: number) => n.toLocaleString('en-US');
 const dayWord = (n: number) => (n >= 3 && n <= 10 ? 'أيام' : 'يوم');
-const fmtDay = (d: string) => new Intl.DateTimeFormat('ar-IQ', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${d}T00:00:00Z`));
+const fmtDay = (d: string) => new Intl.DateTimeFormat('ar-IQ-u-nu-latn', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${d}T00:00:00Z`));
 const addMonths = (d: string, n: number) => { const x = new Date(`${d}T00:00:00Z`); x.setUTCMonth(x.getUTCMonth() + n); return x.toISOString().slice(0, 10); };
 
 function daysText(it: Item) {

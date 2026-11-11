@@ -46,7 +46,7 @@ try {
   await p.waitForTimeout(800);
   await shot(p, 'm03-slots');
   // pick the first free time on the selected day
-  await p.getByRole('button', { name: /^[٠-٩0-9]{1,2}[:٫][٠-٩0-9]{2}/ }).first().click();
+  await p.getByRole('button', { name: /^[0-90-9]{1,2}[:.][0-90-9]{2}/ }).first().click();
   await p.getByRole('button', { name: 'التالي: مراجعة' }).click();
   await p.getByText('راجع تفاصيل الحجز').waitFor();
   step('service + slot chosen, review shown');

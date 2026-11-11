@@ -18,7 +18,7 @@ interface G {
 
 const n = (v: number) => v.toLocaleString('en-US');
 const usd = (v: number) => `$${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-const dayLabel = (d: string) => new Intl.DateTimeFormat('ar-IQ', { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(`${d}T00:00:00Z`));
+const dayLabel = (d: string) => new Intl.DateTimeFormat('ar-IQ-u-nu-latn', { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(`${d}T00:00:00Z`));
 const SOURCE: Record<string, string> = { app: 'التطبيق', web: 'الموقع', reception: 'الاستقبال' };
 
 /** How the platform is growing: counts only, no names of patients and nothing medical. */

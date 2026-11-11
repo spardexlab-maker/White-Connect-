@@ -1,13 +1,17 @@
 // Google Play store graphics: framed phone screenshots (1080×1920) with Arabic captions,
 // the feature graphic (1024×500) and the 512×512 icon.
-// Usage: node scripts/make_play_assets.mjs <raw-screens-dir> <out-dir>
+// Usage: node scripts/make_play_assets.mjs <raw-screens-dir> <out-dir> [WxH]
+// WxH = another screenshot size, e.g. 1290x2796 for the App Store (iPhone 6.7"/6.9"); then only the screenshots are made.
 // (raw screens come from: node scripts/e2e-mobile.mjs apps/mobile/dist-local <raw-screens-dir>)
 import { chromium } from 'playwright';
 import { readFileSync } from 'node:fs';
 import { copyFile, mkdir, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-const [raw, out] = process.argv.slice(2).map((p) => resolve(p));
+const [raw, out] = process.argv.slice(2, 4).map((p) => resolve(p));
+const [W, H] = (process.argv[4] ?? '1080x1920').split('x').map(Number);
+const k = W / 1080;                                   // everything scales with the width
+const phoneW = Math.round(H / W > 2 ? 960 * k : 640 * k);   // taller canvases fit a larger phone
 if (!raw || !out) { console.error('usage: node scripts/make_play_assets.mjs <raw-dir> <out-dir>'); process.exit(2); }
 await mkdir(out, { recursive: true });
 const font = (pkg, file) => `data:font/woff2;base64,${readFileSync(resolve('apps/web/node_modules/@fontsource', pkg, 'files', file)).toString('base64')}`;
@@ -37,19 +41,21 @@ const shots = [
 ];
 const logo = await data('apps/web/public/logo-symbol.png');
 const b = await chromium.launch();
-const page = await b.newPage({ viewport: { width: 1080, height: 1920 } });
+const page = await b.newPage({ viewport: { width: W, height: H } });
 let i = 0;
 for (const [file, title, sub] of shots) {
   const img = await data(`${raw}/${file}.png`);
   await page.setContent(`<style>${css}
-    body { width: 1080px; height: 1920px; padding: 72px 80px 0; display: flex; flex-direction: column; align-items: center; }
-    .top { align-self: stretch; } h1 { font-size: 76px; margin-top: 44px; } p { font-size: 38px; margin-top: 18px; }
-    .phone { margin-top: 64px; } .phone img { width: 640px; }</style>
+    body { width: ${W}px; height: ${H}px; padding: ${72 * k}px ${80 * k}px 0; display: flex; flex-direction: column; align-items: center; }
+    .top { align-self: stretch; } .brand { font-size: ${34 * k}px; } .brand img { height: ${46 * k}px; }
+    h1 { font-size: ${76 * k}px; margin-top: ${44 * k}px; } p { font-size: ${38 * k}px; margin-top: ${18 * k}px; }
+    .phone { margin-top: ${64 * k}px; border-radius: ${64 * k}px; padding: ${16 * k}px; } .phone img { width: ${phoneW}px; border-radius: ${50 * k}px; }</style>
     <div class="top"><div class="brand"><img src="${logo}">أبيض</div><h1>${title}</h1><p>${sub}</p></div>
     <div class="phone"><img src="${img}"></div>`);
   await page.evaluate(async () => { await Promise.all([...document.fonts].map((f) => f.load())); await document.fonts.ready; });
   await page.screenshot({ path: `${out}/screenshot-${++i}.png` });
 }
+if (process.argv[4]) { await b.close(); console.log('done', out); process.exit(0); }
 // feature graphic
 await page.setViewportSize({ width: 1024, height: 500 });
 const home = await data(`${raw}/m01-home.png`);

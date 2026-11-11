@@ -23,8 +23,40 @@
       "bundleIdentifier": "com.spardexlab.abyad",
       "supportsTablet": false,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "يُستخدم الموقع اختيارياً لترتيب الأطباء والمختبرات حسب القرب. الحجز لا يحتاج الموقع.",
-        "NSMicrophoneUsageDescription": "يُستخدم المايكروفون فقط عندما تضغط زر المايك للتحدث مع المساعد الذكي، ولا يُحفظ التسجيل."
+        "NSLocationWhenInUseUsageDescription": "يُستخدم موقعك اختيارياً لترتيب الأطباء والمختبرات حسب القرب منك، ولإرساله للمختبر عندما تطلب سحب عينة من البيت. الحجز لا يحتاج الموقع.",
+        "NSMicrophoneUsageDescription": "يُستخدم المايكروفون فقط عندما تضغط زر المايك للتحدث مع المساعد الذكي، ولا يُحفظ التسجيل.",
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleDevelopmentRegion": "ar"
+      },
+      "buildNumber": "1",
+      "privacyManifests": {
+        "NSPrivacyTracking": false,
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "CA92.1"
+            ]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryFileTimestamp",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "C617.1"
+            ]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategorySystemBootTime",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "35F9.1"
+            ]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryDiskSpace",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "E174.1"
+            ]
+          }
+        ]
       }
     },
     "android": {

@@ -33,7 +33,7 @@ await a.goto(`${BASE}/platform-admin/reports`);
 await a.getByLabel('المجمع').selectOption({ label: 'مجمع الرافدين الطبي (تجريبي)' });
 await a.getByLabel('المنشأة').selectOption({ label: 'عيادات الرافدين' });
 await a.getByText('المحصّل').first().waitFor();
-await a.getByText('٢٥٬٠٠٠ د.ع').first().waitFor();
+await a.getByText('25,000 د.ع').first().waitFor();
 await a.getByLabel('الفئة').fill('مستلزمات');
 await a.getByLabel('المبلغ (د.ع)').fill('15000');
 await a.getByRole('button', { name: 'إضافة' }).click();

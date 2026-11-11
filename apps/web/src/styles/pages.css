@@ -89,7 +89,8 @@
 /* ---------- QR card ---------- */
 .qr-card { text-align: center; display: flex; flex-direction: column; gap: var(--s-3); align-items: center; }
 .qr-card canvas, .qr-card img { width: min(280px, 72vw) !important; height: auto !important; image-rendering: pixelated; }
-.code-pill { font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace; font-size: var(--f-h3); letter-spacing: 2px; background: var(--c-surface-sunken); padding: var(--s-2) var(--s-4); border-radius: var(--r-md); direction: ltr; }
+.code-pill { font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace; font-size: var(--f-h3); letter-spacing: 2px; background: var(--c-surface-sunken); padding: var(--s-2) var(--s-4); border-radius: var(--r-md); direction: ltr;
+  display: inline-block; max-width: 100%; overflow-wrap: anywhere; }   /* a long key wraps instead of leaving the screen */
 
 /* ---------- Timeline ---------- */
 .timeline { list-style: none; margin: 0; padding: 0; position: relative; }

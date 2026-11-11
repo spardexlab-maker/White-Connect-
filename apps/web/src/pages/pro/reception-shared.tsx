@@ -268,7 +268,7 @@ export function PrintCardDialog({ facilityId, patientId, onClose }: { facilityId
           <canvas ref={canvas} aria-label="رمز QR" />
           <span className="code-pill">{card.data.public_code}</span>
           <span>{card.data.full_name}</span>
-          <span className="small muted">صدرت {today.toLocaleDateString('ar-IQ')} — البطاقة للتعريف فقط ولا تمنح إذناً بالاطلاع على السجل.</span>
+          <span className="small muted">صدرت {today.toLocaleDateString('ar-IQ-u-nu-latn')} — البطاقة للتعريف فقط ولا تمنح إذناً بالاطلاع على السجل.</span>
         </div>
       )}
     </Sheet>

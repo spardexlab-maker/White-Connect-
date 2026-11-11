@@ -71,7 +71,7 @@ function ResetDemoData({ onDone }: { onDone: () => void }) {
     <section className="card stack danger-zone" aria-labelledby="reset-title">
       <h2 id="reset-title" className="section-title row" style={{ gap: 8 }}><Trash2 size={18} aria-hidden />قبل الإطلاق: مسح البيانات التجريبية</h2>
       {!p && <SkeletonList rows={2} />}
-      {p?.locked_at && <Alert tone="success" title="الأداة مقفولة">انقفلت بتاريخ {new Date(p.locked_at).toLocaleDateString('ar-IQ')}، وما تكدر تشتغل مرة ثانية. هذا يحمي البيانات الحقيقية.</Alert>}
+      {p?.locked_at && <Alert tone="success" title="الأداة مقفولة">انقفلت بتاريخ {new Date(p.locked_at).toLocaleDateString('ar-IQ-u-nu-latn')}، وما تكدر تشتغل مرة ثانية. هذا يحمي البيانات الحقيقية.</Alert>}
       {p && !p.locked_at && (
         <>
           <p className="small">يمسح كل البيانات الوهمية مرة وحدة، حتى تبدي المنصة نظيفة للبيانات الحقيقية. <b>ما يرجع.</b></p>

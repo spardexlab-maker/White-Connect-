@@ -10,7 +10,7 @@ export function SubscriptionBanner({ organizationId }: { organizationId: string 
   const r = useAsync(async () => (await unwrap(supabase.rpc('subscription_notice', { p_organization_id: organizationId }))) as unknown as Notice | null, [organizationId]);
   const n = r.data;
   if (!n) return null;
-  const day = new Intl.DateTimeFormat('ar-IQ', { day: 'numeric', month: 'long', timeZone: 'UTC' }).format(new Date(`${n.ends_on}T00:00:00Z`));
+  const day = new Intl.DateTimeFormat('ar-IQ-u-nu-latn', { day: 'numeric', month: 'long', timeZone: 'UTC' }).format(new Date(`${n.ends_on}T00:00:00Z`));
   const red = n.state !== 'expiring';
   const text = n.state === 'expired' ? `اشتراككم منتهي من ${day}، تواصلوا ويانا حتى نجدده.`
     : n.state === 'unpaid' ? 'اشتراككم غير مسدّد، تواصلوا ويانا.'

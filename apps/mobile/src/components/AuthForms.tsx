@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { LogIn, MessageCircle, UserPlus } from 'lucide-react-native';
 import { errorMessage, fieldErrors, iraqiLocal, patientRegistrationSchema, toIraqiE164 } from '@app/shared';
@@ -115,6 +115,10 @@ export function PhoneLink() {
   );
 }
 
+// App Store rule 4.8: an app with Google sign-in must also offer Sign in with Apple. Until that is
+// set up (needs the paid Apple account), the App Store build signs in by WhatsApp code or email only.
+const noGoogle = Platform.OS === 'ios' && process.env.EXPO_PUBLIC_DISTRIBUTION === 'appstore';
+
 /** Google first (free for us, one tap), then a WhatsApp code; email + password under «الدخول بالبريد الإلكتروني». */
 export function AuthForm() {
   const [more, setMore] = useState(false);
@@ -152,7 +156,7 @@ export function AuthForm() {
 
   return (
     <Stack>
-      {!codeScreen && <>
+      {!codeScreen && !noGoogle && <>
       <GoogleButton loading={googleBusy} onPress={google} />
       {error && !more && <Alert tone="danger">{error}</Alert>}
       <Row gap={8} style={{ alignItems: 'center' }}>

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CheckCircle2, FilePen, Plus, Printer, Search, Send, Trash2 } from 'lucide-react';
-import { errorMessage } from '@app/shared';
+import { errorMessage, formatDateTime, latinDigits } from '@app/shared';
 import { supabase } from '../../lib/supabase';
 import { unwrap, useAsync } from '../../lib/useAsync';
 import { newIdempotencyKey } from '../../lib/idempotency';
@@ -157,7 +157,7 @@ export function RxBuilder({ encounterId, facilityId, patientName, orders, onChan
         <div className="stack" data-hidden-mobile={mobileTab !== 'edit'}>
           {isRevision && <Alert tone="warning" title="تعديل وصفة مرسلة">سيُنشأ إصدار جديد وتُبلَّغ الصيدلية ويُبطل الإصدار السابق للصرف.</Alert>}
           {rows.map((r, idx) => (
-            <RxRow key={r.key} row={r} index={idx} pharmacyId={sendTo}
+            <RxRow key={r.key} row={r} index={idx} pharmacyId={destination}
                    onChange={(nr) => { dirty.current = true; setRows(rows.map((x) => x.key === r.key ? nr : x)); }}
                    onRemove={rows.length > 1 ? () => setRows(rows.filter((x) => x.key !== r.key)) : undefined} />
           ))}
@@ -242,13 +242,18 @@ function RxRow({ row, index, onChange, onRemove, pharmacyId }: { row: Row; index
                     setOpen(false);
                   }}>
                     <bdi dir="ltr"><strong>{m.active_ingredient}</strong>{m.brand_name ? ` (${m.brand_name})` : ''} — {m.strength} · {m.dosage_form}</bdi>
-                    <Badge tone="neutral">التوفر غير معروف</Badge>
+                    {['in_stock', 'available'].includes(m.availability) ? <Badge tone="success">متوفر بالصيدلية</Badge>
+                      : m.availability === 'limited' ? <Badge tone="warning">كمية محدودة</Badge>
+                      : ['out_of_stock', 'unavailable'].includes(m.availability) ? <Badge tone="danger">غير متوفر بالصيدلية</Badge>
+                      : <Badge tone="neutral">التوفر غير معروف</Badge>}
                   </button>
                 </li>
               ))}
             </ul>
           )}
-          <span className="hint">التوفر الفعلي يُعرض بعد تفعيل مخزون الصيدلية (المرحلة 4)؛ لا يُعرض كتوفر مؤكد.</span>
+          <span className="hint">{pharmacyId
+            ? `التوفر حسب مخزون الصيدلية المختارة${results.find((m) => m.availability_updated_at) ? ` (آخر تحديث ${formatDateTime(results.find((m) => m.availability_updated_at)!.availability_updated_at!)})` : ''}؛ الصيدلية تؤكده عند الصرف.`
+            : 'اختر صيدلية حتى يظهر توفر الدواء عندها.'}</span>
           <Button size="sm" variant="ghost" disabled={q.trim().length < 2} onClick={() => onChange({ ...row, display_name: q.trim(), medication_id: null })}>
             استخدام النص كما كُتب (خارج القائمة)
           </Button>
@@ -259,7 +264,7 @@ function RxRow({ row, index, onChange, onRemove, pharmacyId }: { row: Row; index
           <label htmlFor={`amt-${row.key}`}>الكمية بكل جرعة</label>
           <div className="row" style={{ gap: 6, flexWrap: 'nowrap' }}>
             <input id={`amt-${row.key}`} className="input" inputMode="decimal" dir="ltr" style={{ width: 80 }} value={row.dose}
-                   placeholder="1" onChange={(e) => set('dose', e.target.value)} />
+                   placeholder="1" onChange={(e) => set('dose', latinDigits(e.target.value))} />
             <select className="select" aria-label="الوحدة" value={row.dose_unit} onChange={(e) => set('dose_unit', e.target.value)}>
               <option value="">—</option>
               {DOSE_UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
