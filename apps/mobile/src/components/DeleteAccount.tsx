@@ -24,7 +24,7 @@ export function DeleteAccount() {
       setError(errorMessage({ message: `app:${code ?? 'delete_failed'}` }));
       return;
     }
-    await signOut();
+    await signOut().catch(() => undefined);   // the account is gone; the dead session ends on its next refresh
   };
   return (
     <Stack gap={8}>

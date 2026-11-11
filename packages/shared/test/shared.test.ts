@@ -4,7 +4,7 @@ import { errorMessage } from '../src/errors';
 import { addDays, formatMoney, localDateKey, weekdayOf } from '../src/format';
 import { quickBookingSchema } from '../src/validation';
 import { youtubeId } from '../src/youtube';
-import { iraqiLocal, toIraqiE164 } from '../src/phone';
+import { iraqiLocal, latinDigits, toIraqiE164 } from '../src/phone';
 import { directionsUrl, isShortMapLink, parseMapLink } from '../src/mapLink';
 
 describe('design tokens', () => {
@@ -76,4 +76,12 @@ describe('youtubeId', () => {
     expect(youtubeId('https://vimeo.com/123')).toBeNull();
     expect(youtubeId('')).toBeNull();
   });
+});
+
+describe('latinDigits', () => {
+  it.each([
+    ['٠١٢٣٤٥٦٧٨٩', '0123456789'], ['۰۱۲۳۴۵۶۷۸۹', '0123456789'], ['٩٨٫٦', '98.6'], ['١٬٢٠٠', '1200'],
+    ['0770 123 4567', '0770 123 4567'], ['Positive', 'Positive'], ['٢٠٢٦-١٠-٢٤', '2026-10-24'],
+  ])('%s → %s', (input, out) => expect(latinDigits(input)).toBe(out));
+  it('lets a phone number typed in Arabic digits through', () => expect(toIraqiE164('٠٧٧٠ ١٢٣ ٤٥٦٧')).toBe('+9647701234567'));
 });

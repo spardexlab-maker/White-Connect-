@@ -1,9 +1,13 @@
 /** Iraqi mobile numbers for WhatsApp sign-in: 07XX XXX XXXX in any common spelling → +9647XXXXXXXXX. */
 const AR_DIGITS = /[٠-٩۰-۹]/g;
 
+/** Arabic-Indic and Persian digits → 0-9 (and «٫» → «.»), so numbers typed on an Arabic keyboard are accepted everywhere. */
+export function latinDigits(input: string): string {
+  return input.replace(AR_DIGITS, (c) => String((c.charCodeAt(0) & 0xf) % 10)).replace(/٫/g, '.').replace(/٬/g, '');
+}
+
 export function toIraqiE164(input: string): string | null {
-  const d = input
-    .replace(AR_DIGITS, (c) => String((c.charCodeAt(0) & 0xf) % 10))
+  const d = latinDigits(input)
     .replace(/[\s\-().]/g, '')
     .replace(/^\+/, '')
     .replace(/^00/, '');

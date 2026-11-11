@@ -62,7 +62,7 @@ function ReportsView({ facilities, initialFacilityId, organizationId }: { facili
     ? ((await unwrap(supabase.rpc('organization_report', { p_organization_id: organizationId, p_from: from, p_to: to }))) as unknown as { facility: string; type: string; appointments: number; lab_orders: number; prescriptions_received: number; collected_minor: number }[])
     : null), [organizationId, from, to]);
   const addExpense = async () => {
-    const { error } = await supabase.rpc('add_expense', { p_facility_id: facilityId, p_category: exp.category, p_amount_minor: Number(exp.amount), p_note: exp.note || undefined });
+    const { error } = await supabase.rpc('add_expense', { p_facility_id: facilityId, p_category: exp.category, p_amount_minor: Number(exp.amount), p_spent_on: localDateKey(new Date()), p_note: exp.note || undefined });
     if (error) toast(errorMessage(error), 'danger'); else { toast('سُجل المصروف', 'success'); setExp({ category: '', amount: '', note: '' }); r.reload(); }
   };
   return (

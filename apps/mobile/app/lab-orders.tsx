@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { Alert as Confirm, Platform, View } from 'react-native';
 import { router } from 'expo-router';
 import QRCode from 'react-native-qrcode-svg';
 import { FlaskConical, PenLine, Plus, Trash2 } from 'lucide-react-native';
-import { errorMessage, formatDate, formatDateTime, localDateKey, patientLabStatus, type LabStatus } from '@app/shared';
+import { errorMessage, formatDate, formatDateTime, latinDigits, localDateKey, patientLabStatus, type LabStatus } from '@app/shared';
 import { supabase, webUrl } from '../src/lib/supabase';
 import { unwrap, useAsync } from '../src/lib/useAsync';
 import { useAuth } from '../src/lib/auth';
@@ -31,10 +31,16 @@ export default function LabOrdersScreen() {
   const [msg, setMsg] = useState<{ tone: 'success' | 'danger'; text: string } | null>(null);
   if (!session) return <SignInPrompt />;
   const reload = () => { orders.reload(); entries.reload(); };
-  const remove = async (id: string) => {
-    const { error } = await supabase.rpc('delete_self_lab_result', { p_entry_id: id });
-    setMsg(error ? { tone: 'danger', text: errorMessage(error) } : { tone: 'success', text: 'حُذفت النتيجة' });
-    if (!error) reload();
+  const remove = (id: string) => {
+    const go = async () => {
+      const { error } = await supabase.rpc('delete_self_lab_result', { p_entry_id: id });
+      setMsg(error ? { tone: 'danger', text: errorMessage(error) } : { tone: 'success', text: 'حُذفت النتيجة' });
+      if (!error) reload();
+    };
+    if (Platform.OS === 'web') { void go(); return; }
+    Confirm.alert('حذف النتيجة؟', 'تنحذف من «صحتي» ومن الرسوم، وطبيبك ما يشوفها بعد.', [
+      { text: 'تراجع', style: 'cancel' }, { text: 'حذف', style: 'destructive', onPress: () => void go() },
+    ]);
   };
   return (
     <Screen refreshing={orders.status === 'loading' && !!orders.data} onRefresh={reload}>
@@ -60,7 +66,7 @@ export default function LabOrdersScreen() {
                 <Text variant="small"><Text variant="small" style={{ fontWeight: '700' }}>{e.name}</Text> <Ltr>{String(e.value_numeric ?? e.value_text ?? '')} {e.unit ?? ''}</Ltr></Text>
                 <Text variant="small" muted>{formatDate(e.taken_on)}{e.lab_name ? ` · ${e.lab_name}` : ''}</Text>
               </View>
-              <Button title="حذف" small variant="ghost" icon={<Trash2 size={14} color={color.danger} />} onPress={() => void remove(e.id)} />
+              <Button title="حذف" small variant="ghost" icon={<Trash2 size={14} color={color.danger} />} onPress={() => remove(e.id)} />
             </Row>
           ))}
           <Button title="شوف الرسوم والمقارنة في «صحتي»" small variant="ghost" onPress={() => router.push('/health')} />
@@ -140,7 +146,7 @@ function SelfResultForm({ patientId, master, item, onDone, onCancel }: { patient
       <Field label="الوحدة" optional ltr placeholder={m?.unit ?? item?.unit ?? ''} value={unit} onChangeText={setUnit} />
       <Field label="المجال الطبيعي" optional ltr placeholder={m?.reference_range ?? item?.reference_range ?? '70-100'}
              hint="من ورقة المختبر، وإذا تركته نستخدم المجال المعتمد" value={range} onChangeText={setRange} />
-      <Field label="تاريخ التحليل" ltr placeholder="2026-10-24" value={date} onChangeText={setDate} />
+      <Field label="تاريخ التحليل" ltr placeholder="2026-10-24" value={date} onChangeText={(t) => setDate(latinDigits(t))} />
       <Field label="اسم المختبر" optional value={lab} onChangeText={setLab} />
       {err && <Alert tone="danger">{err}</Alert>}
       <Text variant="small" muted>النتيجة تتعلّم «أدخلها المريض» حتى يعرف طبيبك مصدرها.</Text>

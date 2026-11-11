@@ -33,7 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => { setSession(data.session); setLoading(false); });
+    supabase.auth.getSession().then(({ data }) => setSession(data.session), () => setSession(null)).finally(() => setLoading(false));
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => setSession(s));
     return () => sub.subscription.unsubscribe();
   }, []);
@@ -49,9 +49,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     // local reminders belong to this account; never leave them on a shared phone
-    await cancelAllReminders();
+    await cancelAllReminders().catch(() => undefined);
     await unregisterPhonePush();
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
   }, []);
 
   const value = useMemo(() => ({ session, loading, access, refreshAccess, signOut }), [session, loading, access, refreshAccess, signOut]);

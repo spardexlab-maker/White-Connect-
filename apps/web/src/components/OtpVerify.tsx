@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ClipboardEvent, type KeyboardEvent } from 'react';
 import { Check, ShieldCheck } from 'lucide-react';
-import { iraqiLocal } from '@app/shared';
+import { iraqiLocal, latinDigits } from '@app/shared';
 import { Ltr } from './ui';
 
 type Stage = 'enter' | 'scatter' | 'verifying' | 'granted';
@@ -50,7 +50,7 @@ export function OtpVerify({ phone, submit, onDone, onResend, resendIn, onChangeN
 
   const put = (i: number, value: string) => {
     const next = [...digits];
-    const typed = value.replace(/\D/g, '');
+    const typed = latinDigits(value).replace(/\D/g, '');
     if (typed.length > 1) { typed.slice(0, LEN - i).split('').forEach((c, k) => { next[i + k] = c; }); }
     else next[i] = typed;
     setDigits(next); setError(null);
@@ -64,7 +64,7 @@ export function OtpVerify({ phone, submit, onDone, onResend, resendIn, onChangeN
     if (e.key === 'ArrowRight' && i > 0) boxes.current[i - 1]?.focus();
   };
   const paste = (e: ClipboardEvent<HTMLInputElement>) => {
-    const text = e.clipboardData.getData('text').replace(/\D/g, '');
+    const text = latinDigits(e.clipboardData.getData('text')).replace(/\D/g, '');
     if (text.length >= 2) { e.preventDefault(); put(0, text.slice(0, LEN)); }
   };
 

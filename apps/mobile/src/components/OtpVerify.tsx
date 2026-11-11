@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { Check } from 'lucide-react-native';
-import { iraqiLocal } from '@app/shared';
+import { iraqiLocal, latinDigits } from '@app/shared';
 import { Text } from './ui';
 import { useReduceMotion } from './ui';
 
@@ -56,7 +56,7 @@ export function OtpVerify({ phone, submit, onDone, onResend, resendIn, onChangeN
   };
 
   const onType = (t: string) => {
-    const v = t.replace(/\D/g, '').slice(0, LEN);
+    const v = latinDigits(t).replace(/\D/g, '').slice(0, LEN);
     setCode(v); setError(null);
     if (v.length === LEN) void run(v);
   };

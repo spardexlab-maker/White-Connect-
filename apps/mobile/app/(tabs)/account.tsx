@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Linking, Platform, Switch } from 'react-native';
+import { Alert as Confirm, Linking, Platform, Switch } from 'react-native';
 import { Briefcase, LogOut, QrCode } from 'lucide-react-native';
-import { iraqiLocal } from '@app/shared';
+import { errorMessage, iraqiLocal } from '@app/shared';
 import { useAuth } from '../../src/lib/auth';
 import { supabase, webUrl } from '../../src/lib/supabase';
 import { useAsync } from '../../src/lib/useAsync';
@@ -23,6 +23,18 @@ export default function Account() {
     return Array.isArray(data) ? data.length : 0;
   }, [session?.user.id]);
   const holding = useAuthHold();   // the WhatsApp check mark plays before the signed-in page appears
+  const [leaving, setLeaving] = useState(false);
+  // one stray tap must not sign the person out (it also clears this phone's medicine reminders)
+  const leave = () => {
+    const go = async () => {
+      setLeaving(true);
+      try { await signOut(); } catch (e) { Confirm.alert('ما كدرنا نسجل الخروج', `${errorMessage(e)}\nتأكد من الإنترنت وحاول مرة ثانية.`); } finally { setLeaving(false); }
+    };
+    if (Platform.OS === 'web') { void go(); return; }
+    Confirm.alert('تسجيل الخروج؟', 'تنحذف تذكيرات الدواء من هذا الهاتف، وترجع لما تسجل دخول مرة ثانية.', [
+      { text: 'تراجع', style: 'cancel' }, { text: 'خروج', style: 'destructive', onPress: () => void go() },
+    ]);
+  };
   if (loading) return <Screen><Loading /></Screen>;
   if (!session || holding) {
     return (
@@ -44,7 +56,7 @@ export default function Account() {
             <Text variant="label" muted>الحساب</Text>
             <Text variant="small" weight="medium"><Ltr>{session.user.email || iraqiLocal(session.user.phone)}</Ltr></Text>
           </Stack>
-          <Button title="خروج" variant="ghost" small icon={<LogOut size={16} color={color.primary} />} onPress={() => void signOut()} />
+          <Button title="خروج" variant="ghost" small loading={leaving} icon={<LogOut size={16} color={color.primary} />} onPress={leave} />
         </Row>
       </Card>
 

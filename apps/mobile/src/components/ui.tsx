@@ -4,7 +4,7 @@ import {
   type PressableProps, type StyleProp, type TextInputProps, type TextProps, type TextStyle, type ViewStyle,
 } from 'react-native';
 import { AlertTriangle, CheckCircle2, Info, OctagonAlert, RefreshCw } from 'lucide-react-native';
-import { appointmentStatus, errorMessage, type AppointmentStatus } from '@app/shared';
+import { appointmentStatus, errorMessage, latinDigits, type AppointmentStatus } from '@app/shared';
 import { color, family, radius, shadow, size, space, startAlign } from '../theme';
 
 export type Tone = 'neutral' | 'success' | 'warning' | 'danger' | 'info' | 'accent';
@@ -141,9 +141,11 @@ export function Segmented<T extends string>({ value, onChange, options }: { valu
   );
 }
 
-export function Field({ label, hint, error, optional, ltr, style, ...rest }: TextInputProps & {
+export function Field({ label, hint, error, optional, ltr, style, onChangeText, ...rest }: TextInputProps & {
   label: string; hint?: string; error?: string; optional?: boolean; ltr?: boolean;
 }) {
+  // numbers typed on an Arabic keyboard (٠١٢٣) count like 0123 in every number and phone field
+  const numeric = ['number-pad', 'decimal-pad', 'numeric', 'phone-pad'].includes(rest.keyboardType ?? '');
   return (
     <View style={{ gap: 6 }}>
       <Text variant="label">{label}{optional ? <RNText style={{ color: color.mutedText }}> (اختياري)</RNText> : null}</Text>
@@ -151,6 +153,7 @@ export function Field({ label, hint, error, optional, ltr, style, ...rest }: Tex
         accessibilityLabel={label}
         placeholderTextColor={color.mutedText}
         {...rest}
+        onChangeText={numeric && onChangeText ? (t) => onChangeText(latinDigits(t)) : onChangeText}
         style={[s.input, ltr ? { textAlign: 'left', writingDirection: 'ltr' } : { textAlign: startAlign }, !!error && { borderColor: color.danger }, style]}
       />
       {error ? <Text variant="small" style={{ color: color.danger }}>{error}</Text> : hint ? <Text variant="small" muted>{hint}</Text> : null}

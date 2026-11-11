@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Linking, View } from 'react-native';
+import { Alert as Confirm, Linking, Platform, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Location from 'expo-location';
 import { Check, Home, MapPin, Phone, Plus } from 'lucide-react-native';
@@ -26,10 +26,16 @@ export default function HomeLabScreen() {
   const [msg, setMsg] = useState<{ tone: 'success' | 'danger'; text: string } | null>(null);
   const list = useAsync(async () => (session ? ((await unwrap(supabase.rpc('my_home_lab_requests'))) as unknown as Req[]) : []), [session?.user.id]);
   if (!session) return <SignInPrompt />;
-  const cancel = async (id: string) => {
-    const { error } = await supabase.rpc('cancel_home_lab_request', { p_request_id: id });
-    setMsg(error ? { tone: 'danger', text: errorMessage(error) } : { tone: 'success', text: 'أُلغي الطلب' });
-    if (!error) list.reload();
+  const cancel = (id: string) => {
+    const go = async () => {
+      const { error } = await supabase.rpc('cancel_home_lab_request', { p_request_id: id });
+      setMsg(error ? { tone: 'danger', text: errorMessage(error) } : { tone: 'success', text: 'أُلغي الطلب' });
+      if (!error) list.reload();
+    };
+    if (Platform.OS === 'web') { void go(); return; }
+    Confirm.alert('إلغاء طلب السحب المنزلي؟', 'المختبر ما راح يجيك، وتكدر تطلب مرة ثانية بأي وقت.', [
+      { text: 'تراجع', style: 'cancel' }, { text: 'إلغاء الطلب', style: 'destructive', onPress: () => void go() },
+    ]);
   };
   return (
     <Screen refreshing={list.status === 'loading' && !!list.data} onRefresh={list.reload}>
@@ -44,7 +50,7 @@ export default function HomeLabScreen() {
       {list.data?.length === 0 && !form && (
         <Card><EmptyState icon={<Home size={28} color={color.mutedText} />} title="ما عندك طلبات">اطلب من مختبر يجي لبيتك ويسحب العينة، وتابع الزيارة خطوة بخطوة من هنا.</EmptyState></Card>
       )}
-      {list.data?.map((r) => <RequestCard key={r.id} r={r} onCancel={() => void cancel(r.id)} />)}
+      {list.data?.map((r) => <RequestCard key={r.id} r={r} onCancel={() => cancel(r.id)} />)}
     </Screen>
   );
 }

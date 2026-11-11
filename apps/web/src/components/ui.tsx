@@ -5,7 +5,7 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { AlertCircle, AlertTriangle, CheckCircle2, Info, Lock, Maximize2, Minimize2, MoreHorizontal, RefreshCw, WifiOff, X } from 'lucide-react';
-import { appointmentStatus, errorMessage, queueStatus, type AppointmentStatus, type QueueStatus, type Tone } from '@app/shared';
+import { appointmentStatus, errorMessage, latinDigits, queueStatus, type AppointmentStatus, type QueueStatus, type Tone } from '@app/shared';
 import { useOnline } from '../lib/useOnline';
 
 /* ------------------------------------------------------------------ */
@@ -58,12 +58,17 @@ export function FieldShell({ label, hint, error, optional, children }: FieldShel
 }
 
 type InputProps = InputHTMLAttributes<HTMLInputElement> & { label: string; hint?: string; error?: string; optional?: boolean; ltr?: boolean };
-export const TextField = forwardRef<HTMLInputElement, InputProps>(function TextField({ label, hint, error, optional, ltr, className = '', ...rest }, ref) {
+export const TextField = forwardRef<HTMLInputElement, InputProps>(function TextField({ label, hint, error, optional, ltr, className = '', onChange, ...rest }, ref) {
+  // numbers typed on an Arabic keyboard (٠١٢٣) count like 0123 in every number, phone and code field
+  const numeric = rest.type === 'tel' || rest.inputMode === 'numeric' || rest.inputMode === 'decimal' || rest.inputMode === 'tel';
+  const change: InputProps['onChange'] = numeric && onChange
+    ? (e) => { const v = latinDigits(e.target.value); if (v !== e.target.value) e.target.value = v; onChange(e); }
+    : onChange;
   return (
     <FieldShell label={label} hint={hint} error={error} optional={optional}>
       {(id, describedBy) => (
         <input ref={ref} id={id} className={`input ${ltr ? 'input-ltr' : ''} ${className}`} aria-invalid={error ? true : undefined}
-               aria-describedby={describedBy} dir={ltr ? 'ltr' : undefined} {...rest} />
+               aria-describedby={describedBy} dir={ltr ? 'ltr' : undefined} {...rest} onChange={change} />
       )}
     </FieldShell>
   );

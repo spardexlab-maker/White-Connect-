@@ -7,7 +7,8 @@ export interface Env { VITE_SUPABASE_URL: string; VITE_SUPABASE_PUBLISHABLE_KEY:
 type Ctx = { request: Request; env: Env; params: Record<string, string | string[]>; waitUntil: (p: Promise<unknown>) => void };
 export type Handler = (ctx: Ctx) => Promise<Response>;
 
-const TTL = 900; // the directory is cached for 15 minutes at the edge
+const FRESH = 900;    // a copy older than 15 minutes is refreshed in the background
+const KEEP = 86400;   // and a copy is kept for a day, so a visitor never waits for a rebuild
 
 async function rest<T>(env: Env, path: string, body?: unknown): Promise<T> {
   const r = await fetch(`${env.VITE_SUPABASE_URL}/rest/v1/${path}`, {
@@ -21,16 +22,22 @@ async function rest<T>(env: Env, path: string, body?: unknown): Promise<T> {
 
 export async function directory(ctx: Ctx): Promise<Directory> {
   const cache = (caches as unknown as { default: Cache }).default;
-  const key = new Request(new URL('/__directory-v2', ctx.request.url).toString());
-  const hit = await cache.match(key);
-  if (hit) return hit.json() as Promise<Directory>;
+  const key = new Request(new URL('/__directory-v3', ctx.request.url).toString());
   const env = ctx.env;
-  const dir = await buildDirectory({
-    cities: () => rest(env, 'cities?select=id,name_ar,name_en&is_active=eq.true&order=name_ar'),
-    specialties: () => rest(env, 'specialties?select=id,code,name_ar&is_active=eq.true&order=sort_order'),
-    search: (kind, cityId) => rest<ProviderRow[]>(env, 'rpc/search_providers', { p_kind: kind, p_city_id: cityId, p_limit: 100 }),
-  });
-  ctx.waitUntil(cache.put(key, new Response(JSON.stringify(dir), { headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${TTL}` } })));
+  const build = async () => {
+    const dir = await buildDirectory({
+      cities: () => rest(env, 'cities?select=id,name_ar,name_en&is_active=eq.true&order=name_ar'),
+      specialties: () => rest(env, 'specialties?select=id,code,name_ar&is_active=eq.true&order=sort_order'),
+      search: (kind, cityId) => rest<ProviderRow[]>(env, 'rpc/search_providers', { p_kind: kind, p_city_id: cityId, p_limit: 100 }),
+    });
+    await cache.put(key, new Response(JSON.stringify(dir), { headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${KEEP}` } }));
+    return dir;
+  };
+  const hit = await cache.match(key);
+  if (!hit) return build();
+  const dir = await hit.json() as Directory;
+  // stale copy: answer with it now, rebuild for the next visitor (a failed rebuild keeps the old copy)
+  if (Date.now() - Date.parse(dir.built_at) > FRESH * 1000) ctx.waitUntil(build().catch(() => undefined));
   return dir;
 }
 

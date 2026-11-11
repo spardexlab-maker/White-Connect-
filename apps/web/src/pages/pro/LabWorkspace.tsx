@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Barcode, CheckCircle2, FlaskConical, Inbox, PencilLine, Plus, Search, Send, TestTube2, XCircle } from 'lucide-react';
-import { errorMessage, formatDateTime, formatMoney, labStatus, type LabStatus } from '@app/shared';
+import { latinDigits, errorMessage, formatDateTime, formatMoney, labStatus, type LabStatus } from '@app/shared';
 import { supabase } from '../../lib/supabase';
 import { unwrap, useAsync } from '../../lib/useAsync';
 import { useWorkspace } from '../../lib/workspace';
@@ -202,7 +202,7 @@ function OrderSheet({ orderId, isApprover, onClose, onChanged }: { orderId: stri
                   <legend className="row-between" style={{ width: '100%' }}><strong>{it.name}</strong>
                     {it.results.some((r) => r.status === 'draft') ? <Badge tone="neutral">محفوظة — غير منشورة</Badge> : null}</legend>
                   <div className="rx-grid">
-                    <TextField label="القيمة" optional={files > 0} ltr value={f.value} onChange={(e) => set(it.id, { value: e.target.value })} />
+                    <TextField label="القيمة" optional={files > 0} ltr value={f.value} onChange={(e) => set(it.id, { value: latinDigits(e.target.value) })} />
                     <TextField label="الوحدة" ltr value={f.unit} onChange={(e) => set(it.id, { unit: e.target.value })} />
                     <TextField label="المجال المرجعي" value={f.range} placeholder={it.catalog.reference_range_text ?? 'مثلاً 70-100'} onChange={(e) => set(it.id, { range: e.target.value })} />
                     <SelectField label="وسم المختبر" value={f.flag} onChange={(e) => set(it.id, { flag: e.target.value })}>
@@ -276,7 +276,7 @@ function CorrectDialog({ result, onClose, onDone }: { result: LabResult; onClose
   return (
     <ConfirmDialog open title="تصحيح نتيجة منشورة" confirmLabel="نشر التصحيح" loading={busy} onCancel={onClose} onConfirm={submit}>
       <p className="small">يُحتفظ بالنتيجة الأصلية ويُضاف إصدار جديد مع السبب.</p>
-      <TextField label="القيمة الصحيحة" ltr value={f.value} onChange={(e) => setF({ ...f, value: e.target.value })} />
+      <TextField label="القيمة الصحيحة" ltr value={f.value} onChange={(e) => setF({ ...f, value: latinDigits(e.target.value) })} />
       <SelectField label="وسم المختبر" value={f.flag} onChange={(e) => setF({ ...f, flag: e.target.value })}>
         <option value="">—</option><option value="low">منخفض</option><option value="high">مرتفع</option><option value="abnormal">غير طبيعي</option><option value="critical">حرج</option>
       </SelectField>

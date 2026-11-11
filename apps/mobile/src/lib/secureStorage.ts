@@ -40,6 +40,12 @@ const web = {
   removeItem: async (k: string) => { if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem(k); },
 };
 
-export const secureStorage = Platform.OS === 'web'
-  ? web
-  : { getItem: nativeGet, setItem: nativeSet, removeItem: nativeRemove };
+// A keystore that cannot be read (restored phone, reset lock screen) must not freeze the app:
+// the session then counts as absent and the person signs in again.
+const native = {
+  getItem: (k: string) => nativeGet(k).catch(() => null),
+  setItem: (k: string, v: string) => nativeSet(k, v).catch(() => undefined),
+  removeItem: (k: string) => nativeRemove(k).catch(() => undefined),
+};
+
+export const secureStorage = Platform.OS === 'web' ? web : native;

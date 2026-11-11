@@ -37,10 +37,14 @@ export default function Meds() {
   }, [plans.data]);
   const [amounts, setAmounts] = useState<Record<string, number>>({});
   const [editing, setEditing] = useState<string | null>(null);
+  const [acting, setActing] = useState(false);
 
   if (!session) return <SignInPrompt />;
   const act = async (p: PromiseLike<{ error: unknown }>, ok: string) => {
-    const { error } = await p;
+    if (acting) return;   // a double tap must not log the same dose twice
+    setActing(true);
+    const { error } = await p.then((r) => r, (e) => ({ error: e as unknown }));
+    setActing(false);
     setMsg(error ? { tone: 'danger', text: errorMessage(error) } : { tone: 'success', text: ok });
     if (!error) plans.reload();
   };
